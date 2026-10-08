@@ -123,3 +123,10 @@ h1, h2, p {
 html.nx-theme-switching, html.nx-theme-switching *, html.nx-theme-switching *::before, html.nx-theme-switching *::after {
   transition: background-color 380ms var(--nx-ease-out), border-color 380ms var(--nx-ease-out), color 380ms var(--nx-ease-out), box-shadow 380ms var(--nx-ease-out), fill 380ms, stroke 380ms !important;
 }
+
+/* Motion polish: focus rings, press feedback, smooth scrolling (run 04:49) */
+:focus-visible { outline: 2px solid rgb(var(--nx-accent-rgb) / 0.7); outline-offset: 2px; transition: outline-offset .15s ease; }
+button { transition: transform .12s ease, background-color .18s ease, box-shadow .18s ease; }
+button:active:not(:disabled) { transform: scale(0.97); }
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--nx-accent-rgb) / 0.25) transparent; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

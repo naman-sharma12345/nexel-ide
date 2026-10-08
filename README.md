@@ -370,3 +370,5 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 - Command palette: matched letters now glow in accent, plus a keyboard-hint footer with result count.
 
 - Stress-test core (`src/lib/stress.ts`): seeded PRNG case generator + first-diff finder, with tests.
+
+- (04:49) Global focus rings, button press feedback, thin themed scrollbars, reduced-motion support; fast-I/O C++ template module (+tests).
