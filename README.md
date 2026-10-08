@@ -346,6 +346,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+- **Theme system** (design): 5 themes (Nexel Emerald, Midnight Indigo, Ember, Sakura Night, Mono Contrast) driven by design tokens (`--nx-bg-*`, `--nx-editor-bg`, `--nx-accent-rgb`). Switching glides colours over ~380ms; Monaco, terminal and chrome change together. All hard-coded accent colours across the CSS migrated to tokens.
+- **Settings panel** (Ctrl+,): theme cards with live mini-previews, font size, tab size, ligatures, word wrap and minimap toggles, persisted and validated (clamped, unknown themes rejected). Also in the command palette (`Theme: …`, `Toggle Minimap`, `Toggle Word Wrap`) and via the status bar theme chip.
 - **Status bar** (design + feature): glass strip with a breathing accent dot, active file with unsaved dot, live `Ln/Col` and selection length, language, judge status (pulsing while judging, `passed/total` after), terminal toggle and shortcut hint. New `--nx-status-h` layout token.
 - **Toast notifications**: spring-in glass toasts with a countdown bar (`Saved main.cpp`), bounded queue (max 4) with de-duplication.
 - Editor canvas now sizes to its container, not 100vh, so the status bar never overlaps.
