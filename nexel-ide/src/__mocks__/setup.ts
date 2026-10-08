@@ -26,7 +26,7 @@ export const mockNexelAPI: INexelAPI = {
   },
   createFile: async (parentPath: string, fileName: string) => `${parentPath}/${fileName}`,
   createFolder: async (parentPath: string, folderName: string) => `${parentPath}/${folderName}`,
-  renameNode: async (oldPath: string, newPath: string) => newPath,
+  renameNode: async (_oldPath: string, newPath: string) => newPath,
   deleteNode: async () => true,
   readFileContent: async () => '#include <iostream>\nint main() { return 0; }',
   writeFileContent: async () => true,
@@ -34,7 +34,7 @@ export const mockNexelAPI: INexelAPI = {
   writeTerminal: () => {},
   resizeTerminal: () => {},
   onTerminalData: () => {},
-  runJudge: async (filePath: string, testCases: any[], timeLimit?: number, memoryLimit?: number) => {
+  runJudge: async (_filePath: string, testCases: any[], _timeLimit?: number, _memoryLimit?: number) => {
     return testCases.map(tc => ({
       id: tc.id,
       verdict: tc.input.includes('fail') ? 'WA' : 'AC',
