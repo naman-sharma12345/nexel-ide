@@ -347,6 +347,9 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 
 ## What's new on hark/overnight-improvements
 
+- **Design:** tabs get a glowing gradient underline that scales in, hover lift, and close buttons that fade in and rotate on hover.
+- **Performance:** Judge and Contests panels are lazy-loaded (React.lazy) with shimmer skeleton fallbacks.
+
 - **Design:** glass dock sheen with accent glow, hover lift on dock items; Monaco accent selection/cursor/indent guides, smooth scrolling, bracket colorization, ligatures.
 - **Security:** CSP meta in index.html; window-open deny and off-origin navigation block in Electron main; Outfit font self-hosted (no Google Fonts request).
 - **Performance:** Monaco bundled locally with slim entry and code-split chunks (earlier run).

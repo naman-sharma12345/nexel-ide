@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useUIStore } from './stores/useUIStore';
 import { useEditorStore } from './stores/useEditorStore';
 import { NavDock } from './components/NavDock';
@@ -6,8 +6,8 @@ import { Explorer } from './components/Explorer';
 import { Editor } from './components/Editor';
 import { TitleBar } from './components/TitleBar';
 import { Terminal } from './components/Terminal';
-import { JudgeSystem } from './components/JudgeSystem';
-import { ContestsSystem } from './components/ContestsSystem';
+const JudgeSystem = lazy(() => import('./components/JudgeSystem'));
+const ContestsSystem = lazy(() => import('./components/ContestsSystem'));
 import './App.css';
 
 function App() {
@@ -146,10 +146,10 @@ function App() {
             />
           </div>
           <div style={{ display: currentSection === 'judge' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-            <JudgeSystem activeFilePath={focusedTabPath || activeTabPath} />
+            <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><JudgeSystem activeFilePath={focusedTabPath || activeTabPath} /></Suspense>
           </div>
           <div style={{ display: currentSection === 'contests' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-            <ContestsSystem />
+            <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><ContestsSystem /></Suspense>
           </div>
         </div>
 

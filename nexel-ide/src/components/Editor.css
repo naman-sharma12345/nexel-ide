@@ -1141,3 +1141,12 @@
 .nx-welcome-logo { animation: nx-float 6s ease-in-out infinite; filter: drop-shadow(0 6px 18px rgba(52,211,153,.25)); }
 @keyframes nx-aurora { from { transform: translate3d(-2%, -1%, 0) rotate(0deg); } to { transform: translate3d(2%, 2%, 0) rotate(8deg); } }
 @keyframes nx-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+/* v3 tab polish: animated accent underline, close-button fade */
+.nx-editor-tab{position:relative;transition:background var(--nx-dur-2,.2s) var(--nx-ease-out,ease),color var(--nx-dur-2,.2s) var(--nx-ease-out,ease),transform var(--nx-dur-2,.2s) var(--nx-ease-spring,ease)}
+.nx-editor-tab::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--nx-accent,#34d399),var(--nx-accent-2,#22d3ee));transform:scaleX(0);transform-origin:center;opacity:0;transition:transform .35s var(--nx-ease-out,ease),opacity .25s;box-shadow:0 0 10px var(--nx-accent,#34d399)}
+.nx-editor-tab.active::after{transform:scaleX(1);opacity:1}
+.nx-editor-tab:hover{transform:translateY(-1px)}
+.nx-tab-close-btn{opacity:0;transition:opacity .15s,background .15s,transform .2s var(--nx-ease-spring,ease)}
+.nx-editor-tab:hover .nx-tab-close-btn,.nx-editor-tab.active .nx-tab-close-btn{opacity:1}
+.nx-tab-close-btn:hover{transform:rotate(90deg) scale(1.1)}
