@@ -7,7 +7,7 @@
  * Ref: https://github.com/suren-atoyan/monaco-react#use-monaco-editor-as-an-npm-package
  */
 import 'monaco-editor/esm/vs/editor/editor.all.js';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import 'monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/python/python.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/java/java.contribution.js';
