@@ -332,3 +332,7 @@
     transform: scale(1) translateY(0);
   }
 }
+
+/* Modal motion: backdrop fades + blurs in, card springs up. */
+.nx-template-modal-overlay { animation: nx-fade-in var(--nx-dur-2) var(--nx-ease-out) both; backdrop-filter: blur(10px) saturate(140%); }
+.nx-template-modal { animation: nx-pop-in var(--nx-dur-3) var(--nx-ease-spring) both; box-shadow: var(--nx-shadow-2); }
