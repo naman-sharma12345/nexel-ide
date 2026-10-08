@@ -12,3 +12,7 @@
 .cp-item.active { background: var(--nx-accent-soft); color: var(--nx-text); padding-left: 16px; box-shadow: inset 2px 0 0 var(--nx-accent); }
 .cp-item kbd { font: 11px ui-monospace, monospace; color: var(--nx-text-faint); border: 1px solid var(--nx-line); border-radius: 4px; padding: 1px 6px; }
 .cp-empty { padding: 18px; text-align: center; color: var(--nx-text-faint); font-size: 13px; }
+
+.cp-mark{background:none;color:var(--nx-accent);font-weight:600;text-shadow:0 0 10px color-mix(in srgb,var(--nx-accent) 55%,transparent)}
+.cp-foot{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--nx-line);font-size:11px;color:var(--nx-text-dim,#8a8a93)}
+.cp-foot kbd{margin-right:4px}.cp-count{margin-left:auto}

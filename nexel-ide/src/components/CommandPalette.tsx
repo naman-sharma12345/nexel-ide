@@ -16,6 +16,17 @@ export function fuzzyScore(query: string, text: string): number {
   return score;
 }
 
+export function highlight(q: string, text: string) {
+  if (!q) return text;
+  const t = text.toLowerCase(); const out: React.ReactNode[] = []; let ti = 0, buf = '';
+  for (const ch of q.toLowerCase()) {
+    const i = t.indexOf(ch, ti); if (i < 0) break;
+    buf += text.slice(ti, i); if (buf) { out.push(buf); buf = ''; }
+    out.push(<mark key={i} className="cp-mark">{text[i]}</mark>); ti = i + 1;
+  }
+  out.push(text.slice(ti)); return out;
+}
+
 export function CommandPalette({ commands, onClose }: { commands: PaletteCommand[]; onClose: () => void }) {
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
@@ -43,10 +54,11 @@ export function CommandPalette({ commands, onClose }: { commands: PaletteCommand
             <div key={c.id} className={'cp-item' + (i === sel ? ' active' : '')}
               style={{ animationDelay: `${Math.min(i, 8) * 18}ms` }}
               onMouseEnter={() => setSel(i)} onClick={() => exec(c)}>
-              <span>{c.label}</span>{c.hint && <kbd>{c.hint}</kbd>}
+              <span>{highlight(q, c.label)}</span>{c.hint && <kbd>{c.hint}</kbd>}
             </div>
           ))}
         </div>
+        <div className="cp-foot"><span><kbd>↑↓</kbd> navigate</span><span><kbd>↵</kbd> run</span><span><kbd>esc</kbd> close</span><span className="cp-count">{results.length} {results.length===1?"result":"results"}</span></div>
       </div>
     </div>
   );
