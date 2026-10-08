@@ -346,6 +346,7 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+- **Python + Java IntelliSense (tier 1, zero-install)**: snippet/completion providers for fast IO, heaps, DSU, main guards, collections, working on every machine without a language server. Nav dock gets a theme-aware accent sheen (respects reduced motion).
 - **Competitive Companion** (feature + security): the IDE listens on `127.0.0.1:27121` (loopback only) for the Competitive Companion browser extension. Sending a problem creates `<Problem>.cpp` (with your C++ template, never overwriting an existing file) and loads the samples into the Judge. Hardened: POST only, 1 MB cap enforced while streaming, strict schema validation, sanitised file names, bounded test count, 5 s request timeout, silent fallback if the port is busy.
 - **Keyboard shortcuts sheet** (design, Ctrl+/): glass cheat-sheet with 3D keycaps that physically press and glow when you hit the matching key. Welcome screen now shows live keycap chips.
 - **Recent workspaces** on the welcome card (MRU, de-duplicated, capped at 5, persisted): one click re-opens a folder.

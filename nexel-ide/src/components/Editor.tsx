@@ -1,3 +1,4 @@
+import { registerLangCompletions } from '../lib/langCompletions';
 import { useStatusStore } from '../stores/useStatusStore';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
@@ -269,6 +270,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     }
   };
 
+  const langProvidersRef = useRef<{ dispose(): void }[] | null>(null);
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     // Feed the status bar: cursor + selection length (store skips no-op updates).
@@ -284,6 +286,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     THEMES.forEach(t => monaco.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)));
     monaco.editor.setTheme(monacoThemeName(useSettingsStore.getState().theme));
 
+    if (!langProvidersRef.current) langProvidersRef.current = registerLangCompletions(monaco);
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
     }
