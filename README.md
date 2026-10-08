@@ -368,3 +368,5 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 - **Performance:** Monaco bundled locally with slim entry and code-split chunks (earlier run).
 
 - Command palette: matched letters now glow in accent, plus a keyboard-hint footer with result count.
+
+- Stress-test core (`src/lib/stress.ts`): seeded PRNG case generator + first-diff finder, with tests.
