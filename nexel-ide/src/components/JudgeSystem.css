@@ -637,3 +637,5 @@
 .nx-judge-stress-toggle:hover svg { animation: nx-zap .5s var(--nx-ease-spring); }
 .nx-judge-stress-toggle.on { color:var(--nx-accent); border-color:rgb(var(--nx-accent-rgb) / .5); background:var(--nx-accent-soft); }
 @keyframes nx-zap { 0% { transform:scale(1) rotate(0); } 40% { transform:scale(1.45) rotate(-12deg); } 100% { transform:scale(1) rotate(0); } }
+.nx-judge-header { padding-right: 14px; gap: 8px; }
+.nx-judge-title { white-space: nowrap; letter-spacing: .2em; text-indent: 0; }

@@ -35,3 +35,7 @@
 .nx-stress-diff code { padding:3px 6px; border-radius:4px; font-family:'JetBrains Mono',monospace; user-select:text; word-break:break-all; }
 .nx-stress-diff .a { background:rgb(var(--nx-accent-rgb) / .12); color:var(--nx-accent); }
 .nx-stress-diff .b { background:rgb(239 68 68 / .12); color:var(--nx-danger); }
+.nx-stress > .nx-stress-field { flex: none; }
+.nx-stress-row { flex: none; align-items: flex-end; }
+.nx-stress-heading b { white-space: nowrap; }
+.nx-stress-btn { flex: none; }

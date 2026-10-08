@@ -71,7 +71,7 @@ export const StressPanel: React.FC<Props> = ({ solutionPath, onClose }) => {
       <div className="nx-stress-row">
         <label className="nx-stress-field"><span>Tests</span><input type="number" min={1} max={2000} value={iterations} onChange={e => setIterations(Math.min(2000, Math.max(1, +e.target.value || 1)))} /></label>
         <label className="nx-stress-field"><span>Max n</span><input type="number" min={1} max={200000} value={maxN} onChange={e => setMaxN(Math.min(200000, Math.max(1, +e.target.value || 1)))} /></label>
-        <label className="nx-stress-field"><span>Max a<sub>i</sub></span><input type="number" min={1} value={maxV} onChange={e => setMaxV(Math.max(1, +e.target.value || 1))} /></label>
+        <label className="nx-stress-field"><span>Max val</span><input type="number" min={1} value={maxV} onChange={e => setMaxV(Math.max(1, +e.target.value || 1))} /></label>
       </div>
 
       {state === 'running'
