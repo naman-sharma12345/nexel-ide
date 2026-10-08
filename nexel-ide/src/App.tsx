@@ -8,6 +8,7 @@ import { TitleBar } from './components/TitleBar';
 import { Terminal } from './components/Terminal';
 const JudgeSystem = lazy(() => import('./components/JudgeSystem'));
 const ContestsSystem = lazy(() => import('./components/ContestsSystem'));
+import { useWorkspaceStore, type FileNode } from './stores/useWorkspaceStore';
 import { CommandPalette } from './components/CommandPalette';
 import './App.css';
 
@@ -36,9 +37,12 @@ function App() {
 
   const [tempTemplate, setTempTemplate] = useState('');
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const tree = useWorkspaceStore(s => s.tree);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(o => !o); }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -51,6 +55,9 @@ function App() {
     { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
     { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },
   ];
+
+  const flatFiles = (nodes: FileNode[]): FileNode[] => nodes.flatMap(n => n.type === 'file' ? [n] : flatFiles(n.children ?? []));
+  const fileCommands = flatFiles(tree).map(n => ({ id: n.path, label: n.name, hint: n.path.split('/').slice(-2, -1)[0] ?? '', run: () => { void handleFileSelect(n.path); } }));
 
   useEffect(() => {
     if (templateModalVisible) {
@@ -101,6 +108,7 @@ function App() {
       backgroundColor: '#0B0B0D' 
     }}>
       {paletteOpen && <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} />}
+      {quickOpen && <CommandPalette commands={fileCommands} placeholder="Go to file…" label="Quick open" onClose={() => setQuickOpen(false)} />}
       <TitleBar />
 
       <div style={{ 

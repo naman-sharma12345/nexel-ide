@@ -27,7 +27,7 @@ export function highlight(q: string, text: string) {
   out.push(text.slice(ti)); return out;
 }
 
-export function CommandPalette({ commands, onClose }: { commands: PaletteCommand[]; onClose: () => void }) {
+export function CommandPalette({ commands, onClose, placeholder = 'Type a command…', label = 'Command palette' }: { commands: PaletteCommand[]; onClose: () => void; placeholder?: string; label?: string }) {
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,8 +39,8 @@ export function CommandPalette({ commands, onClose }: { commands: PaletteCommand
   const exec = (c?: PaletteCommand) => { if (c) { onClose(); c.run(); } };
   return (
     <div className="cp-backdrop" onMouseDown={onClose}>
-      <div className="cp-box" role="dialog" aria-label="Command palette" onMouseDown={e => e.stopPropagation()}>
-        <input ref={inputRef} className="cp-input" placeholder="Type a command…" value={q}
+      <div className="cp-box" role="dialog" aria-label={label} onMouseDown={e => e.stopPropagation()}>
+        <input ref={inputRef} className="cp-input" placeholder={placeholder} value={q}
           onChange={e => { setQ(e.target.value); setSel(0); }}
           onKeyDown={e => {
             if (e.key === 'Escape') onClose();
@@ -49,7 +49,7 @@ export function CommandPalette({ commands, onClose }: { commands: PaletteCommand
             else if (e.key === 'Enter') exec(results[sel]);
           }} />
         <div className="cp-list">
-          {results.length === 0 && <div className="cp-empty">No matching commands</div>}
+          {results.length === 0 && <div className="cp-empty">No matches</div>}
           {results.map((c, i) => (
             <div key={c.id} className={'cp-item' + (i === sel ? ' active' : '')}
               style={{ animationDelay: `${Math.min(i, 8) * 18}ms` }}
