@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useJudgeStore } from '../stores/useJudgeStore';
 import { useEditorStore } from '../stores/useEditorStore';
+import { StressPanel } from './StressPanel';
 import './JudgeSystem.css';
 
 interface JudgeSystemProps {
@@ -23,6 +24,7 @@ export const JudgeSystem: React.FC<JudgeSystemProps> = ({ activeFilePath }) => {
 
   const [showAcEffect, setShowAcEffect] = useState<boolean>(false);
   const [showWaEffect, setShowWaEffect] = useState<boolean>(false);
+  const [showStress, setShowStress] = useState<boolean>(false);
 
   const activeTC = testCases.find(tc => tc.id === activeTCId) || testCases[0];
 
@@ -122,7 +124,13 @@ export const JudgeSystem: React.FC<JudgeSystemProps> = ({ activeFilePath }) => {
     <div className={`nx-judge-wrapper ${showAcEffect ? 'ac-celebrate-glow' : ''}`}>
       <div className="nx-judge-header">
         <span className="nx-judge-title">NEXEL JUDGE</span>
+        <button className={`nx-judge-stress-toggle ${showStress ? 'on' : ''}`} onClick={() => setShowStress(v => !v)} title="Stress tester: solution vs brute force" aria-pressed={showStress}>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+          STRESS
+        </button>
       </div>
+
+      {showStress ? <StressPanel solutionPath={activeFilePath} onClose={() => setShowStress(false)} /> : <>
 
       <div className="nx-judge-tcs-shelf">
         <div className="nx-judge-tcs-scroll">
@@ -285,6 +293,7 @@ export const JudgeSystem: React.FC<JudgeSystemProps> = ({ activeFilePath }) => {
           )}
         </div>
       </div>
+      </>}
     </div>
   );
 };

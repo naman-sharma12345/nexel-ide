@@ -629,3 +629,11 @@
 }
 .nx-tc-pill.running { animation: nx-verdict-pulse 1.2s ease-in-out infinite; }
 @keyframes nx-verdict-pulse { 50% { opacity: .6; } }
+
+/* Stress toggle (header) */
+.nx-judge-header { justify-content: space-between; }
+.nx-judge-stress-toggle { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:99px; border:1px solid var(--nx-line); background:transparent; color:var(--nx-text-dim); font:500 9px 'Outfit',sans-serif; letter-spacing:.18em; cursor:pointer; }
+.nx-judge-stress-toggle:hover { color:var(--nx-warn); border-color:rgb(251 191 36 / .4); box-shadow:0 0 16px -4px rgb(251 191 36 / .5); }
+.nx-judge-stress-toggle:hover svg { animation: nx-zap .5s var(--nx-ease-spring); }
+.nx-judge-stress-toggle.on { color:var(--nx-accent); border-color:rgb(var(--nx-accent-rgb) / .5); background:var(--nx-accent-soft); }
+@keyframes nx-zap { 0% { transform:scale(1) rotate(0); } 40% { transform:scale(1.45) rotate(-12deg); } 100% { transform:scale(1) rotate(0); } }
