@@ -61,7 +61,8 @@ export function parseProblem(data: unknown): CompanionProblem | null {
 
 export class CompanionService {
   private server: http.Server | null = null;
-  constructor(private onProblem: (p: CompanionProblem) => void) {}
+  private onProblem: (p: CompanionProblem) => void;
+  constructor(onProblem: (p: CompanionProblem) => void) { this.onProblem = onProblem; }
 
   start(port = COMPANION_PORT): Promise<boolean> {
     return new Promise(resolve => {
