@@ -643,7 +643,6 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <span className="nx-footer-path">{activeTab.filePath}</span>
           <div className="nx-footer-right-cluster">
             <span className="nx-footer-metric-pill">Monaco Editor</span>
-            <span className="nx-footer-metric-pill">UTF-8</span>
             <span className="nx-footer-metric-pill">Lines: {getStats().lines}</span>
             <span className="nx-footer-metric-pill">Chars: {getStats().chars}</span>
             <span className="nx-footer-metric-pill active">Nexel Engine</span>

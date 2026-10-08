@@ -346,6 +346,9 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+- **Status bar** (design + feature): glass strip with a breathing accent dot, active file with unsaved dot, live `Ln/Col` and selection length, language, judge status (pulsing while judging, `passed/total` after), terminal toggle and shortcut hint. New `--nx-status-h` layout token.
+- **Toast notifications**: spring-in glass toasts with a countdown bar (`Saved main.cpp`), bounded queue (max 4) with de-duplication.
+- Editor canvas now sizes to its container, not 100vh, so the status bar never overlaps.
 - **Quick open (Ctrl+P)**: fuzzy file finder with match highlighting, reusing the command palette.
 - Judge verdict chips: spring pop-in, green/red glow, pulsing RUNNING state.
 
