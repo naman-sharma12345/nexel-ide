@@ -613,3 +613,19 @@
   box-shadow: 0 0 12px rgba(248, 113, 113, 0.25) !important;
 }
 
+
+/* Verdict polish: pop-in + soft glow (tokens from index.css) */
+.nx-tc-verdict-dot,
+.nx-metric-chip.verdict-chip {
+  animation: nx-pop-in var(--nx-dur-2, 240ms) var(--nx-ease-spring, cubic-bezier(.34,1.56,.64,1)) both;
+}
+.nx-tc-verdict-dot.passed,
+.verdict-chip.passed {
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--nx-accent, #34d399) 55%, transparent);
+}
+.nx-tc-verdict-dot.failed,
+.verdict-chip.failed {
+  box-shadow: 0 0 14px -2px rgba(248, 113, 113, 0.5);
+}
+.nx-tc-pill.running { animation: nx-verdict-pulse 1.2s ease-in-out infinite; }
+@keyframes nx-verdict-pulse { 50% { opacity: .6; } }
