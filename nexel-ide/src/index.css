@@ -130,3 +130,17 @@ button { transition: transform .12s ease, background-color .18s ease, box-shadow
 button:active:not(:disabled) { transform: scale(0.97); }
 * { scrollbar-width: thin; scrollbar-color: rgb(var(--nx-accent-rgb) / 0.25) transparent; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* --- Monaco floating widgets: glass cards that match the Nexel tokens --- */
+.monaco-editor .monaco-hover, .monaco-editor .suggest-widget, .monaco-editor .parameter-hints-widget, .monaco-editor .find-widget {
+  background: rgb(17 17 20 / .82) !important;
+  backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid var(--nx-line-strong) !important;
+  border-radius: var(--nx-radius) !important;
+  box-shadow: var(--nx-shadow-2) !important;
+  animation: nx-pop-in var(--nx-dur-2) var(--nx-ease-out) both;
+}
+.monaco-editor .monaco-hover .hover-row:not(:first-child):not(:empty) { border-top: 1px solid var(--nx-line) !important; }
+.monaco-editor .monaco-hover code, .monaco-editor .monaco-hover .monaco-tokenized-source { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused { background: var(--nx-accent-soft) !important; box-shadow: inset 2px 0 0 var(--nx-accent); transition: background var(--nx-dur-1); }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .highlight { color: var(--nx-accent) !important; font-weight: 600; }

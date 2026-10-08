@@ -1,4 +1,5 @@
 import { registerLangCompletions } from '../lib/langCompletions';
+import { registerHoverDocs } from '../lib/hoverDocs';
 import { useStatusStore } from '../stores/useStatusStore';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
@@ -286,7 +287,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     THEMES.forEach(t => monaco.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)));
     monaco.editor.setTheme(monacoThemeName(useSettingsStore.getState().theme));
 
-    if (!langProvidersRef.current) langProvidersRef.current = registerLangCompletions(monaco);
+    if (!langProvidersRef.current) langProvidersRef.current = [...registerLangCompletions(monaco), ...registerHoverDocs(monaco)];
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
     }
