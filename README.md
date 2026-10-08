@@ -344,3 +344,9 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 <sub>Built with caffeine and stubbornness by the Nexel Team ☕⚡</sub>
 
 </div>
+
+## What's new on hark/overnight-improvements
+
+- **Design:** glass dock sheen with accent glow, hover lift on dock items; Monaco accent selection/cursor/indent guides, smooth scrolling, bracket colorization, ligatures.
+- **Security:** CSP meta in index.html; window-open deny and off-origin navigation block in Electron main; Outfit font self-hosted (no Google Fonts request).
+- **Performance:** Monaco bundled locally with slim entry and code-split chunks (earlier run).
