@@ -1123,3 +1123,21 @@
   box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
+
+/* Welcome plate v2: soft aurora halo, gradient hairline border, floating logo. */
+.nx-welcome-glass-plate { position: relative; isolation: isolate; animation: nx-pop-in var(--nx-dur-3) var(--nx-ease-out) 120ms both; box-shadow: var(--nx-shadow-2); }
+.nx-welcome-glass-plate::before {
+  content: ''; position: absolute; inset: -140px; z-index: -1; pointer-events: none;
+  background: radial-gradient(40% 35% at 35% 40%, rgba(52,211,153,.10), transparent 70%),
+              radial-gradient(35% 30% at 68% 62%, rgba(34,211,238,.08), transparent 70%);
+  filter: blur(20px); animation: nx-aurora 14s ease-in-out infinite alternate;
+}
+.nx-welcome-glass-plate::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, rgba(52,211,153,.35), rgba(255,255,255,.04) 40%, rgba(34,211,238,.25));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.nx-welcome-logo { animation: nx-float 6s ease-in-out infinite; filter: drop-shadow(0 6px 18px rgba(52,211,153,.25)); }
+@keyframes nx-aurora { from { transform: translate3d(-2%, -1%, 0) rotate(0deg); } to { transform: translate3d(2%, 2%, 0) rotate(8deg); } }
+@keyframes nx-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
