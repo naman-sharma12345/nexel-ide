@@ -279,11 +279,13 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
       colors: {
         'editor.background': '#050507',
         'editor.foreground': '#E2E3E5',
-        'editorCursor.foreground': '#FFFFFF',
         'editor.lineHighlightBackground': '#0F0F12',
         'editorLineNumber.foreground': '#303035',
         'editorLineNumber.activeForeground': '#FFFFFF',
-        'editor.selectionBackground': '#252528',
+        'editor.selectionBackground': '#34d39933',
+        'editor.selectionHighlightBackground': '#34d39918',
+        'editorCursor.foreground': '#34d399',
+        'editorIndentGuide.activeBackground1': '#34d39955',
         'editorWidget.background': '#0D0D10',
         'editorWidget.border': '#202025',
       }
@@ -442,6 +444,10 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               automaticLayout: true,
               cursorBlinking: 'smooth',
               cursorSmoothCaretAnimation: 'on',
+              smoothScrolling: true,
+              bracketPairColorization: { enabled: true },
+              fontLigatures: true,
+              roundedSelection: true,
               padding: { top: 16 },
               tabSize: 2,
             }}

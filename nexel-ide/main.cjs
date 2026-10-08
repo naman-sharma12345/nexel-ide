@@ -43,7 +43,16 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
     },
+  });
+
+  // Hardening: deny popups and off-origin navigation
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    if (!/^(file:|http:\/\/localhost)/.test(url)) e.preventDefault();
   });
 
   mainWindow.setMenu(null);
