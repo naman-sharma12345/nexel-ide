@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs/promises';
-import { parentPort, workerData } from 'worker_threads';
+import { parentPort } from 'worker_threads';
 
 // Mock worker_threads partially to avoid breaking Vitest runner
 vi.mock('worker_threads', async (importOriginal) => {
