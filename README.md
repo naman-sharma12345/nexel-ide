@@ -347,6 +347,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 
 ## What's new on hark/overnight-improvements
 
+- **Command palette** (Ctrl/Cmd+Shift+P): fuzzy-searchable, animated, keyboard-driven (navigate sections, toggle sidebar/terminal, edit C++ template).
+
 - **Design:** tabs get a glowing gradient underline that scales in, hover lift, and close buttons that fade in and rotate on hover.
 - **Performance:** Judge and Contests panels are lazy-loaded (React.lazy) with shimmer skeleton fallbacks.
 

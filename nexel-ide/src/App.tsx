@@ -8,6 +8,7 @@ import { TitleBar } from './components/TitleBar';
 import { Terminal } from './components/Terminal';
 const JudgeSystem = lazy(() => import('./components/JudgeSystem'));
 const ContestsSystem = lazy(() => import('./components/ContestsSystem'));
+import { CommandPalette } from './components/CommandPalette';
 import './App.css';
 
 function App() {
@@ -34,6 +35,22 @@ function App() {
   } = useEditorStore();
 
   const [tempTemplate, setTempTemplate] = useState('');
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(o => !o); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+  const paletteCommands = [
+    { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
+    { id: 'judge', label: 'Go to Judge', run: () => setSection('judge') },
+    { id: 'contests', label: 'Go to Contests', run: () => setSection('contests') },
+    { id: 'sidebar', label: 'Toggle Sidebar', run: () => toggleSidebar() },
+    { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
+    { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },
+  ];
 
   useEffect(() => {
     if (templateModalVisible) {
@@ -83,6 +100,7 @@ function App() {
       overflow: 'hidden', 
       backgroundColor: '#0B0B0D' 
     }}>
+      {paletteOpen && <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} />}
       <TitleBar />
 
       <div style={{ 

@@ -1,0 +1,14 @@
+.cp-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh;
+  background: rgba(5,5,7,.55); backdrop-filter: blur(6px); animation: nx-fade-in var(--nx-dur-2) var(--nx-ease-out); }
+.cp-box { font-family: 'Outfit', system-ui, sans-serif; width: min(560px, 90vw); background: var(--nx-bg-1); border-radius: var(--nx-radius-lg); border: 1px solid var(--nx-line-strong);
+  box-shadow: var(--nx-shadow-2), 0 0 60px -20px var(--nx-accent); overflow: hidden; animation: nx-pop-in var(--nx-dur-3) var(--nx-ease-spring); }
+.cp-input { width: 100%; box-sizing: border-box; padding: 16px 18px; background: transparent; border: 0; border-bottom: 1px solid var(--nx-line);
+  color: var(--nx-text); font-size: 15px; outline: none; font-family: 'Outfit', system-ui, sans-serif; }
+.cp-input::placeholder { color: var(--nx-text-faint); }
+.cp-list { max-height: 340px; overflow-y: auto; padding: 6px; }
+.cp-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-radius: var(--nx-radius-sm);
+  color: var(--nx-text-dim); font-size: 13px; cursor: pointer; animation: nx-pop-in var(--nx-dur-2) var(--nx-ease-out) both;
+  transition: background-color var(--nx-dur-1), color var(--nx-dur-1), padding-left var(--nx-dur-2) var(--nx-ease-out); }
+.cp-item.active { background: var(--nx-accent-soft); color: var(--nx-text); padding-left: 16px; box-shadow: inset 2px 0 0 var(--nx-accent); }
+.cp-item kbd { font: 11px ui-monospace, monospace; color: var(--nx-text-faint); border: 1px solid var(--nx-line); border-radius: 4px; padding: 1px 6px; }
+.cp-empty { padding: 18px; text-align: center; color: var(--nx-text-faint); font-size: 13px; }
