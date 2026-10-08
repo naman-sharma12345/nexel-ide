@@ -1,0 +1,92 @@
+/**
+ * Nexel theme registry. A theme is a small set of design-token overrides (applied as CSS custom
+ * properties on <html>) plus a matching Monaco colour set, so chrome, editor and terminal stay coherent.
+ * All themes are dark by design: component CSS layers translucent white over --nx-bg-*.
+ */
+export interface NexelTheme {
+  id: string;
+  name: string;
+  blurb: string;
+  bg0: string; bg1: string; bg2: string; editorBg: string;
+  accent: string; accent2: string;
+  /** Monaco syntax colours (hex without #) */
+  syntax: { keyword: string; string: string; number: string; type: string; fn: string; comment: string; fg: string };
+}
+
+export const THEMES: NexelTheme[] = [
+  { id: 'nexel', name: 'Nexel Emerald', blurb: 'The signature obsidian + emerald.',
+    bg0: '#0B0B0D', bg1: '#111114', bg2: '#17171B', editorBg: '#050507', accent: '#34d399', accent2: '#22d3ee',
+    syntax: { keyword: 'C5A3A3', string: 'B0C4DE', number: 'D3C1A5', type: 'A3C5B5', fn: 'D4C2AD', comment: '6D727C', fg: 'E2E3E5' } },
+  { id: 'midnight', name: 'Midnight Indigo', blurb: 'Deep blue-black with electric violet.',
+    bg0: '#0A0B14', bg1: '#10111E', bg2: '#171929', editorBg: '#060712', accent: '#818cf8', accent2: '#38bdf8',
+    syntax: { keyword: 'B7A6F0', string: '9FD3C7', number: 'F2C18D', type: '7FB4F5', fn: 'E7D49A', comment: '616A8C', fg: 'DDE1F5' } },
+  { id: 'ember', name: 'Ember', blurb: 'Warm charcoal with a molten amber glow.',
+    bg0: '#0E0B0A', bg1: '#161110', bg2: '#1E1816', editorBg: '#090605', accent: '#fb923c', accent2: '#f43f5e',
+    syntax: { keyword: 'F28B82', string: 'E6C99A', number: 'F6A86A', type: 'EAB77A', fn: 'F2D3A0', comment: '7A6A62', fg: 'EFE4DE' } },
+  { id: 'sakura', name: 'Sakura Night', blurb: 'Plum shadows, soft rose highlights.',
+    bg0: '#0D0A10', bg1: '#141019', bg2: '#1C1623', editorBg: '#08060B', accent: '#f472b6', accent2: '#c084fc',
+    syntax: { keyword: 'F08FBF', string: 'C7B3F2', number: 'F5C2A0', type: 'B79CF5', fn: 'F3D5E5', comment: '71637D', fg: 'EBE3F0' } },
+  { id: 'mono', name: 'Mono Contrast', blurb: 'Pure black and white, maximum legibility.',
+    bg0: '#000000', bg1: '#090909', bg2: '#121212', editorBg: '#000000', accent: '#ffffff', accent2: '#a3a3a3',
+    syntax: { keyword: 'FFFFFF', string: 'D4D4D4', number: 'BFBFBF', type: 'EDEDED', fn: 'F5F5F5', comment: '7A7A7A', fg: 'F5F5F5' } },
+];
+
+export const DEFAULT_THEME_ID = 'nexel';
+export const getTheme = (id: string): NexelTheme => THEMES.find(t => t.id === id) ?? THEMES[0];
+export const monacoThemeName = (id: string) => `nexel-${getTheme(id).id}`;
+
+/** '#34d399' -> '52 211 153' (space-separated so it works in rgb(var(--x) / a)). */
+export function hexToRgbTriplet(hex: string): string {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}
+
+/** Writes a theme's tokens to <html>. A transient class lets colours glide instead of snapping. */
+export function applyTheme(id: string, root: HTMLElement = document.documentElement, animate = true): NexelTheme {
+  const t = getTheme(id);
+  if (animate) {
+    root.classList.add('nx-theme-switching');
+    window.setTimeout(() => root.classList.remove('nx-theme-switching'), 450);
+  }
+  const set = (k: string, v: string) => root.style.setProperty(k, v);
+  set('--nx-bg-0', t.bg0); set('--nx-bg-1', t.bg1); set('--nx-bg-2', t.bg2); set('--nx-editor-bg', t.editorBg);
+  set('--nx-accent', t.accent); set('--nx-accent-2', t.accent2);
+  set('--nx-accent-rgb', hexToRgbTriplet(t.accent)); set('--nx-accent2-rgb', hexToRgbTriplet(t.accent2));
+  root.dataset.theme = t.id;
+  return t;
+}
+
+/** Monaco theme data for a Nexel theme. */
+export function monacoThemeData(t: NexelTheme) {
+  const a = t.accent.replace('#', '');
+  return {
+    base: 'vs-dark' as const,
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: t.syntax.comment, fontStyle: 'italic' },
+      { token: 'keyword', foreground: t.syntax.keyword, fontStyle: 'bold' },
+      { token: 'string', foreground: t.syntax.string },
+      { token: 'number', foreground: t.syntax.number },
+      { token: 'regexp', foreground: t.syntax.string },
+      { token: 'type', foreground: t.syntax.type, fontStyle: 'bold' },
+      { token: 'class', foreground: t.syntax.fg, fontStyle: 'bold' },
+      { token: 'function', foreground: t.syntax.fn },
+      { token: 'variable', foreground: t.syntax.fg },
+      { token: 'identifier', foreground: t.syntax.fg },
+    ],
+    colors: {
+      'editor.background': t.editorBg,
+      'editor.foreground': '#' + t.syntax.fg,
+      'editor.lineHighlightBackground': t.bg1,
+      'editorLineNumber.foreground': '#303035',
+      'editorLineNumber.activeForeground': '#FFFFFF',
+      'editor.selectionBackground': `#${a}33`,
+      'editor.selectionHighlightBackground': `#${a}18`,
+      'editorCursor.foreground': t.accent,
+      'editorIndentGuide.activeBackground1': `#${a}55`,
+      'editorWidget.background': t.bg1,
+      'editorWidget.border': '#202025',
+    },
+  };
+}

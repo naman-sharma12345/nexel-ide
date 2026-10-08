@@ -13,7 +13,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #0B0B0D;
+  background-color: var(--nx-bg-0);
 }
 
 /* Redesigned full-bleed layout core for an elegant desktop app shell */
@@ -36,6 +36,9 @@ h1, h2, p {
    reach for these instead of hard-coded values so themes stay coherent. */
 :root {
   --nx-bg-0: #0B0B0D;            /* window */
+  --nx-editor-bg: #050507;       /* code canvas */
+  --nx-accent-rgb: 52 211 153;
+  --nx-accent2-rgb: 34 211 238;
   --nx-bg-1: #111114;            /* panels */
   --nx-bg-2: #17171B;            /* raised */
   --nx-line: rgba(255, 255, 255, 0.06);
@@ -45,8 +48,8 @@ h1, h2, p {
   --nx-text-faint: rgba(255, 255, 255, 0.32);
   --nx-accent: #34d399;
   --nx-accent-2: #22d3ee;
-  --nx-accent-soft: rgba(52, 211, 153, 0.15);
-  --nx-accent-glow: 0 0 0 1px rgba(52, 211, 153, 0.35), 0 0 24px -4px rgba(52, 211, 153, 0.45);
+  --nx-accent-soft: rgb(var(--nx-accent-rgb) / 0.15);
+  --nx-accent-glow: 0 0 0 1px rgb(var(--nx-accent-rgb) / 0.35), 0 0 24px -4px rgb(var(--nx-accent-rgb) / 0.45);
   --nx-danger: #ef4444;
   --nx-warn: #fbbf24;
   --nx-radius-sm: 6px;
@@ -63,7 +66,7 @@ h1, h2, p {
   color-scheme: dark;
 }
 
-::selection { background: rgba(52, 211, 153, 0.28); color: #fff; }
+::selection { background: rgb(var(--nx-accent-rgb) / 0.28); color: #fff; }
 
 /* Slim, auto-hiding-feel scrollbars everywhere (Chromium/Electron). */
 * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; }
@@ -114,4 +117,9 @@ h1, h2, p {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Animated theme switching: colours glide for ~350ms, then the helper class is removed so normal UI stays snappy. */
+html.nx-theme-switching, html.nx-theme-switching *, html.nx-theme-switching *::before, html.nx-theme-switching *::after {
+  transition: background-color 380ms var(--nx-ease-out), border-color 380ms var(--nx-ease-out), color 380ms var(--nx-ease-out), box-shadow 380ms var(--nx-ease-out), fill 380ms, stroke 380ms !important;
 }

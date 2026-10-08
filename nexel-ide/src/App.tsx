@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useUIStore } from './stores/useUIStore';
 import { useEditorStore } from './stores/useEditorStore';
 import { NavDock } from './components/NavDock';
@@ -12,6 +12,9 @@ import { useWorkspaceStore, type FileNode } from './stores/useWorkspaceStore';
 import { StatusBar } from './components/StatusBar';
 import { Toasts } from './components/Toasts';
 import { CommandPalette } from './components/CommandPalette';
+import { SettingsPanel } from './components/SettingsPanel';
+import { useSettingsStore } from './stores/useSettingsStore';
+import { applyTheme, THEMES } from './lib/themes';
 import './App.css';
 
 function App() {
@@ -41,9 +44,13 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const tree = useWorkspaceStore(s => s.tree);
+  const themeId = useSettingsStore(s => s.theme);
+  const firstTheme = useRef(true);
+  useEffect(() => { applyTheme(themeId, document.documentElement, !firstTheme.current); firstTheme.current = false; }, [themeId]);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); const st = useSettingsStore.getState(); st.openSettings(!st.settingsOpen); }
       else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
     };
     window.addEventListener('keydown', h);
@@ -56,6 +63,10 @@ function App() {
     { id: 'sidebar', label: 'Toggle Sidebar', run: () => toggleSidebar() },
     { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
     { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },
+    { id: 'settings', label: 'Open Settings', hint: 'Ctrl+,', run: () => useSettingsStore.getState().openSettings(true) },
+    ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => useSettingsStore.getState().setTheme(t.id) })),
+    { id: 'minimap', label: 'Toggle Minimap', run: () => useSettingsStore.getState().toggle('minimap') },
+    { id: 'wrap', label: 'Toggle Word Wrap', run: () => useSettingsStore.getState().toggle('wordWrap') },
   ];
 
   const flatFiles = (nodes: FileNode[]): FileNode[] => nodes.flatMap(n => n.type === 'file' ? [n] : flatFiles(n.children ?? []));
@@ -107,7 +118,7 @@ function App() {
       width: '100vw', 
       height: '100vh', 
       overflow: 'hidden', 
-      backgroundColor: '#0B0B0D' 
+      backgroundColor: 'var(--nx-bg-0)' 
     }}>
       {paletteOpen && <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} />}
       {quickOpen && <CommandPalette commands={fileCommands} placeholder="Go to file…" label="Quick open" onClose={() => setQuickOpen(false)} />}
@@ -188,7 +199,7 @@ function App() {
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box',
-          background: '#0B0B0D',
+          background: 'var(--nx-bg-0)',
           position: 'relative'
         }}>
           {/* Editor panel is always mounted but toggled using CSS to prevent vanishing tabs */}
@@ -204,6 +215,7 @@ function App() {
       
       <StatusBar />
       <Toasts />
+      <SettingsPanel />
       <Terminal 
         visible={terminalVisible} 
         onClose={() => setTerminalVisible(false)} 

@@ -7,6 +7,8 @@ import { useEditorStore } from '../stores/useEditorStore';
 import type { EditorTab } from '../stores/useEditorStore';
 import { useJudgeStore } from '../stores/useJudgeStore';
 import logoImg from '../assets/logo.png';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { THEMES, monacoThemeName, monacoThemeData } from '../lib/themes';
 import dataset from '../../dataset.json';
 import snippets from '../../snippets.json';
 
@@ -17,6 +19,7 @@ interface EditorProps {
 }
 
 export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, onCloseFile }) => {
+  const settings = useSettingsStore();
   const {
     tabs,
     activeTabPath,
@@ -273,37 +276,8 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     editor.onDidFocusEditorText(reportCursor);
     reportCursor();
 
-    monaco.editor.defineTheme('nexel-minimal-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '6D727C', fontStyle: 'italic' },
-        { token: 'keyword', foreground: 'C5A3A3', fontStyle: 'bold' },
-        { token: 'string', foreground: 'B0C4DE' },
-        { token: 'number', foreground: 'D3C1A5' },
-        { token: 'regexp', foreground: 'C5B0C5' },
-        { token: 'type', foreground: 'A3C5B5', fontStyle: 'bold' },
-        { token: 'class', foreground: 'D5D6D8', fontStyle: 'bold' },
-        { token: 'function', foreground: 'D4C2AD' },
-        { token: 'variable', foreground: 'E2E3E5' },
-        { token: 'identifier', foreground: 'E2E3E5' },
-      ],
-      colors: {
-        'editor.background': '#050507',
-        'editor.foreground': '#E2E3E5',
-        'editor.lineHighlightBackground': '#0F0F12',
-        'editorLineNumber.foreground': '#303035',
-        'editorLineNumber.activeForeground': '#FFFFFF',
-        'editor.selectionBackground': '#34d39933',
-        'editor.selectionHighlightBackground': '#34d39918',
-        'editorCursor.foreground': '#34d399',
-        'editorIndentGuide.activeBackground1': '#34d39955',
-        'editorWidget.background': '#0D0D10',
-        'editorWidget.border': '#202025',
-      }
-    });
-
-    monaco.editor.setTheme('nexel-minimal-dark');
+    THEMES.forEach(t => monaco.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)));
+    monaco.editor.setTheme(monacoThemeName(useSettingsStore.getState().theme));
 
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
@@ -439,13 +413,16 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <MonacoEditor
             height="100%"
             language={getLanguage(tab.name)}
+            theme={monacoThemeName(settings.theme)}
             value={tab.content}
             onChange={(val) => handleEditorChangeForTab(tab.filePath, val)}
+            beforeMount={(m: any) => THEMES.forEach(t => m.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)))}
             onMount={handleEditorDidMount}
             options={{
-              fontSize: 13,
+              fontSize: settings.fontSize,
               fontFamily: 'Consolas, "Courier New", Courier, monospace',
-              minimap: { enabled: false },
+              minimap: { enabled: settings.minimap },
+              wordWrap: settings.wordWrap ? 'on' : 'off',
               scrollbar: {
                 vertical: 'visible',
                 horizontal: 'visible',
@@ -458,10 +435,10 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               cursorSmoothCaretAnimation: 'on',
               smoothScrolling: true,
               bracketPairColorization: { enabled: true },
-              fontLigatures: true,
+              fontLigatures: settings.ligatures,
               roundedSelection: true,
               padding: { top: 16 },
-              tabSize: 2,
+              tabSize: settings.tabSize,
             }}
           />
         </div>

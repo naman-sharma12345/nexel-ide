@@ -449,14 +449,14 @@
 }
 
 .nx-contests-custom-input:focus {
-  border-color: rgba(52, 211, 153, 0.35);
+  border-color: rgb(var(--nx-accent-rgb) / 0.35);
   background: rgba(255, 255, 255, 0.02);
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.05);
+  box-shadow: 0 0 8px rgb(var(--nx-accent-rgb) / 0.05);
 }
 
 .nx-contests-custom-btn {
-  background: rgba(52, 211, 153, 0.08);
-  border: 1px solid rgba(52, 211, 153, 0.2);
+  background: rgb(var(--nx-accent-rgb) / 0.08);
+  border: 1px solid rgb(var(--nx-accent-rgb) / 0.2);
   border-radius: 6px;
   color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
@@ -493,8 +493,8 @@
 }
 
 .nx-contests-folder-btn {
-  background: rgba(52, 211, 153, 0.08);
-  border: 1px solid rgba(52, 211, 153, 0.2);
+  background: rgb(var(--nx-accent-rgb) / 0.08);
+  border: 1px solid rgb(var(--nx-accent-rgb) / 0.2);
   border-radius: 4px;
   color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
@@ -591,8 +591,8 @@
 }
 
 .nx-prompt-input:focus {
-  border-color: rgba(52, 211, 153, 0.5);
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.1);
+  border-color: rgb(var(--nx-accent-rgb) / 0.5);
+  box-shadow: 0 0 10px rgb(var(--nx-accent-rgb) / 0.1);
 }
 
 .nx-prompt-actions {
@@ -620,8 +620,8 @@
 }
 
 .nx-prompt-confirm-btn {
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgb(var(--nx-accent-rgb) / 0.1);
+  border: 1px solid rgb(var(--nx-accent-rgb) / 0.3);
   border-radius: 6px;
   color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;

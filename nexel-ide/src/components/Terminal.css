@@ -108,7 +108,7 @@
 
 .nx-terminal-body {
   flex-grow: 1;
-  background: #0B0B0D; /* Sleek obsidian matches layout */
+  background: var(--nx-bg-0); /* Sleek obsidian matches layout */
   padding: 0;
   overflow: hidden;
   box-sizing: border-box;

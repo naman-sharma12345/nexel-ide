@@ -209,7 +209,7 @@
 .nx-judge-textarea {
   width: 100%;
   height: 100%;
-  background: #0b0b0d;
+  background: var(--nx-bg-0);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.85);
@@ -364,12 +364,12 @@
 
 /* CP Judge State Pills & Badges */
 .nx-tc-pill.passed {
-  background: rgba(52, 211, 153, 0.01);
-  border-color: rgba(52, 211, 153, 0.12);
+  background: rgb(var(--nx-accent-rgb) / 0.01);
+  border-color: rgb(var(--nx-accent-rgb) / 0.12);
 }
 .nx-tc-pill.passed:hover {
-  background: rgba(52, 211, 153, 0.04);
-  border-color: rgba(52, 211, 153, 0.2);
+  background: rgb(var(--nx-accent-rgb) / 0.04);
+  border-color: rgb(var(--nx-accent-rgb) / 0.2);
 }
 .nx-tc-pill.passed.active {
   background: var(--nx-accent);
@@ -466,7 +466,7 @@
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 6px;
   padding: 6px;
-  background: #0b0b0d;
+  background: var(--nx-bg-0);
   box-sizing: border-box;
 }
 
@@ -519,7 +519,7 @@
 }
 
 .nx-diff-line-row.mismatch .expected-cell {
-  background: rgba(52, 211, 153, 0.02);
+  background: rgb(var(--nx-accent-rgb) / 0.02);
   color: #a7f3d0;
   border-left: 2px solid var(--nx-accent);
 }
@@ -537,8 +537,8 @@
 }
 
 .nx-judge-textarea.passed-area {
-  background: rgba(52, 211, 153, 0.02);
-  border-color: rgba(52, 211, 153, 0.12);
+  background: rgb(var(--nx-accent-rgb) / 0.02);
+  border-color: rgb(var(--nx-accent-rgb) / 0.12);
   color: #a7f3d0;
 }
 .nx-judge-textarea.failed-area {
@@ -550,7 +550,7 @@
 /* Premium feedback states for metrics panel */
 .nx-judge-metrics-panel.passed {
   border-color: var(--nx-accent-soft);
-  background: rgba(52, 211, 153, 0.01);
+  background: rgb(var(--nx-accent-rgb) / 0.01);
 }
 .nx-judge-metrics-panel.failed {
   border-color: rgba(248, 113, 113, 0.15);
@@ -579,20 +579,20 @@
 /* --- Dopamine AC and WA Animations --- */
 @keyframes green-glow-wash {
   0% {
-    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 rgb(var(--nx-accent-rgb) / 0);
     border-color: rgba(255, 255, 255, 0.03);
   }
   20% {
-    box-shadow: 0 0 35px rgba(52, 211, 153, 0.4), inset 0 0 20px var(--nx-accent-soft);
-    border-color: rgba(52, 211, 153, 0.4);
-    background: rgba(52, 211, 153, 0.02);
+    box-shadow: 0 0 35px rgb(var(--nx-accent-rgb) / 0.4), inset 0 0 20px var(--nx-accent-soft);
+    border-color: rgb(var(--nx-accent-rgb) / 0.4);
+    background: rgb(var(--nx-accent-rgb) / 0.02);
   }
   80% {
-    box-shadow: 0 0 20px var(--nx-accent-soft), inset 0 0 10px rgba(52, 211, 153, 0.08);
-    border-color: rgba(52, 211, 153, 0.25);
+    box-shadow: 0 0 20px var(--nx-accent-soft), inset 0 0 10px rgb(var(--nx-accent-rgb) / 0.08);
+    border-color: rgb(var(--nx-accent-rgb) / 0.25);
   }
   100% {
-    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 rgb(var(--nx-accent-rgb) / 0);
     border-color: rgba(255, 255, 255, 0.03);
   }
 }
