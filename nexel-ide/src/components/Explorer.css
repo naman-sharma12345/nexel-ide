@@ -224,7 +224,7 @@
 
 .nx-shelf-item.active {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--nx-line);
 }
 
 .nx-shelf-icon-frame {
@@ -278,7 +278,7 @@
   font-weight: 500;
   background: rgba(255, 255, 255, 0.02);
   color: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--nx-line);
   padding: 6px 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -326,7 +326,7 @@
 /* Selected File Row Overlay State */
 .nx-row-selected {
   background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--nx-line) !important;
 }
 
 /* Chevron and Icon sizes */
@@ -377,7 +377,7 @@
 }
 
 .nx-svg-icon.folder.open {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--nx-text-dim);
 }
 
 /* Search Highlights */
@@ -478,7 +478,7 @@
   position: relative;
   width: 92%;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--nx-line);
   border-radius: 6px;
   padding: 3px 8px;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);

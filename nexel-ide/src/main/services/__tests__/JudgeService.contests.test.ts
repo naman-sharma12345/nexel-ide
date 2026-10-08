@@ -56,7 +56,7 @@ describe('JudgeService Contests System (New User / No Credentials)', () => {
     const judgeService = new JudgeService();
     const contests = await judgeService.fetchContests();
 
-    expect(globalFetchMock).toHaveBeenCalledWith('https://codeforces.com/api/contest.list?gym=false');
+    expect(globalFetchMock).toHaveBeenCalledWith('https://codeforces.com/api/contest.list?gym=false', expect.objectContaining({ signal: expect.anything() }));
     expect(contests.active.length).toBe(1);
     expect(contests.active[0].id).toBe(100);
     expect(contests.upcoming.length).toBe(2);

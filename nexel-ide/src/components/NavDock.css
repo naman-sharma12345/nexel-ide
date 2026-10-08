@@ -227,4 +227,4 @@
   background: linear-gradient(180deg, rgba(52,211,153,.08), transparent 40%); }
 .nd-item-row { transition: transform var(--nx-dur-2,.25s) var(--nx-ease-spring,cubic-bezier(.34,1.56,.64,1)); }
 .nd-item-row:hover { transform: translateX(2px) scale(1.08); }
-.nd-active-indicator { box-shadow: 0 0 12px var(--nx-accent,#34d399); }
+.nd-active-indicator { box-shadow: 0 0 12px var(--nx-accent,var(--nx-accent)); }

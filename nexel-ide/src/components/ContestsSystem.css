@@ -458,7 +458,7 @@
   background: rgba(52, 211, 153, 0.08);
   border: 1px solid rgba(52, 211, 153, 0.2);
   border-radius: 6px;
-  color: #34d399;
+  color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
   font-weight: 600;
@@ -496,7 +496,7 @@
   background: rgba(52, 211, 153, 0.08);
   border: 1px solid rgba(52, 211, 153, 0.2);
   border-radius: 4px;
-  color: #34d399;
+  color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
   font-size: 9px;
   font-weight: 600;
@@ -560,7 +560,7 @@
 }
 
 .nx-prompt-desc strong {
-  color: #34d399;
+  color: var(--nx-accent);
   font-weight: 600;
 }
 
@@ -623,7 +623,7 @@
   background: rgba(52, 211, 153, 0.1);
   border: 1px solid rgba(52, 211, 153, 0.3);
   border-radius: 6px;
-  color: #34d399;
+  color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
   font-size: 9.5px;
   font-weight: 600;

@@ -129,5 +129,5 @@
 }
 
 .xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--nx-line-strong);
 }

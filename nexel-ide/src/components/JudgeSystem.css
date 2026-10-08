@@ -372,9 +372,9 @@
   border-color: rgba(52, 211, 153, 0.2);
 }
 .nx-tc-pill.passed.active {
-  background: #34d399;
-  border-color: #34d399;
-  box-shadow: 0 4px 16px rgba(52, 211, 153, 0.15);
+  background: var(--nx-accent);
+  border-color: var(--nx-accent);
+  box-shadow: 0 4px 16px var(--nx-accent-soft);
 }
 
 .nx-tc-pill.failed {
@@ -410,8 +410,8 @@
   letter-spacing: 0.02em;
 }
 .nx-tc-verdict-dot.passed {
-  background: rgba(52, 211, 153, 0.15);
-  color: #34d399;
+  background: var(--nx-accent-soft);
+  color: var(--nx-accent);
 }
 .nx-tc-pill.active .nx-tc-verdict-dot.passed {
   background: rgba(0, 0, 0, 0.2);
@@ -451,7 +451,7 @@
   opacity: 0.85;
 }
 .nx-diff-column-hdr.green {
-  color: #34d399;
+  color: var(--nx-accent);
 }
 .nx-diff-column-hdr.red {
   color: #f87171;
@@ -521,7 +521,7 @@
 .nx-diff-line-row.mismatch .expected-cell {
   background: rgba(52, 211, 153, 0.02);
   color: #a7f3d0;
-  border-left: 2px solid #34d399;
+  border-left: 2px solid var(--nx-accent);
 }
 .nx-diff-line-row.mismatch .expected-cell .nx-line-text {
   color: #a7f3d0;
@@ -549,7 +549,7 @@
 
 /* Premium feedback states for metrics panel */
 .nx-judge-metrics-panel.passed {
-  border-color: rgba(52, 211, 153, 0.15);
+  border-color: var(--nx-accent-soft);
   background: rgba(52, 211, 153, 0.01);
 }
 .nx-judge-metrics-panel.failed {
@@ -558,7 +558,7 @@
 }
 
 .verdict-chip.passed {
-  color: #34d399;
+  color: var(--nx-accent);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -583,12 +583,12 @@
     border-color: rgba(255, 255, 255, 0.03);
   }
   20% {
-    box-shadow: 0 0 35px rgba(52, 211, 153, 0.4), inset 0 0 20px rgba(52, 211, 153, 0.15);
+    box-shadow: 0 0 35px rgba(52, 211, 153, 0.4), inset 0 0 20px var(--nx-accent-soft);
     border-color: rgba(52, 211, 153, 0.4);
     background: rgba(52, 211, 153, 0.02);
   }
   80% {
-    box-shadow: 0 0 20px rgba(52, 211, 153, 0.15), inset 0 0 10px rgba(52, 211, 153, 0.08);
+    box-shadow: 0 0 20px var(--nx-accent-soft), inset 0 0 10px rgba(52, 211, 153, 0.08);
     border-color: rgba(52, 211, 153, 0.25);
   }
   100% {
@@ -621,7 +621,7 @@
 }
 .nx-tc-verdict-dot.passed,
 .verdict-chip.passed {
-  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--nx-accent, #34d399) 55%, transparent);
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--nx-accent, var(--nx-accent)) 55%, transparent);
 }
 .nx-tc-verdict-dot.failed,
 .verdict-chip.failed {

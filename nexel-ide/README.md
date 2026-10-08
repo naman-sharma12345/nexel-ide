@@ -66,3 +66,6 @@ To bundle the frontend assets and compile the production client:
 ```bash
 npm run build
 ```
+
+- Design tokens migrated across all component CSS (--nx-line, --nx-text*, --nx-accent*).
+- Contests fetch: 5 min TTL cache, 8s timeout, exponential backoff, stale fallback.

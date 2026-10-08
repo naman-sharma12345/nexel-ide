@@ -187,11 +187,28 @@ export class JudgeService {
     return results;
   }
 
+  private contestsCache: { at: number; data: ContestsData } | null = null;
+
   async fetchContests(): Promise<ContestsData> {
+    // TTL cache (5 min) avoids hammering the API; stale data served if network fails.
+    if (this.contestsCache && Date.now() - this.contestsCache.at < 300_000) return this.contestsCache.data;
     try {
-      const response = await fetch('https://codeforces.com/api/contest.list?gym=false');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let response: Response | undefined;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const ctl = new AbortController();
+          const timer = setTimeout(() => ctl.abort(), 8000);
+          try {
+            response = await fetch('https://codeforces.com/api/contest.list?gym=false', { signal: ctl.signal });
+          } finally { clearTimeout(timer); }
+          if (response.ok) break;
+        } catch (e) {
+          if (attempt === 2) throw e;
+        }
+        await new Promise((r) => setTimeout(r, 400 * 2 ** attempt)); // exponential backoff
+      }
+      if (!response || !response.ok) {
+        throw new Error(`HTTP error! status: ${response?.status}`);
       }
       const data = (await response.json()) as { status: string; comment?: string; result: Contest[] };
       if (data.status !== 'OK') {
@@ -209,9 +226,12 @@ export class JudgeService {
         .sort((a: Contest, b: Contest) => a.startTimeSeconds - b.startTimeSeconds)
         .slice(0, upcomingCount);
 
-      return { active, upcoming, passed };
+      const result = { active, upcoming, passed };
+      this.contestsCache = { at: Date.now(), data: result };
+      return result;
     } catch (err) {
       console.error("Failed to fetch contests in main process:", err);
+      if (this.contestsCache) return this.contestsCache.data;
       throw err;
     }
   }

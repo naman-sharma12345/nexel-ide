@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   background: rgba(13, 13, 16, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--nx-line);
   border-radius: 12px;
   padding: 4px 8px;
   height: 38px;
@@ -42,7 +42,7 @@
 }
 
 .nx-floating-tabbar:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--nx-line-strong);
   background: rgba(10, 10, 12, 0.92);
 }
 
@@ -81,7 +81,7 @@
 }
 
 .nx-editor-tab.active {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--nx-line);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -167,7 +167,7 @@
 
 .nx-toolbar-btn.auto-save.active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--nx-line);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -438,7 +438,7 @@
 
 .nx-toolbar-btn.snippets {
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--nx-line);
   color: rgba(255, 255, 255, 0.5);
   padding: 4px 10px;
   border-radius: 4px;
@@ -451,7 +451,7 @@
 }
 
 .nx-toolbar-btn.snippets:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--nx-line);
   border-color: rgba(255, 255, 255, 0.15);
   color: #ffffff;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.03);
@@ -562,7 +562,7 @@
 .nx-snippet-desc {
   font-family: -apple-system, sans-serif;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--nx-text-dim);
   flex-grow: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -622,10 +622,10 @@
     box-shadow: 0 0 0 rgba(52, 211, 153, 0);
   }
   20% {
-    box-shadow: 0 0 40px rgba(52, 211, 153, 0.35), inset 0 0 20px rgba(52, 211, 153, 0.15);
+    box-shadow: 0 0 40px rgba(52, 211, 153, 0.35), inset 0 0 20px var(--nx-accent-soft);
   }
   80% {
-    box-shadow: 0 0 25px rgba(52, 211, 153, 0.15), inset 0 0 10px rgba(52, 211, 153, 0.08);
+    box-shadow: 0 0 25px var(--nx-accent-soft), inset 0 0 10px rgba(52, 211, 153, 0.08);
   }
   100% {
     box-shadow: 0 0 0 rgba(52, 211, 153, 0);
@@ -642,7 +642,7 @@
     box-shadow: none;
   }
   20% {
-    border-color: #34d399;
+    border-color: var(--nx-accent);
     box-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
     background: rgba(52, 211, 153, 0.08);
   }
@@ -732,13 +732,13 @@
   font-family: ui-monospace, Consolas, monospace;
   font-size: 9.5px;
   font-weight: 600;
-  color: #34d399; /* Emerald highlights */
+  color: var(--nx-accent); /* Emerald highlights */
 }
 
 .nx-cf-import-btn {
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.2);
-  color: #34d399;
+  color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
   font-size: 9px;
   font-weight: 700;
@@ -788,7 +788,7 @@
   border-radius: 99px;
 }
 .nx-cf-problem-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--nx-line-strong);
 }
 
 .nx-cf-section {
@@ -804,7 +804,7 @@
 }
 
 .nx-cf-section:hover {
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: var(--nx-line);
   background: rgba(255, 255, 255, 0.015);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
@@ -902,8 +902,8 @@
 .nx-cf-copy-sample-btn:hover {
   background: rgba(52, 211, 153, 0.06);
   border-color: rgba(52, 211, 153, 0.35);
-  color: #34d399;
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.15);
+  color: var(--nx-accent);
+  box-shadow: 0 0 12px var(--nx-accent-soft);
 }
 
 .nx-cf-sample-grid {
@@ -952,7 +952,7 @@
 /* Math equations inside statements */
 .tex-graphics, .tex-span, .tex-formula {
   font-family: ui-monospace, Consolas, "Courier New", Courier, monospace;
-  color: #34d399; /* Green hue matching standard IDE colors */
+  color: var(--nx-accent); /* Green hue matching standard IDE colors */
   padding: 0 4px;
   border-radius: 4px;
   font-style: italic;
@@ -987,13 +987,13 @@
 }
 
 .nx-tab-split-btn:hover {
-  color: #34d399;
+  color: var(--nx-accent);
   background-color: rgba(52, 211, 153, 0.08);
 }
 
 .nx-tab-split-btn.active {
-  color: #34d399;
-  background-color: rgba(52, 211, 153, 0.15);
+  color: var(--nx-accent);
+  background-color: var(--nx-accent-soft);
 }
 
 .nx-editor-main-container {
@@ -1059,7 +1059,7 @@
 
 .nx-editor-split-divider:hover .nx-divider-glow-line,
 .nx-editor-split-divider.dragging .nx-divider-glow-line {
-  background: #34d399;
+  background: var(--nx-accent);
   box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
 }
 
@@ -1121,7 +1121,7 @@
 
 .nx-editor-split-pane.focused {
   box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--nx-line-strong) !important;
 }
 
 /* Welcome plate v2: soft aurora halo, gradient hairline border, floating logo. */
@@ -1144,7 +1144,7 @@
 
 /* v3 tab polish: animated accent underline, close-button fade */
 .nx-editor-tab{position:relative;transition:background var(--nx-dur-2,.2s) var(--nx-ease-out,ease),color var(--nx-dur-2,.2s) var(--nx-ease-out,ease),transform var(--nx-dur-2,.2s) var(--nx-ease-spring,ease)}
-.nx-editor-tab::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--nx-accent,#34d399),var(--nx-accent-2,#22d3ee));transform:scaleX(0);transform-origin:center;opacity:0;transition:transform .35s var(--nx-ease-out,ease),opacity .25s;box-shadow:0 0 10px var(--nx-accent,#34d399)}
+.nx-editor-tab::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--nx-accent,var(--nx-accent)),var(--nx-accent-2,#22d3ee));transform:scaleX(0);transform-origin:center;opacity:0;transition:transform .35s var(--nx-ease-out,ease),opacity .25s;box-shadow:0 0 10px var(--nx-accent,var(--nx-accent))}
 .nx-editor-tab.active::after{transform:scaleX(1);opacity:1}
 .nx-editor-tab:hover{transform:translateY(-1px)}
 .nx-tab-close-btn{opacity:0;transition:opacity .15s,background .15s,transform .2s var(--nx-ease-spring,ease)}
