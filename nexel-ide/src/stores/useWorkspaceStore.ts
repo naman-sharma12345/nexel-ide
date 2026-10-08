@@ -24,6 +24,8 @@ interface WorkspaceState {
   activeDir: string | null;
   tree: FileNode[];
   pinnedPaths: string[];
+  recentWorkspaces: string[];
+  openRecent: (path: string) => Promise<void>;
   searchQuery: string;
   isRegex: boolean;
   isMatchCase: boolean;
@@ -48,6 +50,11 @@ interface WorkspaceState {
   triggerHeaderNewFolder: () => void;
   handleDeleteNode: (node: FileNode) => Promise<void>;
   handleInlineSubmit: (value: string) => Promise<string | null>;
+}
+
+/** MRU list: newest first, de-duplicated, capped so persisted state stays tiny. */
+export function pushRecent(list: string[], dir: string, max = 5): string[] {
+  return [dir, ...list.filter(d => d !== dir)].slice(0, max);
 }
 
 // Helpers for tree transformation & state extraction
@@ -144,12 +151,20 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           if (!selectedDir) return;
           
           get().setRootPath(selectedDir);
+          set(st => ({ recentWorkspaces: pushRecent(st.recentWorkspaces, selectedDir) }));
           set({ lastSelectedNode: null, activeDir: selectedDir });
           
           await get().refreshTree();
         } catch (error) {
           console.error("Workspace mount failure:", error);
         }
+      },
+
+      recentWorkspaces: [],
+      openRecent: async (dir) => {
+        get().setRootPath(dir);
+        set(st => ({ lastSelectedNode: null, activeDir: dir, recentWorkspaces: pushRecent(st.recentWorkspaces, dir) }));
+        await get().refreshTree();
       },
 
       refreshTree: async (forceOpenPaths) => {
@@ -338,6 +353,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         rootName: state.rootName,
         activeDir: state.activeDir,
         pinnedPaths: state.pinnedPaths,
+        recentWorkspaces: state.recentWorkspaces,
         searchQuery: state.searchQuery,
         isRegex: state.isRegex,
         isMatchCase: state.isMatchCase,

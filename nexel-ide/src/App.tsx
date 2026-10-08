@@ -12,6 +12,7 @@ import { useWorkspaceStore, type FileNode } from './stores/useWorkspaceStore';
 import { StatusBar } from './components/StatusBar';
 import { Toasts } from './components/Toasts';
 import { CommandPalette } from './components/CommandPalette';
+import { ShortcutsSheet } from './components/ShortcutsSheet';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useSettingsStore } from './stores/useSettingsStore';
 import { useStatusStore } from './stores/useStatusStore';
@@ -45,6 +46,7 @@ function App() {
   const [tempTemplate, setTempTemplate] = useState('');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const tree = useWorkspaceStore(s => s.tree);
   const themeId = useSettingsStore(s => s.theme);
   const firstTheme = useRef(true);
@@ -52,6 +54,7 @@ function App() {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === '/' && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) { e.preventDefault(); setShortcutsOpen(o => !o); }
       else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); const st = useSettingsStore.getState(); st.openSettings(!st.settingsOpen); }
       else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
     };
@@ -87,6 +90,7 @@ function App() {
     { id: 'sidebar', label: 'Toggle Sidebar', run: () => toggleSidebar() },
     { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
     { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },
+    { id: 'shortcuts', label: 'Keyboard Shortcuts', hint: 'Ctrl+/', run: () => setShortcutsOpen(true) },
     { id: 'settings', label: 'Open Settings', hint: 'Ctrl+,', run: () => useSettingsStore.getState().openSettings(true) },
     ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => useSettingsStore.getState().setTheme(t.id) })),
     { id: 'minimap', label: 'Toggle Minimap', run: () => useSettingsStore.getState().toggle('minimap') },
@@ -144,6 +148,7 @@ function App() {
       overflow: 'hidden', 
       backgroundColor: 'var(--nx-bg-0)' 
     }}>
+      {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}
       {paletteOpen && <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} />}
       {quickOpen && <CommandPalette commands={fileCommands} placeholder="Go to file…" label="Quick open" onClose={() => setQuickOpen(false)} />}
       <TitleBar />

@@ -6,6 +6,9 @@ import './Editor.css';
 import { useEditorStore } from '../stores/useEditorStore';
 import type { EditorTab } from '../stores/useEditorStore';
 import { useJudgeStore } from '../stores/useJudgeStore';
+import { useWorkspaceStore } from '../stores/useWorkspaceStore';
+import { SHORTCUT_GROUPS } from '../lib/shortcuts';
+import './ShortcutsSheet.css';
 import logoImg from '../assets/logo.png';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { THEMES, monacoThemeName, monacoThemeData } from '../lib/themes';
@@ -20,6 +23,8 @@ interface EditorProps {
 
 export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, onCloseFile }) => {
   const settings = useSettingsStore();
+  const recent = useWorkspaceStore(st => st.recentWorkspaces);
+  const openRecent = useWorkspaceStore(st => st.openRecent);
   const {
     tabs,
     activeTabPath,
@@ -382,12 +387,23 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <h1 className="nx-welcome-headline">NEXEL IDE</h1>
         </div>
         <p className="nx-welcome-subtitle">A premium minimal workspace with native Monaco integration.</p>
-        <div className="nx-shortcut-box">
-          <div className="nx-shortcut-row"><span>Open Workspace Folder</span> <kbd>Click Explorer Header</kbd></div>
-          <div className="nx-shortcut-row"><span>Create New File</span> <kbd>Right Click in Sidebar</kbd></div>
-          <div className="nx-shortcut-row"><span>Save Working Changes</span> <kbd>Ctrl + S</kbd></div>
-          <div className="nx-shortcut-row"><span>Close Active Tab</span> <kbd>Ctrl + W</kbd></div>
+        <div className="nx-keycaps">
+          {SHORTCUT_GROUPS[0].items.concat(SHORTCUT_GROUPS[1].items.slice(0, 2)).map((it, i) => (
+            <div key={it.label} className="nx-keycap-row" style={{ animationDelay: `${220 + i * 55}ms` }}>
+              <span>{it.label}</span><span>{it.keys.map((k, j) => <kbd key={j}>{k}</kbd>)}</span>
+            </div>
+          ))}
         </div>
+        {recent.length > 0 && (
+          <div className="nx-recent">
+            <h4>Recent workspaces</h4>
+            {recent.map((d, i) => (
+              <button key={d} style={{ animationDelay: `${520 + i * 60}ms` }} onClick={() => { void openRecent(d); }}>
+                <b>{d.split(/[\\/]/).filter(Boolean).pop() ?? d}</b><small title={d}>{d}</small>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
