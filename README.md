@@ -346,6 +346,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+- **Stress tester** (feature + design, Judge → ⚡ STRESS): runs your solution against a brute-force file on seeded random inputs until the first mismatch. Animated SVG progress ring (pulses while running, pops ✓ / ! at the end), abortable (STOP), bounded to 2000 tests, shows the counter-example with the first differing line and saves it as a test case in one click.
+- **Hover docs** (feature, zero-install): hover STL calls (`lower_bound`, `priority_queue`, `gcd`…) and Python helpers (`heappush`, `bisect_left`…) for signature, note and complexity. Monaco hover, suggest and find widgets restyled as glass cards with accent-highlighted matches.
 - **Python + Java IntelliSense (tier 1, zero-install)**: snippet/completion providers for fast IO, heaps, DSU, main guards, collections, working on every machine without a language server. Nav dock gets a theme-aware accent sheen (respects reduced motion).
 - **Competitive Companion** (feature + security): the IDE listens on `127.0.0.1:27121` (loopback only) for the Competitive Companion browser extension. Sending a problem creates `<Problem>.cpp` (with your C++ template, never overwriting an existing file) and loads the samples into the Judge. Hardened: POST only, 1 MB cap enforced while streaming, strict schema validation, sanitised file names, bounded test count, 5 s request timeout, silent fallback if the port is busy.
 - **Keyboard shortcuts sheet** (design, Ctrl+/): glass cheat-sheet with 3D keycaps that physically press and glow when you hit the matching key. Welcome screen now shows live keycap chips.
