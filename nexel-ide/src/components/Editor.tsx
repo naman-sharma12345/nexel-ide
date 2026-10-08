@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
+import '../lib/monacoSetup';
 import './Editor.css';
 import { useEditorStore } from '../stores/useEditorStore';
 import type { EditorTab } from '../stores/useEditorStore';
