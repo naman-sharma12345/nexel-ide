@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 vi.mock('child_process', () => {
   const mockExports = {
     spawn: vi.fn(),
-    exec: vi.fn((cmd: string, cb: any) => {
+    exec: vi.fn((_cmd: string, cb: any) => {
       if (typeof cb === 'function') {
         cb(null, '999 K', '');
       }
