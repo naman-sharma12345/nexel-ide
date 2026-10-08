@@ -32,3 +32,86 @@ body {
 h1, h2, p {
   margin: 0;
 }
+/* ───────────────────────── Nexel design tokens (v2) ─────────────────────────
+   One source of truth for colour, depth, radius and motion. Components should
+   reach for these instead of hard-coded values so themes stay coherent. */
+:root {
+  --nx-bg-0: #0B0B0D;            /* window */
+  --nx-bg-1: #111114;            /* panels */
+  --nx-bg-2: #17171B;            /* raised */
+  --nx-line: rgba(255, 255, 255, 0.06);
+  --nx-line-strong: rgba(255, 255, 255, 0.12);
+  --nx-text: rgba(255, 255, 255, 0.92);
+  --nx-text-dim: rgba(255, 255, 255, 0.55);
+  --nx-text-faint: rgba(255, 255, 255, 0.32);
+  --nx-accent: #34d399;
+  --nx-accent-2: #22d3ee;
+  --nx-accent-soft: rgba(52, 211, 153, 0.15);
+  --nx-accent-glow: 0 0 0 1px rgba(52, 211, 153, 0.35), 0 0 24px -4px rgba(52, 211, 153, 0.45);
+  --nx-danger: #ef4444;
+  --nx-warn: #fbbf24;
+  --nx-radius-sm: 6px;
+  --nx-radius: 10px;
+  --nx-radius-lg: 16px;
+  --nx-shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 4px 12px -2px rgba(0,0,0,.35);
+  --nx-shadow-2: 0 8px 24px -6px rgba(0,0,0,.55), 0 24px 64px -12px rgba(0,0,0,.6);
+  --nx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);      /* expo-out: snappy, settles softly */
+  --nx-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --nx-dur-1: 120ms;
+  --nx-dur-2: 220ms;
+  --nx-dur-3: 380ms;
+  color-scheme: dark;
+}
+
+::selection { background: rgba(52, 211, 153, 0.28); color: #fff; }
+
+/* Slim, auto-hiding-feel scrollbars everywhere (Chromium/Electron). */
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.10);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color var(--nx-dur-2);
+}
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,.22); }
+
+/* Keyboard focus is always visible, never on mouse click. */
+:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--nx-accent-glow);
+  border-radius: var(--nx-radius-sm);
+}
+
+/* Tactile press feedback on every button. */
+:where(button) { transition: transform var(--nx-dur-1) var(--nx-ease-out), background-color var(--nx-dur-2), color var(--nx-dur-2), box-shadow var(--nx-dur-2), opacity var(--nx-dur-2); }
+:where(button:not(:disabled)):active { transform: scale(0.96); }
+
+/* App boot: the shell fades and lifts in instead of popping. */
+@keyframes nx-boot { from { opacity: 0; transform: translateY(6px) scale(.995); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+#root > * { animation: nx-boot var(--nx-dur-3) var(--nx-ease-out) both; }
+#root > *:nth-child(2) { animation-delay: 60ms; }
+#root > *:nth-child(3) { animation-delay: 120ms; }
+
+/* Shared motion primitives for components. */
+@keyframes nx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nx-pop-in { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes nx-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+.nx-skeleton {
+  border-radius: var(--nx-radius-sm);
+  background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.09) 37%, rgba(255,255,255,.04) 63%);
+  background-size: 400% 100%;
+  animation: nx-shimmer 1.4s ease infinite;
+}
+
+/* Respect OS-level "reduce motion" (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
