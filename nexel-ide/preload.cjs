@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('nexelAPI', {
   fetchContestProblems: (contestId) =>
     ipcRenderer.invoke('judge:fetch-problems', contestId),
 
+  // Competitive Companion (browser extension -> IDE). Callback receives an already-validated problem.
+  onCompanionProblem: (callback) => {
+    ipcRenderer.removeAllListeners('companion:problem');
+    ipcRenderer.on('companion:problem', (event, problem) => callback(problem));
+  },
+
   // Secure Electron Store bindings
   getStoreSync: (key) => ipcRenderer.sendSync('store:get-sync', key),
   setStoreSync: (key, value) => ipcRenderer.sendSync('store:set-sync', key, value),

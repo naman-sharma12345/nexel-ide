@@ -57,6 +57,10 @@ export interface INexelAPI {
   fetchContestProblems: (
     contestId: number | string
   ) => Promise<Record<string, unknown>>;
+  onCompanionProblem?: (callback: (problem: {
+    name: string; group: string; url: string; timeLimit: number; memoryLimit: number; fileName: string;
+    tests: Array<{ input: string; output: string }>;
+  }) => void) => void;
   getStoreSync: (key: string) => any;
   setStoreSync: (key: string, value: any) => void;
   deleteStoreSync: (key: string) => void;

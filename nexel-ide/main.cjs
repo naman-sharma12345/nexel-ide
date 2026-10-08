@@ -21,6 +21,7 @@ require.extensions['.ts'] = function (module, filename) {
 const { FileSystemService } = require('./src/main/services/FileSystemService.ts');
 const { JudgeService } = require('./src/main/services/JudgeService.ts');
 const { StoreService } = require('./src/main/services/StoreService.ts');
+const { CompanionService } = require('./src/main/services/CompanionService.ts');
 
 let pty;
 try {
@@ -62,6 +63,13 @@ async function createWindow() {
   const judgeService = new JudgeService();
   const storeService = new StoreService();
   await storeService.initialize();
+
+  // Competitive Companion: loopback-only HTTP listener (127.0.0.1:27121), forwards validated problems to the UI
+  const companion = new CompanionService((problem) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companion:problem', problem);
+  });
+  companion.start();
+  app.on('before-quit', () => companion.stop());
 
   // Window frame control receivers
   ipcMain.on('window-control', (event, action) => {

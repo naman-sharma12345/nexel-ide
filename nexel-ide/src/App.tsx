@@ -14,6 +14,8 @@ import { Toasts } from './components/Toasts';
 import { CommandPalette } from './components/CommandPalette';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useSettingsStore } from './stores/useSettingsStore';
+import { useStatusStore } from './stores/useStatusStore';
+import { useJudgeStore } from './stores/useJudgeStore';
 import { applyTheme, THEMES } from './lib/themes';
 import './App.css';
 
@@ -55,6 +57,28 @@ function App() {
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
+  }, []);
+  // Competitive Companion: browser extension -> new solution file + judge samples
+  useEffect(() => {
+    window.nexelAPI.onCompanionProblem?.(async (p) => {
+      const ws = useWorkspaceStore.getState();
+      const dir = ws.activeDir ?? ws.rootPath;
+      const toast = useStatusStore.getState().pushToast;
+      if (!dir) { toast('Open a workspace folder first, then re-send the problem', 'error', 4000); return; }
+      try {
+        const taken = new Set((function walk(ns: FileNode[]): string[] { return ns.flatMap(n => [n.name, ...walk(n.children ?? [])]); })(ws.tree));
+        let name = `${p.fileName}.cpp`, i = 2;
+        while (taken.has(name)) name = `${p.fileName}_${i++}.cpp`; // never overwrite an existing solution
+        const filePath = await window.nexelAPI.createFile(dir, name);
+        const body = useEditorStore.getState().cppTemplate;
+        if (body) await window.nexelAPI.writeFileContent(filePath, body);
+        await ws.refreshTree();
+        openFile(filePath, name, body);
+        useJudgeStore.getState().importSamples(p.tests);
+        toast(`Imported ${p.name} · ${p.tests.length} sample${p.tests.length === 1 ? '' : 's'}`, 'success', 4000);
+      } catch (e) { console.error(e); toast('Could not import problem from Competitive Companion', 'error', 4000); }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const paletteCommands = [
     { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
