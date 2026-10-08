@@ -9,6 +9,8 @@ import { Terminal } from './components/Terminal';
 const JudgeSystem = lazy(() => import('./components/JudgeSystem'));
 const ContestsSystem = lazy(() => import('./components/ContestsSystem'));
 import { useWorkspaceStore, type FileNode } from './stores/useWorkspaceStore';
+import { StatusBar } from './components/StatusBar';
+import { Toasts } from './components/Toasts';
 import { CommandPalette } from './components/CommandPalette';
 import './App.css';
 
@@ -114,7 +116,7 @@ function App() {
       <div style={{ 
         flexGrow: 1,
         width: '100vw',
-        height: 'calc(100vh - 34px)',
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'row',
         overflow: 'hidden',
@@ -130,7 +132,7 @@ function App() {
               left: 0,
               top: '34px',
               width: '24px',
-              height: 'calc(100vh - 34px)',
+              height: 'calc(100vh - 34px - var(--nx-status-h))',
               zIndex: 9999,
               background: 'transparent'
             }}
@@ -142,7 +144,7 @@ function App() {
           className={`nx-navdock-wrapper-container ${sidebarCollapsed ? 'collapsed' : ''} ${isHoverRevealed ? 'hover-revealed' : ''}`}
           onMouseLeave={() => setIsHoverRevealed(false)}
           style={{
-            height: 'calc(100vh - 34px)',
+            height: 'calc(100vh - 34px - var(--nx-status-h))',
             zIndex: 10000,
             position: 'fixed',
             top: '34px',
@@ -200,6 +202,8 @@ function App() {
         </div>
       </div>
       
+      <StatusBar />
+      <Toasts />
       <Terminal 
         visible={terminalVisible} 
         onClose={() => setTerminalVisible(false)} 

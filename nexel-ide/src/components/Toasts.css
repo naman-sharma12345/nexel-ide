@@ -1,0 +1,15 @@
+.tz-stack { position: fixed; right: 18px; bottom: calc(var(--nx-status-h) + 14px); z-index: 20000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; pointer-events: none; }
+.tz-toast {
+  position: relative; overflow: hidden; pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px; min-width: 180px;
+  background: rgba(23,23,27,.82); backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--nx-line-strong); border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow-2); color: var(--nx-text); font: 500 12.5px/1.2 var(--sans);
+  animation: tz-in var(--nx-dur-3) var(--nx-ease-spring) both;
+}
+.tz-toast svg { width: 16px; height: 16px; flex: none; }
+.tz-success svg { color: var(--nx-accent); } .tz-error svg { color: var(--nx-danger); } .tz-info svg { color: var(--nx-accent-2); }
+.tz-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: currentColor; transform-origin: left; animation: tz-life 2.6s linear forwards; opacity: .8; }
+.tz-success .tz-bar { color: var(--nx-accent); } .tz-error .tz-bar { color: var(--nx-danger); } .tz-info .tz-bar { color: var(--nx-accent-2); }
+@keyframes tz-in { from { opacity: 0; transform: translateX(28px) scale(.96); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes tz-life { from { transform: scaleX(1); } to { transform: scaleX(0); } }

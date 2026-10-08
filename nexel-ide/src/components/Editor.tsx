@@ -1,3 +1,4 @@
+import { useStatusStore } from '../stores/useStatusStore';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import '../lib/monacoSetup';
@@ -193,8 +194,10 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     try {
       await window.nexelAPI.writeFileContent(activeTab.filePath, activeTab.content);
       useEditorStore.getState().saveTabSuccess(activeTab.filePath);
+      useStatusStore.getState().pushToast(`Saved ${activeTab.name}`, 'success');
     } catch (err) {
       console.error("Failed to save active file:", err);
+      useStatusStore.getState().pushToast(`Could not save ${activeTab.name}`, 'error', 4000);
     }
   };
 
@@ -260,6 +263,15 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+    // Feed the status bar: cursor + selection length (store skips no-op updates).
+    const reportCursor = () => {
+      const pos = editor.getPosition(); const sel = editor.getSelection(); const model = editor.getModel();
+      if (!pos) return;
+      useStatusStore.getState().setCursor(pos.lineNumber, pos.column, sel && model && !sel.isEmpty() ? model.getValueInRange(sel).length : 0);
+    };
+    editor.onDidChangeCursorSelection(reportCursor);
+    editor.onDidFocusEditorText(reportCursor);
+    reportCursor();
 
     monaco.editor.defineTheme('nexel-minimal-dark', {
       base: 'vs-dark',

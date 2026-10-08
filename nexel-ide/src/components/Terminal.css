@@ -1,6 +1,6 @@
 .nx-terminal-panel {
   position: fixed;
-  bottom: 0;
+  bottom: var(--nx-status-h);
   right: 0;
   height: 280px;
   background: rgba(11, 11, 13, 0.95);
@@ -27,7 +27,7 @@
 .nx-navdock-wrapper-container,
 .nx-navdock-hover-trigger {
   /* Prevent dock/sidebar overlaying on top of bottom terminal when expanded */
-  height: calc(100vh - 34px) !important;
+  height: calc(100vh - 34px - var(--nx-status-h)) !important;
 }
 
 @keyframes nx-term-slide-up {
