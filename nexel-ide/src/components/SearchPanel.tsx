@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchFiles, type FileResult, type SearchOptions } from '../lib/searchInFiles';
+import { replaceInText } from '../lib/replaceInText';
 import './SearchPanel.css';
 
 export interface SearchFile { path: string; name: string; }
@@ -11,6 +12,8 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
   const [res, setRes] = useState<{ results: FileResult[]; total: number; truncated: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [sel, setSel] = useState(0);
+  const [rep, setRep] = useState('');
+  const [note, setNote] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -27,6 +30,21 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
 
   const flat = useMemo(() => (res?.results ?? []).flatMap(f => f.matches.map(m => ({ f, m }))), [res]);
   const go = (i: number) => { const x = flat[i]; if (x) { onClose(); onOpen(x.f.path, x.m.line, x.m.col); } };
+  const replaceAll = async () => {
+    if (!res || !res.total) return;
+    if (!window.confirm(`Replace ${res.total} match(es) in ${res.results.length} file(s)?`)) return;
+    let n = 0, fc = 0;
+    for (const f of res.results) {
+      try {
+        const src = await window.nexelAPI.readFileContent(f.path);
+        const r = replaceInText(src, q, rep, opts);
+        if (r.count > 0 && await window.nexelAPI.writeFileContent(f.path, r.text)) { n += r.count; fc++; }
+      } catch { /* skip unreadable file */ }
+    }
+    setNote(`Replaced ${n} in ${fc} file${fc === 1 ? '' : 's'}`);
+    setRes(null); setQ(q + ' ');
+    window.setTimeout(() => setQ(x => x.trimEnd()), 0);
+  };
   const flag = (k: keyof SearchOptions, label: string, title: string) => (
     <button type="button" className={'sp2-flag' + (opts[k] ? ' on' : '')} title={title} aria-pressed={!!opts[k]} onClick={() => setOpts(o => ({ ...o, [k]: !o[k] }))}>{label}</button>
   );
@@ -45,6 +63,11 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
             }} />
           {flag('caseSensitive', 'Aa', 'Match case')}{flag('wholeWord', 'ab', 'Whole word')}{flag('regex', '.*', 'Regular expression')}
         </div>
+        <div className="sf-bar sf-rep">
+          <span className="sf-glyph" aria-hidden>↳</span>
+          <input className="sf-input" placeholder="Replace with…" value={rep} onChange={e => setRep(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') onClose(); else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void replaceAll(); }} />
+          <button type="button" className="sp2-flag sf-repbtn" disabled={!res || !res.total} title="Replace all (Ctrl+Enter)" onClick={() => void replaceAll()}>Replace all</button>
+        </div>
         <div className="sf-list">
           {!q.trim() && <div className="sf-empty">Search across {files.length} file{files.length === 1 ? '' : 's'} in this workspace</div>}
           {q.trim() && res && res.total === 0 && !busy && <div className="sf-empty">No results</div>}
@@ -60,7 +83,7 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
           ))}
         </div>
         <div className="sf-foot"><span><kbd>↑↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span>
-          <span className="sf-count">{res ? `${res.total}${res.truncated ? '+' : ''} match${res.total === 1 ? '' : 'es'} · ${res.results.length} files` : ''}</span></div>
+          <span className="sf-count">{note ? note : res ? `${res.total}${res.truncated ? '+' : ''} match${res.total === 1 ? '' : 'es'} · ${res.results.length} files` : ''}</span></div>
       </div>
     </div>
   );

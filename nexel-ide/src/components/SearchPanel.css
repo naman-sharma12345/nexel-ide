@@ -30,3 +30,8 @@
 .sf-count { margin-left: auto; }
 .sf-box .sf-input:focus-visible { outline: none; }
 .sf-box .sf-input, .sf-box .sf-input:focus, .sf-box .sf-input:focus-visible { outline: none !important; box-shadow: none !important; border: 0 !important; background: transparent !important; border-radius: 0 !important; }
+
+.sf-rep{border-top:1px solid var(--nx-line,rgba(255,255,255,.06))}
+.sf-repbtn{width:auto;padding:0 10px;white-space:nowrap;transition:opacity .2s,transform .15s}
+.sf-repbtn:disabled{opacity:.35;cursor:default}
+.sf-repbtn:not(:disabled):hover{transform:translateY(-1px)}
