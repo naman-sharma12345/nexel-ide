@@ -35,6 +35,9 @@ h1, h2, p {
    One source of truth for colour, depth, radius and motion. Components should
    reach for these instead of hard-coded values so themes stay coherent. */
 :root {
+  --nx-ink: 255 255 255;         /* overlay ink: white-alpha on dark themes (Paper Light flips it to ink) */
+  --nx-surf: 17 17 20;           /* glass surface base for floating widgets */
+  --nx-info: #60a5fa;
   --nx-bg-0: #0B0B0D;            /* window */
   --nx-editor-bg: #050507;       /* code canvas */
   --nx-accent-rgb: 52 211 153;
@@ -133,7 +136,8 @@ button:active:not(:disabled) { transform: scale(0.97); }
 
 /* --- Monaco floating widgets: glass cards that match the Nexel tokens --- */
 .monaco-editor .monaco-hover, .monaco-editor .suggest-widget, .monaco-editor .parameter-hints-widget, .monaco-editor .find-widget {
-  background: rgb(17 17 20 / .82) !important;
+  background: rgb(var(--nx-surf) / .86) !important;
+  color: var(--nx-text);
   backdrop-filter: blur(14px) saturate(1.3);
   border: 1px solid var(--nx-line-strong) !important;
   border-radius: var(--nx-radius) !important;
@@ -144,6 +148,41 @@ button:active:not(:disabled) { transform: scale(0.97); }
 .monaco-editor .monaco-hover code, .monaco-editor .monaco-hover .monaco-tokenized-source { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused { background: var(--nx-accent-soft) !important; box-shadow: inset 2px 0 0 var(--nx-accent); transition: background var(--nx-dur-1); }
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row .highlight { color: var(--nx-accent) !important; font-weight: 600; }
+
+/* --- clangd IntelliSense widgets: themed in every theme (tokens only) --- */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row { color: var(--nx-text); }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .label-name { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .signature-label { color: var(--nx-text-dim) !important; opacity: 1 !important; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .label-description { color: var(--nx-text-faint) !important; opacity: 1 !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon { color: var(--nx-accent-2) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon.codicon-symbol-snippet { color: var(--nx-warn) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon.codicon-symbol-keyword { color: var(--nx-text-dim) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .suggest-icon { color: var(--nx-accent) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .label-name,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .monaco-icon-label { color: var(--nx-text) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .label-description,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .signature-label { color: var(--nx-text-dim) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .label-name .highlight { color: var(--nx-accent) !important; }
+.monaco-editor .suggest-details-container, .monaco-editor .suggest-details { background: rgb(var(--nx-surf) / .92) !important; color: var(--nx-text) !important; border-color: var(--nx-line-strong) !important; border-radius: var(--nx-radius) !important; }
+.monaco-editor .suggest-details .header .type { color: var(--nx-text-dim) !important; }
+/* Monaco sizes the docs side panel once (often before markdown finishes rendering) and can clip clangd's docs:
+   let it grow with its content up to a sane cap and scroll beyond that. */
+.monaco-editor .suggest-details-container, .monaco-editor .suggest-details-container .suggest-details,
+.monaco-editor .suggest-details > .monaco-scrollable-element { height: auto !important; max-height: 360px; }
+.monaco-editor .suggest-details > .monaco-scrollable-element > .body { max-height: 358px; overflow-y: auto !important; }
+.monaco-editor .suggest-details .docs { color: var(--nx-text-dim); }
+.monaco-editor .suggest-widget .suggest-status-bar { border-top-color: var(--nx-line) !important; color: var(--nx-text-faint) !important; }
+.monaco-editor .monaco-hover { color: var(--nx-text) !important; }
+.monaco-editor .monaco-hover a { color: var(--nx-accent) !important; }
+.monaco-editor .monaco-hover .hover-contents h3, .monaco-editor .monaco-hover .markdown-hover h3 { font: 600 12px/1.4 var(--sans); margin: 4px 0 6px; color: var(--nx-text); }
+.monaco-editor .monaco-hover hr { border-color: var(--nx-line) !important; }
+.monaco-editor .monaco-hover .hover-row.status-bar { background: rgb(var(--nx-ink) / .03) !important; border-top: 1px solid var(--nx-line) !important; }
+.monaco-editor .monaco-hover .marker.hover-contents .code { color: var(--nx-text-faint); }
+.monaco-editor .parameter-hints-widget .signature .parameter.active { color: var(--nx-accent) !important; font-weight: 600; text-decoration: underline 1px rgb(var(--nx-accent-rgb) / .5); text-underline-offset: 3px; }
+.monaco-editor .parameter-hints-widget .docs { color: var(--nx-text-dim) !important; }
+.monaco-editor .peekview-widget .head { background: rgb(var(--nx-surf) / .95) !important; }
+.monaco-editor .peekview-widget .peekview-title .filename { color: var(--nx-text); }
+.monaco-editor .rename-box { background: rgb(var(--nx-surf) / .95) !important; border: 1px solid rgb(var(--nx-accent-rgb) / .45) !important; border-radius: var(--nx-radius-sm) !important; box-shadow: var(--nx-shadow-2) !important; }
 
 /* Line flash when jumping from Find in Files */
 .monaco-editor .nx-line-flash { background: rgb(var(--nx-accent-rgb) / .22); animation: nx-line-flash 1.4s var(--nx-ease-out) forwards; box-shadow: inset 3px 0 0 var(--nx-accent); }

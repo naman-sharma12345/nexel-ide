@@ -45,3 +45,46 @@ button.sb-item:hover, .sb-item:hover { background: rgb(var(--nx-ink) / .06); col
 
 .sb-swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:linear-gradient(135deg,var(--nx-accent),var(--nx-accent-2));box-shadow:0 0 8px rgb(var(--nx-accent-rgb) / .6)}
 .sb-theme:hover .sb-swatch{transform:rotate(180deg) scale(1.2);transition:transform var(--nx-dur-3) var(--nx-ease-spring)}
+
+/* ── clangd chip ───────────────────────────────────────────── */
+.sb-lsp-wrap { position: relative; display: inline-flex; }
+.sb-lsp { gap: 6px; }
+.sb-lsp .sb-lsp-name { font-weight: 600; letter-spacing: .02em; color: var(--nx-text); }
+.sb-lsp em { font-style: normal; color: var(--nx-text-dim); }
+.sb-lsp-dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--nx-text-faint); flex: none; transition: background-color var(--nx-dur-2), box-shadow var(--nx-dur-2); }
+.sb-lsp-ready .sb-lsp-dot, .sb-lsp-dot.sb-lsp-ready { background: var(--nx-accent); box-shadow: 0 0 8px rgb(var(--nx-accent-rgb) / .8); }
+.sb-lsp-ready em { color: var(--nx-accent); }
+.sb-lsp-indexing .sb-lsp-dot, .sb-lsp-dot.sb-lsp-indexing { background: var(--nx-accent-2); animation: sb-lsp-pulse 1.6s ease-in-out infinite; }
+.sb-lsp-indexing em { color: var(--nx-accent-2); }
+.sb-lsp-starting .sb-lsp-dot, .sb-lsp-dot.sb-lsp-starting { background: transparent; border: 1.5px solid var(--nx-accent-2); border-right-color: transparent; width: 6px; height: 6px; box-sizing: content-box; animation: sb-lsp-spin .9s linear infinite; }
+.sb-lsp-fallback .sb-lsp-dot, .sb-lsp-dot.sb-lsp-fallback { background: var(--nx-warn); box-shadow: 0 0 6px rgb(251 191 36 / .55); }
+.sb-lsp-fallback em { color: var(--nx-warn); }
+.sb-lsp-error .sb-lsp-dot, .sb-lsp-dot.sb-lsp-error { background: var(--nx-danger); box-shadow: 0 0 8px rgb(239 68 68 / .7); }
+.sb-lsp-error em { color: var(--nx-danger); }
+.sb-lsp-disabled .sb-lsp-dot, .sb-lsp-off .sb-lsp-dot { background: transparent; border: 1.5px solid var(--nx-text-faint); width: 5px; height: 5px; box-sizing: content-box; }
+@keyframes sb-lsp-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(var(--nx-accent2-rgb) / .55); opacity: 1; } 50% { box-shadow: 0 0 0 4px rgb(var(--nx-accent2-rgb) / 0); opacity: .7; } }
+@keyframes sb-lsp-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sb-lsp-dot { animation: none !important; } }
+
+.sb-menu {
+  position: absolute; right: 0; bottom: calc(100% + 8px); width: 290px; padding: 12px; box-sizing: border-box;
+  background: rgb(var(--nx-surf) / .9); backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid var(--nx-line-strong); border-radius: var(--nx-radius); box-shadow: var(--nx-shadow-2);
+  color: var(--nx-text); font: 400 11.5px/1.45 var(--sans); white-space: normal; text-align: left;
+  transform-origin: bottom right; animation: nx-pop-in var(--nx-dur-2) var(--nx-ease-out) both; z-index: 10002;
+}
+.sb-menu::before { content: ''; position: absolute; inset: 0 12px auto 12px; height: 1px; background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .55), transparent); }
+.sb-menu header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sb-menu header b { font-weight: 600; font-size: 12px; flex: 1; }
+.sb-lsp-tag { font: 600 9.5px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; background: rgb(var(--nx-ink) / .06); color: var(--nx-text-dim); }
+.sb-lsp-tag.sb-lsp-ready { background: var(--nx-accent-soft); color: var(--nx-accent); }
+.sb-lsp-tag.sb-lsp-indexing, .sb-lsp-tag.sb-lsp-starting { background: rgb(var(--nx-accent2-rgb) / .14); color: var(--nx-accent-2); }
+.sb-lsp-tag.sb-lsp-fallback { background: rgb(251 191 36 / .14); color: var(--nx-warn); }
+.sb-lsp-tag.sb-lsp-error { background: rgb(239 68 68 / .14); color: var(--nx-danger); }
+.sb-menu p { margin: 0 0 6px; color: var(--nx-text-dim); }
+.sb-menu small { display: block; margin-bottom: 8px; font: 500 10.5px/1.4 'JetBrains Mono', ui-monospace, monospace; color: var(--nx-text-faint); word-break: break-word; }
+.sb-menu-items { display: flex; flex-direction: column; gap: 2px; padding-top: 6px; border-top: 1px solid var(--nx-line); }
+.sb-menu-items button { display: flex; align-items: center; gap: 9px; height: 28px; padding: 0 8px; border: 0; border-radius: var(--nx-radius-sm); background: transparent; color: var(--nx-text); font: 500 11.5px/1 var(--sans); cursor: pointer; text-align: left; transition: background-color var(--nx-dur-1), color var(--nx-dur-1); }
+.sb-menu-items button:hover:not(:disabled) { background: var(--nx-accent-soft); color: var(--nx-accent); }
+.sb-menu-items button:disabled { opacity: .4; cursor: default; }
+.sb-menu-items svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

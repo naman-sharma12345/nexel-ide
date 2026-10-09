@@ -1,4 +1,7 @@
 // Tier-1 hover docs: zero-install, works offline on every machine.
+// While clangd serves C/C++ it already shows the exact signature and type, so this provider then only adds the
+// CP-specific note (complexity + tip) underneath instead of a second signature.
+import { isClangdActive } from './clangd/state';
 export interface HoverDoc { sig: string; doc: string; cx?: string }
 
 export const CPP_DOCS: Record<string, HoverDoc> = {
@@ -57,6 +60,12 @@ export function registerHoverDocs(monaco: any): { dispose(): void }[] {
       if (!w) return null;
       const d = hoverFor(lang, w.word);
       if (!d) return null;
+      if (lang === 'cpp' && isClangdActive()) {
+        return {
+          range: { startLineNumber: pos.lineNumber, endLineNumber: pos.lineNumber, startColumn: w.startColumn, endColumn: w.endColumn },
+          contents: [{ value: `**Nexel CP note** · ${d.doc}` + (d.cx ? `  \n**Complexity:** \`${d.cx}\`` : '') }],
+        };
+      }
       return {
         range: { startLineNumber: pos.lineNumber, endLineNumber: pos.lineNumber, startColumn: w.startColumn, endColumn: w.endColumn },
         contents: [

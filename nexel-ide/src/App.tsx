@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { getClangd } from './lib/clangd/session';
 import { useUIStore } from './stores/useUIStore';
 import { useEditorStore } from './stores/useEditorStore';
 import { NavDock } from './components/NavDock';
@@ -92,6 +93,24 @@ function App() {
     const t = window.setTimeout(() => { if (tabs.length) saveSession({ root: rootPath, paths: tabs.map(x => x.filePath), active: activeTabPath }); }, 400);
     return () => window.clearTimeout(t);
   }, [tabs, activeTabPath, rootPath]);
+  // clangd IntelliSense follows the workspace root and the IntelliSense settings (restarts only when they change).
+  const clangdEnabled = useSettingsStore(s => s.clangdEnabled);
+  const cppStd = useSettingsStore(s => s.cppStd);
+  const clangdFlags = useSettingsStore(s => s.clangdFlags);
+  useEffect(() => {
+    void getClangd((m, k, ttl) => useStatusStore.getState().pushToast(m, k, ttl))
+      .configure({ root: rootPath, enabled: clangdEnabled, std: cppStd, extraFlags: clangdFlags.split(' ').filter(Boolean) });
+  }, [rootPath, clangdEnabled, cppStd, clangdFlags]);
+  // Go to Definition into another file (clangd): open it as a tab, then reveal the line.
+  useEffect(() => {
+    const onOpenAt = (e: Event) => {
+      const { path: p, line, col } = (e as CustomEvent<{ path: string; line: number; col: number }>).detail ?? {};
+      if (typeof p !== 'string') return;
+      void handleFileSelect(p).then(() => window.setTimeout(() => window.dispatchEvent(new CustomEvent('nexel:reveal', { detail: { path: p, line, col } })), 160));
+    };
+    window.addEventListener('nexel:open-at', onOpenAt);
+    return () => window.removeEventListener('nexel:open-at', onOpenAt);
+  });
   // Competitive Companion: browser extension -> new solution file + judge samples
   useEffect(() => {
     window.nexelAPI.onCompanionProblem?.(async (p) => {
@@ -146,7 +165,7 @@ function App() {
     } else {
       try {
         const content = await window.nexelAPI.readFileContent(filePath);
-        const name = filePath.split('/').pop() || filePath;
+        const name = filePath.split(/[\\/]/).pop() || filePath;
         openFile(filePath, name, content);
       } catch (err) {
         console.error("Failed to read selected file:", err);

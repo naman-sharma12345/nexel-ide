@@ -2,6 +2,9 @@ import { registerLangCompletions } from '../lib/langCompletions';
 import { registerHoverDocs } from '../lib/hoverDocs';
 import { registerSignatureHelp } from '../lib/signatureHelp';
 import { toCrumbs } from '../lib/breadcrumbs';
+import { getClangd } from '../lib/clangd/session';
+import { isClangdActive } from '../lib/clangd/state';
+import { pathToUri } from '../lib/clangd/uri';
 import { useStatusStore } from '../stores/useStatusStore';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
@@ -141,7 +144,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     const loadFile = async () => {
       try {
         const content = await window.nexelAPI.readFileContent(activeFilePath);
-        const name = activeFilePath.split('/').pop() || activeFilePath;
+        const name = activeFilePath.split(/[\\/]/).pop() || activeFilePath;
         useEditorStore.getState().openFile(activeFilePath, name, content);
       } catch (err) {
         console.error("Failed to read selected file:", err);
@@ -206,6 +209,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     try {
       await window.nexelAPI.writeFileContent(activeTab.filePath, activeTab.content);
       useEditorStore.getState().saveTabSuccess(activeTab.filePath);
+      getClangd().notifySaved(activeTab.filePath);
       useStatusStore.getState().pushToast(`Saved ${activeTab.name}`, 'success');
     } catch (err) {
       console.error("Failed to save active file:", err);
@@ -219,6 +223,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
       try {
         await window.nexelAPI.writeFileContent(tab.filePath, tab.content);
         useEditorStore.getState().saveTabSuccess(tab.filePath);
+        getClangd().notifySaved(tab.filePath);
       } catch (err) {
         console.error("Auto-save write operation failed:", err);
       }
@@ -237,6 +242,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     }
 
     closeTab(path);
+    getClangd().closePath(path);
     if (onCloseFile) onCloseFile(path);
 
     const updatedState = useEditorStore.getState();
@@ -306,6 +312,12 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     monaco.editor.setTheme(monacoThemeName(useSettingsStore.getState().theme));
 
     if (!langProvidersRef.current) langProvidersRef.current = [...registerLangCompletions(monaco), ...registerHoverDocs(monaco), ...registerSignatureHelp(monaco)];
+    // clangd: providers registered after the offline ones (so they are asked first); every C/C++ model shown in an
+    // editor is synced. When clangd is absent or crashes the providers no-op and the offline ones serve alone.
+    const clangd = getClangd((m, k, ttl) => useStatusStore.getState().pushToast(m, k, ttl));
+    clangd.attachMonaco(monaco);
+    clangd.track(editor.getModel());
+    editor.onDidChangeModel(() => clangd.track(editor.getModel()));
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
     }
@@ -315,6 +327,11 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         const hasUsingStd = /\busing\s+namespace\s+std\s*;/.test(text);
 
         const word = model.getWordUntilPosition(position);
+        // Member / scope access (v.  p->  std::) belongs to clangd; dataset words there would only be noise.
+        const before = model.getLineContent(position.lineNumber).slice(0, word.startColumn - 1);
+        if (/(\.|->|::)\s*$/.test(before)) return { suggestions: [] };
+        // With clangd active, it owns keywords/containers/algorithms; Nexel keeps its CP aliases and snippets.
+        const clangdOn = isClangdActive();
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
@@ -323,7 +340,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         };
 
         const suggestions: any[] = [];
-        const categories = ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp'];
+        const categories = clangdOn ? ['cp'] : ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp'];
 
         categories.forEach(category => {
           const items = (dataset as any)[category] || [];
@@ -352,12 +369,13 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
             }
 
             const score = item.score !== undefined ? item.score : 50;
-            const sortText = String(1000 - score).padStart(4, '0');
+            // Offline items rank after clangd's semantic results (clangd sortText starts with a digit run like "3f…").
+            const sortText = (clangdOn ? '~' : '') + String(1000 - score).padStart(4, '0');
 
             suggestions.push({
-              label: label,
               kind: kind,
               detail: item.detail || `${category} (Nexel Autocomplete)`,
+              label: clangdOn ? { label, description: 'Nexel' } : label,
               documentation: {
                 value: item.documentation || '',
               },
@@ -372,7 +390,6 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           Object.entries(snippets).forEach(([key, val]: [string, any]) => {
             const bodyStr = Array.isArray(val.body) ? val.body.join('\n') : val.body;
             suggestions.push({
-              label: val.prefix,
               kind: monaco.languages.CompletionItemKind.Snippet,
               detail: val.description || 'Snippet',
               documentation: {
@@ -381,7 +398,8 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               insertText: bodyStr,
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               range: range,
-              sortText: '0001'
+              label: clangdOn ? { label: val.prefix, description: 'snippet' } : val.prefix,
+              sortText: clangdOn ? '~0001' : '0001'
             });
           });
         }
@@ -465,6 +483,8 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
             language={getLanguage(tab.name)}
             theme={monacoThemeName(settings.theme)}
             value={tab.content}
+            // One Monaco model per file, keyed by its file:// URI, so clangd sees each document separately.
+            path={pathToUri(tab.filePath)}
             onChange={(val) => handleEditorChangeForTab(tab.filePath, val)}
             beforeMount={(m: any) => THEMES.forEach(t => m.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)))}
             onMount={handleEditorDidMount}

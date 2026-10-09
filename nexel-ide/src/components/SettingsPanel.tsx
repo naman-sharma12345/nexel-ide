@@ -1,4 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { CPP_STDS } from '../stores/useSettingsStore';
+import { partitionFlags } from '../main/services/lsp/lspValidate';
+import { useLspStore, STATUS_LABEL } from '../lib/clangd/state';
+import { getClangd } from '../lib/clangd/session';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { THEMES } from '../lib/themes';
 import './SettingsPanel.css';
@@ -10,6 +14,41 @@ function Toggle({ on, onClick, label, hint }: { on: boolean; onClick: () => void
       <span><b>{label}</b><small>{hint}</small></span>
       <i className={`sp-switch ${on ? 'on' : ''}`}><em /></i>
     </button>
+  );
+}
+
+function IntelliSenseSection() {
+  const s = useSettingsStore();
+  const status = useLspStore(x => x.status);
+  const detail = useLspStore(x => x.detail);
+  const [draft, setDraft] = useState(s.clangdFlags);
+  useEffect(() => setDraft(s.clangdFlags), [s.clangdFlags]);
+  const { rejected } = partitionFlags(draft);
+  const commit = () => { if (draft.trim() !== s.clangdFlags) s.setClangdFlags(draft); };
+  return (
+    <section id="sp-intellisense">
+      <h3>IntelliSense <span className="sp-h-note">C / C++</span></h3>
+      <div className="sp-row sp-lsp-status">
+        <span><b>clangd</b><small title={detail}>{detail || 'Language server for C and C++'}</small></span>
+        <span className="sp-lsp-right">
+          <i className={`sp-lsp-pill sb-lsp-${status}`}><i className="sb-lsp-dot" />{STATUS_LABEL[status]}</i>
+          <button className="sp-mini" onClick={() => void getClangd().restart()} disabled={!s.clangdEnabled}>Restart</button>
+        </span>
+      </div>
+      <Toggle on={s.clangdEnabled} onClick={() => s.toggle('clangdEnabled')} label="Enable clangd" hint="Semantic completions, hovers, diagnostics, go to definition, rename, format. Off = built-in completions only" />
+      <div className="sp-row">
+        <span><b>C++ standard</b><small>Written to the workspace .clangd (never over your own config)</small></span>
+        <div className="sp-seg">
+          {CPP_STDS.map(v => <button key={v} className={s.cppStd === v ? 'on' : ''} onClick={() => s.setCppStd(v)} disabled={!s.clangdEnabled}>{v.replace('c++', 'C++')}</button>)}
+        </div>
+      </div>
+      <label className="sp-row sp-col">
+        <span><b>Extra compiler flags</b><small>For example <code>-DLOCAL -Wshadow -Wconversion</code>. Applied on Enter or when you leave the field</small></span>
+        <input className={`sp-input ${rejected.length ? 'bad' : ''}`} value={draft} spellCheck={false} placeholder="-DLOCAL -Wshadow" disabled={!s.clangdEnabled}
+          onChange={e => setDraft(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); (e.target as HTMLInputElement).blur(); } }} />
+        {rejected.length > 0 && <small className="sp-warn">Ignored for safety: {rejected.join(' ')} (only -D, -U, -W, -f, -O, -m, -I style flags are allowed)</small>}
+      </label>
+    </section>
   );
 }
 
@@ -65,6 +104,7 @@ export function SettingsPanel() {
             <Toggle on={s.wordWrap} onClick={() => s.toggle('wordWrap')} label="Word wrap" hint="Wrap long lines at the viewport edge" />
             <Toggle on={s.minimap} onClick={() => s.toggle('minimap')} label="Minimap" hint="Code overview on the right edge" />
           </section>
+          <IntelliSenseSection />
         </div>
         <footer className="sp-foot">
           <button className="sp-reset" onClick={() => s.reset()}>Reset to defaults</button>

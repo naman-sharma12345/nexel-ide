@@ -1,5 +1,6 @@
 // Tier-1 signature help for C++ STL calls: zero-install, derived from hoverDocs.
 import { CPP_DOCS } from './hoverDocs';
+import { isClangdActive } from './clangd/state';
 
 export interface CallContext { name: string; argIndex: number }
 
@@ -40,6 +41,7 @@ export function registerSignatureHelp(monaco: any): { dispose(): void }[] {
   return [monaco.languages.registerSignatureHelpProvider('cpp', {
     signatureHelpTriggerCharacters: ['(', ','],
     provideSignatureHelp(model: any, pos: any) {
+      if (isClangdActive()) return null; // clangd has exact overloads; this is the offline fallback
       const before = model.getValueInRange({ startLineNumber: Math.max(1, pos.lineNumber - 20), startColumn: 1, endLineNumber: pos.lineNumber, endColumn: pos.column });
       const call = findCall(before);
       const d = call && CPP_DOCS[call.name];
