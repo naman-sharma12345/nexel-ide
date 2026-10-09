@@ -17,6 +17,13 @@ contextBridge.exposeInMainWorld('nexelAPI', {
   readFileContent: (filePath) => ipcRenderer.invoke('fs:read-file-content', filePath),
   writeFileContent: (filePath, content) => ipcRenderer.invoke('fs:write-file-content', filePath, content),
 
+  // clangd bridge (main validates every message)
+  lspStart: (root) => ipcRenderer.invoke('lsp:start', root),
+  lspSend: (msg) => ipcRenderer.invoke('lsp:send', msg),
+  lspStop: () => ipcRenderer.invoke('lsp:stop'),
+  onLspMessage: (cb) => { ipcRenderer.removeAllListeners('lsp:message'); ipcRenderer.on('lsp:message', (e, m) => cb(m)); },
+  onLspStatus: (cb) => { ipcRenderer.removeAllListeners('lsp:status'); ipcRenderer.on('lsp:status', (e, s) => cb(s)); },
+
   // Terminal PTY integration
   createTerminal: () => ipcRenderer.invoke('terminal:create'),
   writeTerminal: (data) => ipcRenderer.send('terminal:write', data),

@@ -22,6 +22,8 @@ const { FileSystemService } = require('./src/main/services/FileSystemService.ts'
 const { JudgeService } = require('./src/main/services/JudgeService.ts');
 const { StoreService } = require('./src/main/services/StoreService.ts');
 const { validateJudgeArgs } = require('./src/main/services/ipcValidate.ts');
+const { LanguageServerManager } = require('./src/main/services/lsp/LanguageServerManager.ts');
+const { resolveClangd, clangdArgs, compileFlags } = require('./src/main/services/lsp/resolveClangd.ts');
 const { CompanionService } = require('./src/main/services/CompanionService.ts');
 
 let pty;
@@ -70,7 +72,24 @@ async function createWindow() {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companion:problem', problem);
   });
   companion.start();
-  app.on('before-quit', () => companion.stop());
+  app.on('before-quit', () => { companion.stop(); if (lsp) lsp.stop(); });
+
+  // clangd language server bridge (validated JSON-RPC only; renderer falls back to Monaco providers when unavailable)
+  let lsp = null;
+  const sendStatus = (s) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:status', s); };
+  ipcMain.handle('lsp:start', async (event, root) => {
+    if (typeof root !== 'string' || !path.isAbsolute(root) || root.includes('\0') || !fs.existsSync(root)) return { ok: false, reason: 'invalid-root' };
+    if (lsp) lsp.stop();
+    const bin = resolveClangd({ platform: process.platform, arch: process.arch, resourcesPath: process.resourcesPath, appRoot: __dirname, pathEnv: process.env.PATH });
+    if (!bin) { sendStatus('off'); return { ok: false, reason: 'clangd-not-found' }; }
+    const inc = path.join(fs.existsSync(path.join(process.resourcesPath || '', 'nexel-include')) ? process.resourcesPath : path.join(__dirname, 'resources'), 'nexel-include');
+    try { const f = path.join(root, 'compile_flags.txt'); if (!fs.existsSync(f)) fs.writeFileSync(f, compileFlags('c++17', inc)); } catch {}
+    lsp = new LanguageServerManager(bin.path, clangdArgs(), root, (m) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:message', m); }, sendStatus);
+    lsp.start();
+    return { ok: true, source: bin.source };
+  });
+  ipcMain.handle('lsp:send', async (event, msg) => { if (!lsp) return false; try { lsp.send(msg); return true; } catch { return false; } });
+  ipcMain.handle('lsp:stop', async () => { if (lsp) lsp.stop(); lsp = null; return true; });
 
   // Window frame control receivers
   ipcMain.on('window-control', (event, action) => {
