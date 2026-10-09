@@ -35,6 +35,12 @@ export const THEMES: NexelTheme[] = [
   { id: 'forest', name: 'Deep Forest', blurb: 'Mossy near-black with lime sparks.',
     bg0: '#0A0F0C', bg1: '#101712', bg2: '#16201A', editorBg: '#060A07', accent: '#a3e635', accent2: '#2dd4bf',
     syntax: { keyword: 'B8D98A', string: 'E3D3A0', number: 'F0B98A', type: '8AD1B5', fn: 'D9E8B0', comment: '5F7064', fg: 'E1EBE3' } },
+  { id: 'gold', name: 'Obsidian Gold', blurb: 'Black glass with a warm champagne-gold edge.',
+    bg0: '#0C0B09', bg1: '#13110D', bg2: '#1B1812', editorBg: '#070605', accent: '#facc15', accent2: '#f59e0b',
+    syntax: { keyword: 'E8C46A', string: 'C9D6A3', number: 'F0A77A', type: 'D9B98C', fn: 'F4E4B0', comment: '786F5C', fg: 'EDE7D8' } },
+  { id: 'aurora', name: 'Aurora Teal', blurb: 'Deep ocean black with teal and magenta light.',
+    bg0: '#080E10', bg1: '#0E161A', bg2: '#141F24', editorBg: '#050A0C', accent: '#2dd4bf', accent2: '#e879f9',
+    syntax: { keyword: 'E49BF2', string: '9FE3D4', number: 'F5C38A', type: '7ADBE0', fn: 'D6F0E8', comment: '587178', fg: 'DCEBEE' } },
 ];
 
 export const DEFAULT_THEME_ID = 'nexel';
