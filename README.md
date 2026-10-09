@@ -346,6 +346,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+
+- Two new themes: **Obsidian Gold** and **Aurora Teal** (9 themes total).
 - Two new themes: Nord Frost and Deep Forest (7 themes total).
 - Drag-and-drop tab reordering in the editor tab bar.
 
