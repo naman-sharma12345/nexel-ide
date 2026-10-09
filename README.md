@@ -346,6 +346,9 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+- **Find in files** (feature + design, Ctrl+Shift+F): glass search overlay with case / whole-word / regex toggles, debounced and abortable. The engine (`src/lib/searchInFiles.ts`) is a bounded worker pool: capped files, bytes, matches and concurrency, skips binaries, guards zero-width regexes. Enter jumps to the match and the line flashes in the accent colour.
+- **Theme circular reveal** (design): switching themes now expands the new palette as a circle from where you clicked (View Transitions API), with the colour-glide fallback and reduced-motion respected.
+- **Judge IPC hardening** (security): `judge:run` arguments are validated in the main process (path type/extension, max 200 cases, 2 MB of data, clamped time/memory limits) because the renderer is treated as untrusted.
 - **Stress tester** (feature + design, Judge → ⚡ STRESS): runs your solution against a brute-force file on seeded random inputs until the first mismatch. Animated SVG progress ring (pulses while running, pops ✓ / ! at the end), abortable (STOP), bounded to 2000 tests, shows the counter-example with the first differing line and saves it as a test case in one click.
 - **Hover docs** (feature, zero-install): hover STL calls (`lower_bound`, `priority_queue`, `gcd`…) and Python helpers (`heappush`, `bisect_left`…) for signature, note and complexity. Monaco hover, suggest and find widgets restyled as glass cards with accent-highlighted matches.
 - **Python + Java IntelliSense (tier 1, zero-install)**: snippet/completion providers for fast IO, heaps, DSU, main guards, collections, working on every machine without a language server. Nav dock gets a theme-aware accent sheen (respects reduced motion).
