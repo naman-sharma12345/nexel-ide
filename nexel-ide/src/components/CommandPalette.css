@@ -1,5 +1,5 @@
 .cp-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh;
-  background: rgba(5,5,7,.55); backdrop-filter: blur(6px); animation: nx-fade-in var(--nx-dur-2) var(--nx-ease-out); }
+  background: rgb(var(--nx-surf, 5 5 7) / .55); backdrop-filter: blur(6px); animation: nx-fade-in var(--nx-dur-2) var(--nx-ease-out); }
 .cp-box { font-family: 'Outfit', system-ui, sans-serif; width: min(560px, 90vw); background: var(--nx-bg-1); border-radius: var(--nx-radius-lg); border: 1px solid var(--nx-line-strong);
   box-shadow: var(--nx-shadow-2), 0 0 60px -20px var(--nx-accent); overflow: hidden; animation: nx-pop-in var(--nx-dur-3) var(--nx-ease-spring); }
 .cp-input { width: 100%; box-sizing: border-box; padding: 16px 18px; background: transparent; border: 0; border-bottom: 1px solid var(--nx-line);

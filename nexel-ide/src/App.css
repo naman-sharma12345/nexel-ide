@@ -190,7 +190,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(4, 4, 6, 0.7);
+  background: rgb(var(--nx-surf, 4 4 6) / 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -203,11 +203,11 @@
 .nx-template-modal {
   width: 500px;
   max-width: 90%;
-  background: rgba(15, 15, 18, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--nx-surf, 15 15 18) / 0.85);
+  border: 1px solid rgb(var(--nx-ink) / 0.08);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6), 0 0 1px rgb(var(--nx-ink) / 0.2) inset;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -218,7 +218,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgb(var(--nx-ink) / 0.04);
   padding-bottom: 12px;
 }
 
@@ -227,7 +227,7 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #ffffff;
+  color: rgb(var(--nx-ink));
   margin: 0;
 }
 
@@ -236,19 +236,19 @@
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgb(var(--nx-ink));
+  background: rgb(var(--nx-ink) / 0.08);
+  border: 1px solid rgb(var(--nx-ink) / 0.15);
   padding: 2px 6px;
   border-radius: 4px;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 8px rgb(var(--nx-ink) / 0.05);
 }
 
 .nx-template-modal-desc {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 11.5px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgb(var(--nx-ink) / 0.45);
   margin: 0;
 }
 
@@ -256,7 +256,7 @@
   width: 100%;
   height: 200px;
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgb(var(--nx-ink) / 0.08);
   border-radius: 6px;
   color: #e2e3e5;
   font-family: 'Consolas', 'Courier New', Courier, monospace;
@@ -270,16 +270,16 @@
 }
 
 .nx-template-textarea:focus {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgb(var(--nx-ink) / 0.25);
   background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 8px rgb(var(--nx-ink) / 0.03);
 }
 
 .nx-template-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgb(var(--nx-ink) / 0.04);
   padding-top: 16px;
 }
 
@@ -296,14 +296,14 @@
 
 .nx-template-modal-btn.cancel {
   background: transparent;
-  color: rgba(255, 255, 255, 0.4);
-  border-color: rgba(255, 255, 255, 0.08);
+  color: rgb(var(--nx-ink) / 0.4);
+  border-color: rgb(var(--nx-ink) / 0.08);
 }
 
 .nx-template-modal-btn.cancel:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.15);
+  color: rgb(var(--nx-ink));
+  background: rgb(var(--nx-ink) / 0.04);
+  border-color: rgb(var(--nx-ink) / 0.15);
 }
 
 .nx-template-modal-btn.save {
@@ -313,8 +313,8 @@
 }
 
 .nx-template-modal-btn.save:hover {
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+  background: rgb(var(--nx-ink) / 0.9);
+  box-shadow: 0 0 12px rgb(var(--nx-ink) / 0.15);
 }
 
 @keyframes modal-fade-in {

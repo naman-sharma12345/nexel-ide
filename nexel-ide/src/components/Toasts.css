@@ -2,7 +2,7 @@
 .tz-toast {
   position: relative; overflow: hidden; pointer-events: auto; cursor: pointer;
   display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px; min-width: 180px;
-  background: rgba(23,23,27,.82); backdrop-filter: blur(18px) saturate(140%);
+  background: rgb(var(--nx-surf, 23 23 27) / .82); backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid var(--nx-line-strong); border-radius: var(--nx-radius);
   box-shadow: var(--nx-shadow-2); color: var(--nx-text); font: 500 12.5px/1.2 var(--sans);
   animation: tz-in var(--nx-dur-3) var(--nx-ease-spring) both;

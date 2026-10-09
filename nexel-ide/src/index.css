@@ -41,11 +41,11 @@ h1, h2, p {
   --nx-accent2-rgb: 34 211 238;
   --nx-bg-1: #111114;            /* panels */
   --nx-bg-2: #17171B;            /* raised */
-  --nx-line: rgba(255, 255, 255, 0.06);
-  --nx-line-strong: rgba(255, 255, 255, 0.12);
-  --nx-text: rgba(255, 255, 255, 0.92);
-  --nx-text-dim: rgba(255, 255, 255, 0.55);
-  --nx-text-faint: rgba(255, 255, 255, 0.32);
+  --nx-line: rgb(var(--nx-ink) / 0.06);
+  --nx-line-strong: rgb(var(--nx-ink) / 0.12);
+  --nx-text: rgb(var(--nx-ink) / 0.92);
+  --nx-text-dim: rgb(var(--nx-ink) / 0.55);
+  --nx-text-faint: rgb(var(--nx-ink) / 0.32);
   --nx-accent: #34d399;
   --nx-accent-2: #22d3ee;
   --nx-accent-soft: rgb(var(--nx-accent-rgb) / 0.15);
@@ -69,17 +69,17 @@ h1, h2, p {
 ::selection { background: rgb(var(--nx-accent-rgb) / 0.28); color: #fff; }
 
 /* Slim, auto-hiding-feel scrollbars everywhere (Chromium/Electron). */
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--nx-ink) / .14) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.10);
+  background: rgb(var(--nx-ink) / .10);
   border-radius: 999px;
   border: 3px solid transparent;
   background-clip: padding-box;
   transition: background-color var(--nx-dur-2);
 }
-*::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,.22); }
+*::-webkit-scrollbar-thumb:hover { background-color: rgb(var(--nx-ink) / .22); }
 
 /* Keyboard focus is always visible, never on mouse click. */
 :where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
@@ -104,7 +104,7 @@ h1, h2, p {
 @keyframes nx-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
 .nx-skeleton {
   border-radius: var(--nx-radius-sm);
-  background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.09) 37%, rgba(255,255,255,.04) 63%);
+  background: linear-gradient(90deg, rgb(var(--nx-ink) / .04) 25%, rgb(var(--nx-ink) / .09) 37%, rgb(var(--nx-ink) / .04) 63%);
   background-size: 400% 100%;
   animation: nx-shimmer 1.4s ease infinite;
 }
@@ -169,8 +169,17 @@ html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
 .nx-sheen { position: relative; }
 .nx-sheen::before { content:''; position:absolute; inset:0 0 auto 0; height:1px; background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .5), transparent); opacity:.7; pointer-events:none; }
 
-/* Paper Light: luminance inversion of the dark token set; hue-rotate restores original hues. */
-html[data-theme='light'] #root { filter: invert(0.93) hue-rotate(180deg); }
-html[data-theme='light'] #root img, html[data-theme='light'] #root video { filter: invert(1) hue-rotate(180deg); }
-html[data-theme='light'] { background: #0b0c10; color-scheme: light; }
-@media (prefers-reduced-motion: reduce) { html[data-theme='light'] #root { transition: none; } }
+/* Paper Light: a true light palette driven by tokens (--nx-ink flips white-alpha overlays to ink-alpha). */
+html[data-theme='light'] {
+  --nx-ink: 28 25 20;
+  --nx-surf: 247 245 239;
+  --nx-text: rgba(28, 25, 20, 0.92);
+  --nx-text-dim: rgba(28, 25, 20, 0.62);
+  --nx-text-faint: rgba(28, 25, 20, 0.4);
+  --nx-line: rgba(28, 25, 20, 0.09);
+  --nx-line-strong: rgba(28, 25, 20, 0.18);
+  --nx-shadow-1: 0 1px 2px rgba(60,50,30,.12), 0 4px 12px -2px rgba(60,50,30,.1);
+  --nx-shadow-2: 0 8px 24px -6px rgba(60,50,30,.2), 0 24px 64px -12px rgba(60,50,30,.22);
+  color-scheme: light;
+  background: #f7f5ef;
+}

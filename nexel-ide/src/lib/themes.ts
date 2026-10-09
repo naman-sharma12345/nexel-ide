@@ -9,6 +9,7 @@ export interface NexelTheme {
   blurb: string;
   bg0: string; bg1: string; bg2: string; editorBg: string;
   accent: string; accent2: string;
+  light?: boolean;
   /** Monaco syntax colours (hex without #) */
   syntax: { keyword: string; string: string; number: string; type: string; fn: string; comment: string; fg: string };
 }
@@ -45,9 +46,9 @@ export const THEMES: NexelTheme[] = [
     bg0: '#0D0A12', bg1: '#150F1B', bg2: '#1D1626', editorBg: '#08060C', accent: '#fb7185', accent2: '#a78bfa',
     syntax: { keyword: 'FB8FA0', string: 'F5C9A8', number: 'F9A87A', type: 'B9A3F5', fn: 'F3DDB8', comment: '6E6180', fg: 'ECE3F0' } },
   // Light: authored as a dark palette and optically inverted (see html[data-theme='light'] in index.css).
-  { id: 'light', name: 'Paper Light', blurb: 'Warm paper white with emerald ink (inverted-luminance render).',
-    bg0: '#0B0C10', bg1: '#13141A', bg2: '#1A1C23', editorBg: '#04050A', accent: '#34d399', accent2: '#22d3ee',
-    syntax: { keyword: 'C5A3A3', string: 'B0C4DE', number: 'D3C1A5', type: 'A3C5B5', fn: 'D4C2AD', comment: '6D727C', fg: 'E2E3E5' } },
+  { id: 'light', name: 'Paper Light', blurb: 'Warm paper white with dark ink and emerald accents.', light: true,
+    bg0: '#f7f5ef', bg1: '#efece3', bg2: '#e6e2d6', editorBg: '#fdfcf8', accent: '#059669', accent2: '#0891b2',
+    syntax: { keyword: 'A6264B', string: '0B6E4F', number: 'B45309', type: '1D4ED8', fn: '6D28D9', comment: '8A857A', fg: '1C1914' } },
 ];
 
 export const DEFAULT_THEME_ID = 'nexel';
@@ -80,7 +81,7 @@ export function applyTheme(id: string, root: HTMLElement = document.documentElem
 export function monacoThemeData(t: NexelTheme) {
   const a = t.accent.replace('#', '');
   return {
-    base: 'vs-dark' as const,
+    base: (t.light ? 'vs' : 'vs-dark') as 'vs' | 'vs-dark',
     inherit: true,
     rules: [
       { token: 'comment', foreground: t.syntax.comment, fontStyle: 'italic' },
@@ -98,14 +99,14 @@ export function monacoThemeData(t: NexelTheme) {
       'editor.background': t.editorBg,
       'editor.foreground': '#' + t.syntax.fg,
       'editor.lineHighlightBackground': t.bg1,
-      'editorLineNumber.foreground': '#303035',
-      'editorLineNumber.activeForeground': '#FFFFFF',
+      'editorLineNumber.foreground': t.light ? '#b5b0a2' : '#303035',
+      'editorLineNumber.activeForeground': t.light ? '#1C1914' : '#FFFFFF',
       'editor.selectionBackground': `#${a}33`,
       'editor.selectionHighlightBackground': `#${a}18`,
       'editorCursor.foreground': t.accent,
       'editorIndentGuide.activeBackground1': `#${a}55`,
       'editorWidget.background': t.bg1,
-      'editorWidget.border': '#202025',
+      'editorWidget.border': t.light ? '#d8d3c4' : '#202025',
     },
   };
 }
