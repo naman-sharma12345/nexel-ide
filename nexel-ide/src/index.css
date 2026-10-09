@@ -159,3 +159,8 @@ button:active:not(:disabled) { transform: scale(0.97); }
 html.nx-zen .nx-sidebar-container, html.nx-zen .nx-navdock-wrapper-container, html.nx-zen .nx-status-h { opacity: 0; pointer-events: none; }
 html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: none; } }
+
+/* Tab entrance: gentle slide + fade */
+@keyframes nx-tab-in { from { opacity: 0; transform: translateY(4px) scale(.97); } to { opacity: 1; transform: none; } }
+.nx-tab, [class*="tab-item"] { animation: nx-tab-in .22s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .nx-tab, [class*="tab-item"] { animation: none; } }
