@@ -346,6 +346,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+
+- **Zen mode** (Ctrl+Alt+Z or palette): sidebar, dock and status bar fade away; Esc exits.
 - **Breadcrumbs** (design): the editor footer path is now workspace-relative clickable-looking crumbs (`cp-workspace › codeforces › 1950A.cpp`) with chevrons, staggered slide-in on every file switch and an accent-coloured file name.
 - **Living welcome backdrop** (design): dot grid that lights up under the cursor, an accent spotlight that follows the mouse (rAF-throttled CSS vars, no React re-renders) and two slow drifting aurora orbs tinted by the active theme; respects reduced motion.
 - **Session restore** (feature): reopens the tabs you had open in the last workspace (paths only, validated to live inside the workspace root, capped at 24, bounded storage) and focuses the active one.

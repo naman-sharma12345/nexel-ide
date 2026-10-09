@@ -51,6 +51,8 @@ function App() {
   const [quickOpen, setQuickOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [zen, setZen] = useState(false);
+  useEffect(() => { document.documentElement.classList.toggle('nx-zen', zen); return () => document.documentElement.classList.remove('nx-zen'); }, [zen]);
   const tree = useWorkspaceStore(s => s.tree);
   const themeId = useSettingsStore(s => s.theme);
   const firstTheme = useRef(true);
@@ -60,6 +62,8 @@ function App() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(false); setSearchOpen(o => !o); }
       else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
       else if ((e.ctrlKey || e.metaKey) && e.key === '/' && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) { e.preventDefault(); setShortcutsOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'z') { e.preventDefault(); setZen(z => !z); }
+      else if (e.key === 'Escape' && document.documentElement.classList.contains('nx-zen') && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) setZen(false);
       else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); const st = useSettingsStore.getState(); st.openSettings(!st.settingsOpen); }
       else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
     };
@@ -114,6 +118,7 @@ function App() {
     { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
     { id: 'judge', label: 'Go to Judge', run: () => setSection('judge') },
     { id: 'contests', label: 'Go to Contests', run: () => setSection('contests') },
+    { id: 'zen', label: 'Toggle Zen Mode', hint: 'Ctrl+Alt+Z', run: () => setZen(z => !z) },
     { id: 'sidebar', label: 'Toggle Sidebar', run: () => toggleSidebar() },
     { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
     { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },

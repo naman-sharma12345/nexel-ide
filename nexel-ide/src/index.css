@@ -153,3 +153,9 @@ button:active:not(:disabled) { transform: scale(0.97); }
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 ::view-transition-old(root) { z-index: 1; }
 ::view-transition-new(root) { z-index: 2; }
+
+/* Zen mode: chrome fades away, editor stays */
+.nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: opacity .35s ease, transform .35s ease, max-width .35s ease; }
+html.nx-zen .nx-sidebar-container, html.nx-zen .nx-navdock-wrapper-container, html.nx-zen .nx-status-h { opacity: 0; pointer-events: none; }
+html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: none; } }

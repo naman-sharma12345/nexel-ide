@@ -16,6 +16,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     { label: 'Toggle comment', keys: ['Ctrl', '/'] },
   ] },
   { title: 'Workspace', items: [
+    { label: 'Zen mode', keys: ['Ctrl', 'Alt', 'Z'] },
     { label: 'Toggle terminal', keys: ['Ctrl', '`'] },
     { label: 'Switch theme', keys: ['Ctrl', 'Shift', 'P'] },
     { label: 'Import problem', keys: ['Companion'] },
