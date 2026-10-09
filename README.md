@@ -346,6 +346,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+
+- Two new themes: **Obsidian Gold** and **Aurora Teal** (9 themes total).
 - Two new themes: Nord Frost and Deep Forest (7 themes total).
 - Drag-and-drop tab reordering in the editor tab bar.
 
@@ -389,3 +391,5 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 - (04:49) Global focus rings, button press feedback, thin themed scrollbars, reduced-motion support; fast-I/O C++ template module (+tests).
 
 - (overnight) Verdict classifier `src/lib/verdict.ts` (AC/WA/TLE/MLE/RE, Codeforces precedence) and animated tab entrance.
+
+- STL signature help (C++): parameter hints while typing calls like `sort(`, `lower_bound(` with complexity notes (src/lib/signatureHelp.ts).
