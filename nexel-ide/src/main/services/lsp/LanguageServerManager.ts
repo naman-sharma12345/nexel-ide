@@ -18,8 +18,10 @@ export class LanguageServerManager {
   status: LspStatus = 'off';
   private bin: string; private args: string[]; private cwd: string;
   private onMessage: (m: unknown) => void; private onStatus: (s: LspStatus) => void;
-  constructor(bin: string, args: string[], cwd: string, onMessage: (m: unknown) => void, onStatus: (s: LspStatus) => void = () => {}) {
+  private baseDelayMs: number;
+  constructor(bin: string, args: string[], cwd: string, onMessage: (m: unknown) => void, onStatus: (s: LspStatus) => void = () => {}, opts: { baseDelayMs?: number } = {}) {
     this.bin = bin; this.args = [...args]; this.cwd = cwd; this.onMessage = onMessage; this.onStatus = onStatus;
+    this.baseDelayMs = opts.baseDelayMs ?? 1000;
   }
 
   private set(s: LspStatus) { this.status = s; this.onStatus(s); }
@@ -48,7 +50,7 @@ export class LanguageServerManager {
     if (this.stopped) return;
     if (this.retries >= MAX_RESTARTS) { this.set('failed'); return; }
     this.set('crashed');
-    const delay = Math.min(30_000, 1000 * 2 ** this.retries++);
+    const delay = Math.min(30_000, this.baseDelayMs * 2 ** this.retries++);
     this.restartTimer = setTimeout(() => { this.restartTimer = null; if (!this.stopped) this.start(); }, delay);
     (this.restartTimer as { unref?: () => void }).unref?.();
   }

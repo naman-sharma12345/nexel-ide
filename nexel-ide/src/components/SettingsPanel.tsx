@@ -22,7 +22,8 @@ function IntelliSenseSection() {
   const status = useLspStore(x => x.status);
   const detail = useLspStore(x => x.detail);
   const [draft, setDraft] = useState(s.clangdFlags);
-  useEffect(() => setDraft(s.clangdFlags), [s.clangdFlags]);
+  const [seen, setSeen] = useState(s.clangdFlags);
+  if (seen !== s.clangdFlags) { setSeen(s.clangdFlags); setDraft(s.clangdFlags); } // store changed elsewhere (reset)
   const { rejected } = partitionFlags(draft);
   const commit = () => { if (draft.trim() !== s.clangdFlags) s.setClangdFlags(draft); };
   return (

@@ -198,6 +198,63 @@ npm run electron:dev
 | `npm run test` | Run all Vitest unit/integration tests |
 | `npm run test:coverage` | Run Vitest with v8 coverage (70% threshold) |
 | `npm run test:e2e` | Run Playwright end-to-end tests |
+| `npm run fetch:clangd` | Download + verify the pinned clangd for this OS into `resources/clangd/` |
+| `npm run fetch:clangd:all` | Same for Windows, macOS and Linux (for release machines) |
+| `npm run test:clangd` | clangd unit tests + the real-binary end-to-end test |
+| `npm run dist` / `dist:win` / `dist:mac` / `dist:linux` | Build, fetch clangd and package with electron-builder |
+
+---
+
+## 🧩 C/C++ IntelliSense (clangd)
+
+Nexel ships the official [clangd](https://clangd.llvm.org) language server (pinned **19.1.2**) and wires it straight into Monaco. Without clangd (or if it crashes) the editor quietly falls back to the built-in, zero-install providers, so C++ always has completions.
+
+**What you get in `.cpp` / `.c` / `.h` files**
+
+- Semantic completions (`v.` → `push_back`, `size`, … with signatures, return types and docs), snippets and the Nexel CP aliases merged into one list, no duplicates
+- Hovers with the exact type (`vector<int>`), plus a short Nexel CP note (complexity, pitfalls) for STL names
+- Signature help on `(` and `,`, diagnostics as themed squiggles (errors, warnings, unused code), go to definition / declaration (Ctrl+click, F12, peek into headers), find references, rename (F2), document outline, highlight occurrences, format document / selection (clang-format)
+- A **clangd** chip in the status bar: `ready`, `indexing` (soft pulse), `starting`, `fallback` (not installed), `error` (crashed). Click it to restart clangd, switch to built-in IntelliSense, or open the settings
+- **Settings → IntelliSense**: enable/disable clangd, C++ standard (17 / 20 / 23), extra compiler flags (for example `-DLOCAL -Wshadow`)
+
+**How it works**
+
+```
+Monaco providers ──► ClangdSession (renderer)          src/lib/clangd/session.ts
+                       │  LSP JSON-RPC, debounced incremental didChange, markers, fallback
+                       ▼
+          preload: nexelAPI.lspStart / lspSend / lspRestart / lspStop
+                       ▼  (allowlisted methods only, 4 MB cap, sender check)
+main.cjs ──► LanguageServerManager ──► clangd (stdio, fixed argv, no shell)
+             src/main/services/lsp/    restart with backoff, killed on quit / window close
+```
+
+- **Which clangd runs**: a bundled copy (`<resources>/clangd/<os>-<arch>/bin/clangd`) → the repo copy in dev (`resources/clangd/…`) → `clangd` on your `PATH` → built-in fallback.
+- **Single-file CP folders**: when a workspace has no `compile_commands.json`, `compile_flags.txt` or `.clangd` of its own, Nexel writes a small `.clangd` marked `# nexel:generated` (C++ standard, `-Wall`, your extra flags, C rules for `.c` files). It only ever rewrites files carrying that marker; delete the first line to make it yours.
+- **`#include <bits/stdc++.h>` everywhere**: Linux (libstdc++) and MinGW have it; for macOS (libc++) and MSVC toolchains Nexel adds `-I` to a bundled `nexel-include/bits/stdc++.h` shim.
+- **System headers**: Nexel finds `g++` (then `clang++`) on `PATH` and passes that exact path to clangd's `--query-driver`, so clangd uses the same headers your compiler does (MinGW on Windows, Xcode tools on macOS).
+- **Security**: the renderer can never choose the binary or its arguments. Extra flags go into `.clangd` only after an allowlist check (`-D -U -W -f -O -m -I -isystem`; `-fplugin`, `-Xclang`, `-load`, `@file` and shell characters are dropped), and only `initialize`, `textDocument/*`, `completionItem/resolve`, `$/cancelRequest` and a few `workspace/*` notifications cross the IPC bridge.
+
+**Packaged builds bundle clangd on every OS**
+
+`scripts/fetch-clangd.mjs` downloads the official release zips from `github.com/clangd/clangd/releases/tag/19.1.2`, checks each SHA256 (pinned in `scripts/clangd-assets.mjs`), caches them (`~/.cache/nexel-clangd`, or `NEXEL_CLANGD_CACHE`) and extracts `bin/` + `lib/clang/19/include` into `resources/clangd/`. electron-builder then copies only the matching folder into each installer through per-target `extraResources`:
+
+| Target | Release asset | Bundled as |
+|---|---|---|
+| Windows x64 (NSIS) | `clangd-windows-19.1.2.zip` | `resources/clangd/win-x64` (also used on Windows on ARM via emulation) |
+| macOS universal (DMG, arm64 + x64) | `clangd-mac-19.1.2.zip` (universal Mach-O) | `resources/clangd/mac-universal` |
+| Linux x64 (AppImage, deb) | `clangd-linux-19.1.2.zip` | `resources/clangd/linux-x64` |
+
+The binaries are gitignored and never committed. Linux on ARM has no official build: install `clangd` from your distro and Nexel picks it up from `PATH`.
+
+```bash
+npm run fetch:clangd      # dev: this OS only
+npm run dist:win          # or dist:mac / dist:linux: build + fetch + package
+```
+
+**Verified end to end**: `src/main/services/lsp/__tests__/clangd.e2e.test.ts` spawns the real pinned clangd through `LanguageServerManager`, opens a file with `#include <bits/stdc++.h>` (resolved to the shim) and `vector<int> v; v.`, and checks completion (`push_back`), hover (`vector<int>`), an undeclared-identifier diagnostic, signature help, incremental sync, definition, references, rename, highlights, formatting and symbols, both raw and through the renderer's `ClangdSession` + Monaco providers. It is skipped when no clangd is available.
+
+**Troubleshooting**: chip says `fallback` → run `npm run fetch:clangd` (dev) or install clangd. Standard headers not found → install a compiler (`g++`/MinGW on Windows, Xcode command line tools on macOS) and restart clangd from the chip.
 
 ---
 
@@ -349,7 +406,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 
 - **Paper Light is now a true light theme** (10:50 IST): white-alpha overlays run through a new `--nx-ink` token, near-black surfaces through `--nx-surf`, plus a light Monaco palette (`vs` base). The old invert filter is gone.
 
-- **clangd backend (foundation)**: LSP framing, safe JSON-RPC IPC allow-list (`textDocument/*` only), per-platform clangd resolution (bundled, dev, PATH, then Monaco fallback), crash-restart with backoff, bits/stdc++.h shim for macOS/Windows. Renderer client and packaging next.
+- **clangd IntelliSense, finished** (Oct 9): real clangd 19.1.2 in Monaco for C/C++ with completions, hovers, signature help, diagnostics, go to definition, references, rename, outline, highlights and formatting; automatic fallback to the built-in providers; a status-bar chip (ready / indexing / starting / fallback / error) with a restart menu and failure toasts; Settings → IntelliSense (toggle, C++17/20/23, extra flags); auto-generated `.clangd` for CP folders; checksum-verified clangd bundled into Windows, macOS (universal) and Linux builds. See [C/C++ IntelliSense (clangd)](#-cc-intellisense-clangd).
+- **Theme fix**: dark themes now define the `--nx-ink` / `--nx-surf` tokens (hairlines, text tints and glass widgets were falling back to defaults), and Monaco suggest / hover / peek widgets follow the active theme, Paper Light included.
 
 - **Codeforces fix:** built-in problem fetcher (API standings + statement parser, retries, cache, sanitised HTML) replaces the external scraper; upcoming contests now open a countdown view (IST start, Register link) and auto-load problems at start.
 

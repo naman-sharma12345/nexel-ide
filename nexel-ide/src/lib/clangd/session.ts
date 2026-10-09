@@ -125,9 +125,10 @@ export class ClangdSession {
           initializationOptions: { clangdFileStatus: true },
         }, undefined, 60_000);
         this.caps = init?.capabilities ?? {};
-        const si = init?.serverInfo;
-        this.serverInfo = si?.version ? `clangd ${String(si.version).split(' ')[0]}` : 'clangd';
-        useLspStore.getState().patch({ version: si?.version ? String(si.version).split(' ')[0] : null });
+        // serverInfo.version is e.g. "clangd version 19.1.2 (https://github.com/llvm/llvm-project ...)"
+        const ver = /\d+\.\d+(?:\.\d+)?/.exec(String(init?.serverInfo?.version ?? ''))?.[0] ?? null;
+        this.serverInfo = ver ? `clangd ${ver}` : 'clangd';
+        useLspStore.getState().patch({ version: ver });
         this.client.notify('initialized', {});
         this.initialized = true;
         for (const d of this.docs.values()) this.openDoc(d);

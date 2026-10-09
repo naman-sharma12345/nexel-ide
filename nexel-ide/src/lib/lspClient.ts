@@ -56,15 +56,16 @@ export class LspClient {
   /** Answer a server->client request (default answer is a null result). */
   onRequest(method: string, cb: (p: unknown) => unknown) { this.requestHandlers.set(method, cb); }
 
-  handleMessage(m: any) {
-    if (!m || typeof m !== 'object') return;
+  handleMessage(raw: unknown) {
+    if (!raw || typeof raw !== 'object') return;
+    const m = raw as { id?: number | string; method?: unknown; params?: unknown; result?: unknown; error?: { message?: string } };
     if ((typeof m.id === 'number' || typeof m.id === 'string') && typeof m.method !== 'string') {
       const p = this.pending.get(m.id as number); if (!p) return;
       clearTimeout(p.timer); this.pending.delete(m.id as number);
       if (m.error) p.reject(new Error(m.error.message || 'LSP error')); else p.resolve(m.result);
     } else if (typeof m.method === 'string') {
       if (m.id !== undefined) {
-        let result: unknown = null;
+        let result: unknown;
         try { result = this.requestHandlers.get(m.method)?.(m.params) ?? null; } catch { result = null; }
         void Promise.resolve(this.t.send({ jsonrpc: '2.0', id: m.id, result })).catch(() => {});
       }

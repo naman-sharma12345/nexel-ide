@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import { encodeFrame, FrameDecoder, MAX_FRAME_BYTES } from '../framing';
 import { resolveClangd, platformKey, compileFlags } from '../resolveClangd';

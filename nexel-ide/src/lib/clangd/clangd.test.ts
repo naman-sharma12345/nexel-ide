@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { pathToUri, uriToPath, uriKey, clangdLanguageFor, samePath } from './uri';
 import { toMonacoCompletion, toMonacoCompletions, toMarkers, toMonacoHover, toLocations, toMonacoSymbols, toMonacoWorkspaceEdit, toLspChanges, markerSeverity, toMonacoSignatureHelp } from './convert';
