@@ -20,6 +20,7 @@ import { useJudgeStore } from './stores/useJudgeStore';
 import { applyTheme, THEMES } from './lib/themes';
 import { switchTheme } from './lib/themeTransition';
 import { SearchPanel } from './components/SearchPanel';
+import { loadSession, saveSession } from './lib/session';
 import './App.css';
 
 function App() {
@@ -65,6 +66,28 @@ function App() {
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
+  // Session restore: reopen last workspace's tabs once, then keep the session saved (debounced).
+  const restored = useRef(false);
+  const rootPath = useWorkspaceStore(s => s.rootPath);
+  useEffect(() => {
+    if (restored.current || !rootPath) return;
+    restored.current = true;
+    if (useEditorStore.getState().tabs.length) return;
+    const sess = loadSession(rootPath);
+    if (!sess) return;
+    void (async () => {
+      for (const p of sess.paths.filter(x => x !== sess.active)) {
+        try { useEditorStore.getState().openFile(p, p.split(/[\\/]/).pop() ?? p, await window.nexelAPI.readFileContent(p)); } catch { /* file gone: skip */ }
+      }
+      if (sess.active) { try { useEditorStore.getState().openFile(sess.active, sess.active.split(/[\\/]/).pop() ?? sess.active, await window.nexelAPI.readFileContent(sess.active)); } catch { /* skip */ } }
+      useStatusStore.getState().pushToast(`Restored ${sess.paths.length} tab${sess.paths.length === 1 ? '' : 's'}`, 'info', 2500);
+    })();
+  }, [rootPath]);
+  useEffect(() => {
+    if (!rootPath || !restored.current) return;
+    const t = window.setTimeout(() => { if (tabs.length) saveSession({ root: rootPath, paths: tabs.map(x => x.filePath), active: activeTabPath }); }, 400);
+    return () => window.clearTimeout(t);
+  }, [tabs, activeTabPath, rootPath]);
   // Competitive Companion: browser extension -> new solution file + judge samples
   useEffect(() => {
     window.nexelAPI.onCompanionProblem?.(async (p) => {
