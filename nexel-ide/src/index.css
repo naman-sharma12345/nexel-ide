@@ -144,3 +144,7 @@ button:active:not(:disabled) { transform: scale(0.97); }
 .monaco-editor .monaco-hover code, .monaco-editor .monaco-hover .monaco-tokenized-source { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused { background: var(--nx-accent-soft) !important; box-shadow: inset 2px 0 0 var(--nx-accent); transition: background var(--nx-dur-1); }
 .monaco-editor .suggest-widget .monaco-list .monaco-list-row .highlight { color: var(--nx-accent) !important; font-weight: 600; }
+
+/* Line flash when jumping from Find in Files */
+.monaco-editor .nx-line-flash { background: rgb(var(--nx-accent-rgb) / .22); animation: nx-line-flash 1.4s var(--nx-ease-out) forwards; box-shadow: inset 3px 0 0 var(--nx-accent); }
+@keyframes nx-line-flash { 0% { background: rgb(var(--nx-accent-rgb) / .45); } 100% { background: rgb(var(--nx-accent-rgb) / 0); box-shadow: inset 3px 0 0 transparent; } }

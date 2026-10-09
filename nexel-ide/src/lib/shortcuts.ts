@@ -4,6 +4,7 @@ export interface ShortcutGroup { title: string; items: Array<{ label: string; ke
 export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   { title: 'Navigate', items: [
     { label: 'Quick open file', keys: ['Ctrl', 'P'] },
+    { label: 'Find in files', keys: ['Ctrl', 'Shift', 'F'] },
     { label: 'Palette', keys: ['Ctrl', 'Shift', 'P'] },
     { label: 'Settings', keys: ['Ctrl', ','] },
     { label: 'Shortcuts', keys: ['Ctrl', '/'] },

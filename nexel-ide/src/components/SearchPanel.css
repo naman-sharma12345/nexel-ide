@@ -1,0 +1,30 @@
+.sf-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 10vh;
+  background: rgb(5 5 7 / .55); backdrop-filter: blur(6px); animation: nx-fade-in var(--nx-dur-2) var(--nx-ease-out); }
+.sf-box { font-family: 'Outfit', system-ui, sans-serif; width: min(720px, 92vw); background: var(--nx-bg-1); border: 1px solid var(--nx-line-strong); border-radius: var(--nx-radius-lg);
+  box-shadow: var(--nx-shadow-2), 0 0 70px -22px var(--nx-accent); overflow: hidden; animation: nx-pop-in var(--nx-dur-3) var(--nx-ease-spring); }
+.sf-bar { display: flex; align-items: center; gap: 8px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--nx-line); position: relative; }
+.sf-bar::after { content: ''; position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%; transform: scaleX(0); transform-origin: left;
+  background: linear-gradient(90deg, var(--nx-accent), var(--nx-accent-2), transparent); transition: transform .5s var(--nx-ease-out); }
+.sf-bar:focus-within::after { transform: scaleX(1); }
+.sf-glyph { font-size: 20px; color: var(--nx-text-faint); transition: color .2s; }
+.sf-bar:focus-within .sf-glyph { color: var(--nx-accent); }
+.sf-glyph.busy { animation: sf-spin 0.9s linear infinite; color: var(--nx-accent); }
+@keyframes sf-spin { to { transform: rotate(360deg); } }
+.sf-input { flex: 1; padding: 16px 4px; background: transparent; border: 0; outline: none; color: var(--nx-text); font: 15px 'Outfit', system-ui, sans-serif; }
+.sf-input::placeholder { color: var(--nx-text-faint); }
+.sp2-flag { font: 600 11px ui-monospace, monospace; color: var(--nx-text-dim); background: transparent; border: 1px solid var(--nx-line); border-radius: 6px; padding: 3px 7px; cursor: pointer; }
+.sp2-flag:hover { border-color: var(--nx-line-strong); color: var(--nx-text); }
+.sp2-flag.on { color: var(--nx-accent); border-color: rgb(var(--nx-accent-rgb) / .5); background: rgb(var(--nx-accent-rgb) / .12); box-shadow: 0 0 12px -4px var(--nx-accent); }
+.sf-list { max-height: min(54vh, 460px); overflow-y: auto; padding: 6px; }
+.sf-empty { padding: 26px 18px; text-align: center; color: var(--nx-text-faint); font-size: 13px; }
+.sf-file { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 4px; font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--nx-text); position: sticky; top: 0; background: var(--nx-bg-1); z-index: 1; }
+.sf-file em { font-style: normal; font-size: 10.5px; color: var(--nx-accent); background: rgb(var(--nx-accent-rgb) / .12); border-radius: 999px; padding: 1px 8px; }
+.sf-hit { display: flex; gap: 12px; align-items: baseline; padding: 5px 10px; border-radius: var(--nx-radius-sm); cursor: pointer; animation: nx-pop-in var(--nx-dur-2) var(--nx-ease-out) both;
+  transition: background-color var(--nx-dur-1), padding-left var(--nx-dur-2) var(--nx-ease-out); }
+.sf-hit.active { background: var(--nx-accent-soft); padding-left: 15px; box-shadow: inset 2px 0 0 var(--nx-accent); }
+.sf-ln { min-width: 28px; text-align: right; font: 11px ui-monospace, monospace; color: var(--nx-text-faint); }
+.sf-hit code { font: 12.5px 'JetBrains Mono', ui-monospace, monospace; color: var(--nx-text-dim); white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+.sf-hit mark { background: rgb(var(--nx-accent-rgb) / .22); color: var(--nx-accent); border-radius: 3px; padding: 0 2px; text-shadow: 0 0 10px rgb(var(--nx-accent-rgb) / .5); }
+.sf-foot { display: flex; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--nx-line); font-size: 11px; color: var(--nx-text-dim); }
+.sf-foot kbd { font: 10.5px ui-monospace, monospace; border: 1px solid var(--nx-line); border-radius: 4px; padding: 0 5px; margin-right: 4px; }
+.sf-count { margin-left: auto; }

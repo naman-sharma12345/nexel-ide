@@ -272,6 +272,22 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
   };
 
   const langProvidersRef = useRef<{ dispose(): void }[] | null>(null);
+  // Find-in-files / palette jump: reveal a line and pulse-highlight it.
+  const flashRef = useRef<string[]>([]);
+  useEffect(() => {
+    const onReveal = (e: Event) => {
+      const { line, col } = (e as CustomEvent<{ path: string; line: number; col: number }>).detail ?? {};
+      const ed = editorRef.current;
+      if (!ed || !Number.isFinite(line)) return;
+      ed.revealLineInCenter(line);
+      ed.setPosition({ lineNumber: line, column: col || 1 });
+      ed.focus();
+      flashRef.current = ed.deltaDecorations(flashRef.current, [{ range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 }, options: { isWholeLine: true, className: 'nx-line-flash' } }]);
+      window.setTimeout(() => { flashRef.current = editorRef.current?.deltaDecorations(flashRef.current, []) ?? []; }, 1400);
+    };
+    window.addEventListener('nexel:reveal', onReveal);
+    return () => window.removeEventListener('nexel:reveal', onReveal);
+  }, []);
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     // Feed the status bar: cursor + selection length (store skips no-op updates).

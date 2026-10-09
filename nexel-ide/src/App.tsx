@@ -18,6 +18,7 @@ import { useSettingsStore } from './stores/useSettingsStore';
 import { useStatusStore } from './stores/useStatusStore';
 import { useJudgeStore } from './stores/useJudgeStore';
 import { applyTheme, THEMES } from './lib/themes';
+import { SearchPanel } from './components/SearchPanel';
 import './App.css';
 
 function App() {
@@ -47,13 +48,15 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const tree = useWorkspaceStore(s => s.tree);
   const themeId = useSettingsStore(s => s.theme);
   const firstTheme = useRef(true);
   useEffect(() => { applyTheme(themeId, document.documentElement, !firstTheme.current); firstTheme.current = false; }, [themeId]);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(false); setSearchOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
       else if ((e.ctrlKey || e.metaKey) && e.key === '/' && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) { e.preventDefault(); setShortcutsOpen(o => !o); }
       else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); const st = useSettingsStore.getState(); st.openSettings(!st.settingsOpen); }
       else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
@@ -90,6 +93,7 @@ function App() {
     { id: 'sidebar', label: 'Toggle Sidebar', run: () => toggleSidebar() },
     { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
     { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },
+    { id: 'findfiles', label: 'Find in Files', hint: 'Ctrl+Shift+F', run: () => setSearchOpen(true) },
     { id: 'shortcuts', label: 'Keyboard Shortcuts', hint: 'Ctrl+/', run: () => setShortcutsOpen(true) },
     { id: 'settings', label: 'Open Settings', hint: 'Ctrl+,', run: () => useSettingsStore.getState().openSettings(true) },
     ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => useSettingsStore.getState().setTheme(t.id) })),
@@ -150,6 +154,7 @@ function App() {
     }}>
       {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}
       {paletteOpen && <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} />}
+      {searchOpen && <SearchPanel files={flatFiles(tree)} onClose={() => setSearchOpen(false)} onOpen={async (p, line, col) => { await handleFileSelect(p); window.setTimeout(() => window.dispatchEvent(new CustomEvent('nexel:reveal', { detail: { path: p, line, col } })), 120); }} />}
       {quickOpen && <CommandPalette commands={fileCommands} placeholder="Go to file…" label="Quick open" onClose={() => setQuickOpen(false)} />}
       <TitleBar />
 
