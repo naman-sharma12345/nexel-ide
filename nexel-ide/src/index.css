@@ -164,3 +164,7 @@ html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
 @keyframes nx-tab-in { from { opacity: 0; transform: translateY(4px) scale(.97); } to { opacity: 1; transform: none; } }
 .nx-tab, [class*="tab-item"] { animation: nx-tab-in .22s cubic-bezier(.2,.8,.2,1) both; }
 @media (prefers-reduced-motion: reduce) { .nx-tab, [class*="tab-item"] { animation: none; } }
+
+/* Soft top-edge sheen on raised glass surfaces */
+.nx-sheen { position: relative; }
+.nx-sheen::before { content:''; position:absolute; inset:0 0 auto 0; height:1px; background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .5), transparent); opacity:.7; pointer-events:none; }
