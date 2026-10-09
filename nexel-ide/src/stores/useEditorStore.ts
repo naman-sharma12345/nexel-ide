@@ -24,6 +24,7 @@ interface EditorState {
   
   openFile: (filePath: string, name: string, content: string) => void;
   closeTab: (filePath: string) => void;
+  moveTab: (from: string, to: string) => void;
   updateTabContent: (filePath: string, content: string) => void;
   toggleSplit: (filePath: string) => void;
   setFocusedTabPath: (path: string | null) => void;
@@ -74,6 +75,16 @@ export const useEditorStore = create<EditorState>()(
         });
       },
 
+      moveTab: (from, to) => {
+        const { tabs } = get();
+        const a = tabs.findIndex((t) => t.filePath === from);
+        const b = tabs.findIndex((t) => t.filePath === to);
+        if (a < 0 || b < 0 || a === b) return;
+        const next = tabs.slice();
+        const [m] = next.splice(a, 1);
+        next.splice(b, 0, m);
+        set({ tabs: next });
+      },
       closeTab: (filePath) => {
         const { tabs, activeTabPath, rightTabPath } = get();
         let nextIsSplit = get().isSplit;

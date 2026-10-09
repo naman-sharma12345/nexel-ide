@@ -507,6 +507,10 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               {tabs.map((tab) => (
                 <div 
                   key={tab.filePath} 
+                  draggable
+                  onDragStart={(e) => { e.dataTransfer.setData('text/nx-tab', tab.filePath); e.dataTransfer.effectAllowed = 'move'; }}
+                  onDragOver={(e) => { if (e.dataTransfer.types.includes('text/nx-tab')) e.preventDefault(); }}
+                  onDrop={(e) => { const from = e.dataTransfer.getData('text/nx-tab'); if (from) { e.preventDefault(); useEditorStore.getState().moveTab(from, tab.filePath); } }}
                   className={`nx-editor-tab ${focusedTabPath === tab.filePath ? 'active' : ''} ${focusedTabPath === tab.filePath && acCelebration ? 'ac-celebrate-glow' : ''}`}
                   onClick={() => {
                     if (isSplit && rightTabPath === tab.filePath) {
