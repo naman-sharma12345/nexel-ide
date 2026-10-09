@@ -346,6 +346,7 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 </div>
 
 ## What's new on hark/overnight-improvements
+- Drag-and-drop tab reordering in the editor tab bar.
 
 - Replace in files: replace field + Replace all (Ctrl+Enter) in the Find-in-files panel, with confirm.
 
