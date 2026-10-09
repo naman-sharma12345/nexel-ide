@@ -18,8 +18,9 @@ contextBridge.exposeInMainWorld('nexelAPI', {
   writeFileContent: (filePath, content) => ipcRenderer.invoke('fs:write-file-content', filePath, content),
 
   // clangd bridge (main validates every message)
-  lspStart: (root) => ipcRenderer.invoke('lsp:start', root),
+  lspStart: (root, opts) => ipcRenderer.invoke('lsp:start', root, opts),
   lspSend: (msg) => ipcRenderer.invoke('lsp:send', msg),
+  lspRestart: () => ipcRenderer.invoke('lsp:restart'),
   lspStop: () => ipcRenderer.invoke('lsp:stop'),
   onLspMessage: (cb) => { ipcRenderer.removeAllListeners('lsp:message'); ipcRenderer.on('lsp:message', (e, m) => cb(m)); },
   onLspStatus: (cb) => { ipcRenderer.removeAllListeners('lsp:status'); ipcRenderer.on('lsp:status', (e, s) => cb(s)); },

@@ -61,6 +61,13 @@ export interface INexelAPI {
     name: string; group: string; url: string; timeLimit: number; memoryLimit: number; fileName: string;
     tests: Array<{ input: string; output: string }>;
   }) => void) => void;
+  // clangd bridge (optional: absent in browser previews and unit tests -> offline IntelliSense)
+  lspStart?: (root: string, opts?: { std?: string; extraFlags?: string[] }) => Promise<{ ok: boolean; reason?: string; source?: string; compiler?: string | null; config?: string }>;
+  lspSend?: (msg: unknown) => Promise<boolean>;
+  lspRestart?: () => Promise<boolean>;
+  lspStop?: () => Promise<boolean>;
+  onLspMessage?: (cb: (msg: unknown) => void) => void;
+  onLspStatus?: (cb: (status: 'off' | 'starting' | 'ready' | 'crashed' | 'failed') => void) => void;
   getStoreSync: (key: string) => any;
   setStoreSync: (key: string, value: any) => void;
   deleteStoreSync: (key: string) => void;

@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Relative asset URLs so the packaged app can load dist/index.html over file://
+  base: './',
   worker: { format: 'es' },
   build: {
     target: 'es2022',

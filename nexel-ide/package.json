@@ -14,7 +14,15 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "fetch:clangd": "node scripts/fetch-clangd.mjs",
+    "fetch:clangd:all": "node scripts/fetch-clangd.mjs --all",
+    "predist": "npm run build",
+    "dist": "node scripts/fetch-clangd.mjs && electron-builder",
+    "dist:win": "npm run build && node scripts/fetch-clangd.mjs --platform win && electron-builder --win --x64",
+    "dist:mac": "npm run build && node scripts/fetch-clangd.mjs --platform mac && electron-builder --mac --universal",
+    "dist:linux": "npm run build && node scripts/fetch-clangd.mjs --platform linux && electron-builder --linux --x64",
+    "test:clangd": "vitest run src/main/services/lsp"
   },
   "dependencies": {
     "@fontsource/outfit": "^5.3.0",
@@ -26,7 +34,8 @@
     "react-dom": "^19.2.6",
     "xterm": "^5.3.0",
     "xterm-addon-fit": "^0.8.0",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "typescript": "~6.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -40,16 +49,107 @@
     "@vitest/coverage-v8": "^4.1.8",
     "concurrently": "^10.0.0",
     "electron": "^42.3.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "extract-zip": "^2.0.1",
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.60.0",
-    "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.8",
     "wait-on": "^9.0.10"
+  },
+  "productName": "Nexel IDE",
+  "build": {
+    "appId": "dev.nexel.ide",
+    "productName": "Nexel IDE",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "dist/**",
+      "src/main/**/*.{ts,cjs}",
+      "!src/main/**/__tests__/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/nexel-include",
+        "to": "nexel-include"
+      }
+    ],
+    "asar": false,
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "extraResources": [
+        {
+          "from": "resources/clangd/mac-universal",
+          "to": "clangd/mac-universal",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ],
+      "x64ArchFiles": "Contents/Resources/clangd/**"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "resources/clangd/win-x64",
+          "to": "clangd/win-x64",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Development",
+      "extraResources": [
+        {
+          "from": "resources/clangd/linux-x64",
+          "to": "clangd/linux-x64",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
+    }
   }
 }

@@ -23,7 +23,9 @@ const { JudgeService } = require('./src/main/services/JudgeService.ts');
 const { StoreService } = require('./src/main/services/StoreService.ts');
 const { validateJudgeArgs } = require('./src/main/services/ipcValidate.ts');
 const { LanguageServerManager } = require('./src/main/services/lsp/LanguageServerManager.ts');
-const { resolveClangd, clangdArgs, compileFlags } = require('./src/main/services/lsp/resolveClangd.ts');
+const { resolveClangd, clangdArgs, findCompiler } = require('./src/main/services/lsp/resolveClangd.ts');
+const { ensureWorkspaceConfig } = require('./src/main/services/lsp/workspaceConfig.ts');
+const { validateClangdOptions } = require('./src/main/services/lsp/lspValidate.ts');
 const { CompanionService } = require('./src/main/services/CompanionService.ts');
 
 let pty;
@@ -74,22 +76,40 @@ async function createWindow() {
   companion.start();
   app.on('before-quit', () => { companion.stop(); if (lsp) lsp.stop(); });
 
-  // clangd language server bridge (validated JSON-RPC only; renderer falls back to Monaco providers when unavailable)
+  // clangd language server bridge. The renderer can only: start (workspace root + validated std/flags that end up in a
+  // generated .clangd, never in argv), send allowlisted JSON-RPC, restart, stop. Binary path and argv are fixed here.
   let lsp = null;
+  const fromMain = (event) => mainWindow && !mainWindow.isDestroyed() && event.sender === mainWindow.webContents;
   const sendStatus = (s) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:status', s); };
-  ipcMain.handle('lsp:start', async (event, root) => {
-    if (typeof root !== 'string' || !path.isAbsolute(root) || root.includes('\0') || !fs.existsSync(root)) return { ok: false, reason: 'invalid-root' };
-    if (lsp) lsp.stop();
-    const bin = resolveClangd({ platform: process.platform, arch: process.arch, resourcesPath: process.resourcesPath, appRoot: __dirname, pathEnv: process.env.PATH });
+  const shimDir = () => {
+    const packaged = path.join(process.resourcesPath || '', 'nexel-include');
+    return app.isPackaged && fs.existsSync(packaged) ? packaged : path.join(__dirname, 'resources', 'nexel-include');
+  };
+  ipcMain.handle('lsp:start', async (event, root, rawOpts) => {
+    if (!fromMain(event)) return { ok: false, reason: 'bad-sender' };
+    if (typeof root !== 'string' || root.length > 4096 || !path.isAbsolute(root) || root.includes('\0')) return { ok: false, reason: 'invalid-root' };
+    let st; try { st = fs.statSync(root); } catch { st = null; }
+    if (!st || !st.isDirectory()) return { ok: false, reason: 'invalid-root' };
+    const opts = validateClangdOptions(rawOpts);
+    if (lsp) { lsp.stop(); lsp = null; }
+    const env = { platform: process.platform, arch: process.arch, resourcesPath: app.isPackaged ? process.resourcesPath : undefined, appRoot: __dirname, pathEnv: process.env.PATH };
+    const bin = resolveClangd(env);
     if (!bin) { sendStatus('off'); return { ok: false, reason: 'clangd-not-found' }; }
-    const inc = path.join(fs.existsSync(path.join(process.resourcesPath || '', 'nexel-include')) ? process.resourcesPath : path.join(__dirname, 'resources'), 'nexel-include');
-    try { const f = path.join(root, 'compile_flags.txt'); if (!fs.existsSync(f)) fs.writeFileSync(f, compileFlags('c++17', inc)); } catch {}
-    lsp = new LanguageServerManager(bin.path, clangdArgs(), root, (m) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:message', m); }, sendStatus);
+    const compiler = findCompiler(env);
+    // libstdc++ (Linux, MinGW) already has bits/stdc++.h; the shim is for libc++/MSVC toolchains.
+    const includeDir = process.platform === 'linux' ? null : shimDir();
+    const config = ensureWorkspaceConfig(root, { ...opts, includeDir, compiler });
+    lsp = new LanguageServerManager(bin.path, clangdArgs({ queryDriver: compiler }), root,
+      (m) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:message', m); }, sendStatus);
     lsp.start();
-    return { ok: true, source: bin.source };
+    return { ok: true, source: bin.source, compiler: compiler ? path.basename(compiler) : null, config: config.action };
   });
-  ipcMain.handle('lsp:send', async (event, msg) => { if (!lsp) return false; try { lsp.send(msg); return true; } catch { return false; } });
-  ipcMain.handle('lsp:stop', async () => { if (lsp) lsp.stop(); lsp = null; return true; });
+  ipcMain.handle('lsp:send', async (event, msg) => { if (!fromMain(event) || !lsp) return false; try { lsp.send(msg); return true; } catch { return false; } });
+  ipcMain.handle('lsp:restart', async (event) => { if (!fromMain(event) || !lsp) return false; lsp.restart(); return true; });
+  ipcMain.handle('lsp:stop', async (event) => { if (!fromMain(event)) return false; if (lsp) lsp.stop(); lsp = null; return true; });
+  // Never leave clangd behind: quit, window close, renderer crash.
+  mainWindow.on('closed', () => { if (lsp) { lsp.stop(); lsp = null; } });
+  mainWindow.webContents.on('render-process-gone', () => { if (lsp) { lsp.stop(); lsp = null; } });
 
   // Window frame control receivers
   ipcMain.on('window-control', (event, action) => {
@@ -243,8 +263,9 @@ async function createWindow() {
     event.returnValue = true;
   });
 
-  const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:5173';
-  mainWindow.loadURL(startUrl);
+  // Packaged builds load the Vite bundle from disk; dev uses the Vite server.
+  if (app.isPackaged && !process.env.ELECTRON_START_URL) mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  else mainWindow.loadURL(process.env.ELECTRON_START_URL || 'http://localhost:5173');
 
   if (process.env.ELECTRON_START_URL) {
     mainWindow.webContents.openDevTools();
