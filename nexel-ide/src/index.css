@@ -168,3 +168,9 @@ html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
 /* Soft top-edge sheen on raised glass surfaces */
 .nx-sheen { position: relative; }
 .nx-sheen::before { content:''; position:absolute; inset:0 0 auto 0; height:1px; background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .5), transparent); opacity:.7; pointer-events:none; }
+
+/* Paper Light: luminance inversion of the dark token set; hue-rotate restores original hues. */
+html[data-theme='light'] #root { filter: invert(0.93) hue-rotate(180deg); }
+html[data-theme='light'] #root img, html[data-theme='light'] #root video { filter: invert(1) hue-rotate(180deg); }
+html[data-theme='light'] { background: #0b0c10; color-scheme: light; }
+@media (prefers-reduced-motion: reduce) { html[data-theme='light'] #root { transition: none; } }

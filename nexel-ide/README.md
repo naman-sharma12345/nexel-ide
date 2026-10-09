@@ -71,3 +71,5 @@ npm run build
 - Contests fetch: 5 min TTL cache, 8s timeout, exponential backoff, stale fallback.
 
 - Added "Solar Dusk" theme (violet twilight with coral accent).
+
+- **Paper Light theme** (hark/overnight-improvements): luminance-inverted light mode selectable in Settings.

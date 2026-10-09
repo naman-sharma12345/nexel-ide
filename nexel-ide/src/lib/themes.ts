@@ -44,6 +44,10 @@ export const THEMES: NexelTheme[] = [
   { id: 'dusk', name: 'Solar Dusk', blurb: 'Violet twilight fading into coral sunset.',
     bg0: '#0D0A12', bg1: '#150F1B', bg2: '#1D1626', editorBg: '#08060C', accent: '#fb7185', accent2: '#a78bfa',
     syntax: { keyword: 'FB8FA0', string: 'F5C9A8', number: 'F9A87A', type: 'B9A3F5', fn: 'F3DDB8', comment: '6E6180', fg: 'ECE3F0' } },
+  // Light: authored as a dark palette and optically inverted (see html[data-theme='light'] in index.css).
+  { id: 'light', name: 'Paper Light', blurb: 'Warm paper white with emerald ink (inverted-luminance render).',
+    bg0: '#0B0C10', bg1: '#13141A', bg2: '#1A1C23', editorBg: '#04050A', accent: '#34d399', accent2: '#22d3ee',
+    syntax: { keyword: 'C5A3A3', string: 'B0C4DE', number: 'D3C1A5', type: 'A3C5B5', fn: 'D4C2AD', comment: '6D727C', fg: 'E2E3E5' } },
 ];
 
 export const DEFAULT_THEME_ID = 'nexel';
