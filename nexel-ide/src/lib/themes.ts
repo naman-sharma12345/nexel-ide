@@ -41,6 +41,9 @@ export const THEMES: NexelTheme[] = [
   { id: 'aurora', name: 'Aurora Teal', blurb: 'Deep ocean black with teal and magenta light.',
     bg0: '#080E10', bg1: '#0E161A', bg2: '#141F24', editorBg: '#050A0C', accent: '#2dd4bf', accent2: '#e879f9',
     syntax: { keyword: 'E49BF2', string: '9FE3D4', number: 'F5C38A', type: '7ADBE0', fn: 'D6F0E8', comment: '587178', fg: 'DCEBEE' } },
+  { id: 'dusk', name: 'Solar Dusk', blurb: 'Violet twilight fading into coral sunset.',
+    bg0: '#0D0A12', bg1: '#150F1B', bg2: '#1D1626', editorBg: '#08060C', accent: '#fb7185', accent2: '#a78bfa',
+    syntax: { keyword: 'FB8FA0', string: 'F5C9A8', number: 'F9A87A', type: 'B9A3F5', fn: 'F3DDB8', comment: '6E6180', fg: 'ECE3F0' } },
 ];
 
 export const DEFAULT_THEME_ID = 'nexel';
