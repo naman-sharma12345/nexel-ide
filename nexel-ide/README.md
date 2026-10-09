@@ -69,3 +69,5 @@ npm run build
 
 - Design tokens migrated across all component CSS (--nx-line, --nx-text*, --nx-accent*).
 - Contests fetch: 5 min TTL cache, 8s timeout, exponential backoff, stale fallback.
+
+- Added "Solar Dusk" theme (violet twilight with coral accent).
