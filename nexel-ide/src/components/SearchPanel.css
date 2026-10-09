@@ -28,3 +28,5 @@
 .sf-foot { display: flex; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--nx-line); font-size: 11px; color: var(--nx-text-dim); }
 .sf-foot kbd { font: 10.5px ui-monospace, monospace; border: 1px solid var(--nx-line); border-radius: 4px; padding: 0 5px; margin-right: 4px; }
 .sf-count { margin-left: auto; }
+.sf-box .sf-input:focus-visible { outline: none; }
+.sf-box .sf-input, .sf-box .sf-input:focus, .sf-box .sf-input:focus-visible { outline: none !important; box-shadow: none !important; border: 0 !important; background: transparent !important; border-radius: 0 !important; }
