@@ -1151,3 +1151,38 @@
 .nx-tab-close-btn{opacity:0;transition:opacity .15s,background .15s,transform .2s var(--nx-ease-spring,ease)}
 .nx-editor-tab:hover .nx-tab-close-btn,.nx-editor-tab.active .nx-tab-close-btn{opacity:1}
 .nx-tab-close-btn:hover{transform:rotate(90deg) scale(1.1)}
+
+/* ── Breadcrumbs (footer path) ─────────────────────────────── */
+.nx-crumbs { display: flex; align-items: center; gap: 2px; min-width: 0; max-width: 55%; overflow: hidden; white-space: nowrap; }
+.nx-crumb {
+  padding: 1px 5px; border-radius: 4px; color: rgb(255 255 255 / .38); cursor: default;
+  animation: nx-crumb-in var(--nx-dur-3) var(--nx-ease-out) both;
+  transition: color var(--nx-dur-1), background-color var(--nx-dur-1);
+  overflow: hidden; text-overflow: ellipsis;
+}
+.nx-crumb:hover { color: rgb(255 255 255 / .85); background: rgb(255 255 255 / .05); }
+.nx-crumb-file { color: rgb(var(--nx-accent-rgb) / .9); font-weight: 600; }
+.nx-crumb-file:hover { color: var(--nx-accent); background: rgb(var(--nx-accent-rgb) / .1); }
+.nx-crumb-sep { width: 7px; height: 7px; flex: none; color: rgb(255 255 255 / .2); }
+@keyframes nx-crumb-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+
+/* ── Welcome backdrop: dot grid + cursor spotlight + drifting aurora orbs ── */
+.nx-editor-welcome-backdrop { position: relative; overflow: hidden; --mx: 50%; --my: 50%; }
+.nx-welcome-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgb(255 255 255 / .09) 1px, transparent 1.2px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(420px circle at var(--mx) var(--my), #000 0%, rgb(0 0 0 / .18) 55%, transparent 100%);
+  mask-image: radial-gradient(420px circle at var(--mx) var(--my), #000 0%, rgb(0 0 0 / .18) 55%, transparent 100%);
+}
+.nx-welcome-spot {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(360px circle at var(--mx) var(--my), rgb(var(--nx-accent-rgb) / .08), transparent 70%);
+}
+.nx-welcome-orb { position: absolute; width: 520px; height: 520px; border-radius: 50%; filter: blur(90px); pointer-events: none; opacity: .5; will-change: transform; }
+.nx-welcome-orb-a { top: -180px; left: -120px; background: rgb(var(--nx-accent-rgb) / .10); animation: nx-orb-a 22s ease-in-out infinite alternate; }
+.nx-welcome-orb-b { bottom: -220px; right: -140px; background: rgb(var(--nx-accent2-rgb) / .09); animation: nx-orb-b 28s ease-in-out infinite alternate; }
+@keyframes nx-orb-a { to { transform: translate(180px, 120px) scale(1.15); } }
+@keyframes nx-orb-b { to { transform: translate(-200px, -90px) scale(1.2); } }
+.nx-welcome-glass-plate { position: relative; z-index: 1; backdrop-filter: blur(14px) saturate(1.2); }
+@media (prefers-reduced-motion: reduce) { .nx-welcome-orb, .nx-crumb { animation: none; } }

@@ -1,5 +1,6 @@
 import { registerLangCompletions } from '../lib/langCompletions';
 import { registerHoverDocs } from '../lib/hoverDocs';
+import { toCrumbs } from '../lib/breadcrumbs';
 import { useStatusStore } from '../stores/useStatusStore';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
@@ -399,8 +400,20 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     };
   };
 
+  // Cursor-follow spotlight: writes CSS vars straight to the element (no React re-render per mousemove), rAF-throttled.
+  const welcomeRaf = useRef(0);
+  const onWelcomeMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget; const r = el.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+    cancelAnimationFrame(welcomeRaf.current);
+    welcomeRaf.current = requestAnimationFrame(() => { el.style.setProperty('--mx', x + 'px'); el.style.setProperty('--my', y + 'px'); });
+  };
+
   const renderWelcomeBackdrop = () => (
-    <div className="nx-editor-welcome-backdrop">
+    <div className="nx-editor-welcome-backdrop" onMouseMove={onWelcomeMove}>
+      <div className="nx-welcome-grid" aria-hidden="true" />
+      <div className="nx-welcome-spot" aria-hidden="true" />
+      <div className="nx-welcome-orb nx-welcome-orb-a" aria-hidden="true" />
+      <div className="nx-welcome-orb nx-welcome-orb-b" aria-hidden="true" />
       <div className="nx-welcome-glass-plate">
         <div className="nx-welcome-branding-wrapper">
           <img src={logoImg} className="nx-welcome-logo" alt="Nexel IDE Logo" />
@@ -653,7 +666,14 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
       {/* Status metrics footer */}
       {activeTab && (
         <div className="nx-editor-footer-metrics">
-          <span className="nx-footer-path">{activeTab.filePath}</span>
+          <nav className="nx-crumbs" key={activeTab.filePath} aria-label="File path" title={activeTab.filePath}>
+            {toCrumbs(activeTab.filePath, useWorkspaceStore.getState().rootPath).map((c, i, arr) => (
+              <React.Fragment key={i}>
+                <span className={`nx-crumb ${c.isFile ? 'nx-crumb-file' : ''}`} style={{ animationDelay: `${i * 35}ms` }}>{c.label}</span>
+                {i < arr.length - 1 && <svg className="nx-crumb-sep" viewBox="0 0 8 8" aria-hidden="true"><path d="M2.5 1l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              </React.Fragment>
+            ))}
+          </nav>
           <div className="nx-footer-right-cluster">
             <span className="nx-footer-metric-pill">Monaco Editor</span>
             <span className="nx-footer-metric-pill">Lines: {getStats().lines}</span>
