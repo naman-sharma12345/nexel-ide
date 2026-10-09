@@ -347,6 +347,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 
 ## What's new on hark/overnight-improvements
 
+- **clangd backend (foundation)**: LSP framing, safe JSON-RPC IPC allow-list (`textDocument/*` only), per-platform clangd resolution (bundled, dev, PATH, then Monaco fallback), crash-restart with backoff, bits/stdc++.h shim for macOS/Windows. Renderer client and packaging next.
+
 - **Codeforces fix:** built-in problem fetcher (API standings + statement parser, retries, cache, sanitised HTML) replaces the external scraper; upcoming contests now open a countdown view (IST start, Register link) and auto-load problems at start.
 
 - Two new themes: **Obsidian Gold** and **Aurora Teal** (9 themes total).
