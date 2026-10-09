@@ -46,9 +46,9 @@ export const THEMES: NexelTheme[] = [
     bg0: '#0D0A12', bg1: '#150F1B', bg2: '#1D1626', editorBg: '#08060C', accent: '#fb7185', accent2: '#a78bfa',
     syntax: { keyword: 'FB8FA0', string: 'F5C9A8', number: 'F9A87A', type: 'B9A3F5', fn: 'F3DDB8', comment: '6E6180', fg: 'ECE3F0' } },
   // Light: authored as a dark palette and optically inverted (see html[data-theme='light'] in index.css).
-  { id: 'light', name: 'Paper Light', blurb: 'Warm paper white with dark ink and emerald accents.', light: true,
-    bg0: '#f7f5ef', bg1: '#efece3', bg2: '#e6e2d6', editorBg: '#fdfcf8', accent: '#059669', accent2: '#0891b2',
-    syntax: { keyword: 'A6264B', string: '0B6E4F', number: 'B45309', type: '1D4ED8', fn: '6D28D9', comment: '8A857A', fg: '1C1914' } },
+  { id: 'light', name: 'Paper Light', blurb: 'Warm paper white with ink-blue accents.', light: true,
+    bg0: '#f7f5ef', bg1: '#efece3', bg2: '#e6e2d6', editorBg: '#fdfcf8', accent: '#2f5bd3', accent2: '#3a6f7f',
+    syntax: { keyword: '7A3EB8', string: 'A3542A', number: 'B35C00', type: '2F5BD3', fn: '1F4E8C', comment: '8A8577', fg: '1C1914' } },
 ];
 
 export const DEFAULT_THEME_ID = 'nexel';

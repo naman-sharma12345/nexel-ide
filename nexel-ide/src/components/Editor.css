@@ -737,8 +737,8 @@
 }
 
 .nx-cf-import-btn {
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgb(var(--nx-accent-rgb) / 0.08);
+  border: 1px solid rgb(var(--nx-accent-rgb) / 0.2);
   color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
   font-size: 9px;
@@ -750,16 +750,16 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.03);
+  box-shadow: 0 0 10px rgb(var(--nx-accent-rgb) / 0.03);
   transition: all 0.25s ease;
 }
 
 .nx-cf-import-btn:hover {
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(90deg, var(--nx-accent) 0%, var(--nx-accent2) 100%);
   border-color: transparent;
   color: rgb(var(--nx-ink));
   transform: translateY(-0.5px);
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 16px rgb(var(--nx-accent-rgb) / 0.25);
 }
 
 .nx-import-icon {
@@ -815,7 +815,7 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #10b981;
+  color: var(--nx-accent);
   margin: 0 0 4px 0;
   text-transform: uppercase;
   border-left: none;
@@ -831,8 +831,8 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 6px #10b981;
+  background: var(--nx-accent);
+  box-shadow: 0 0 6px var(--nx-accent);
 }
 
 .nx-cf-section p {

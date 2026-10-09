@@ -73,3 +73,5 @@ npm run build
 - Added "Solar Dusk" theme (violet twilight with coral accent).
 
 - **Paper Light theme** (hark/overnight-improvements): luminance-inverted light mode selectable in Settings.
+
+- Paper Light recoloured: ink-blue accent (#2f5bd3) with muted syntax tones; hardcoded emerald in contests/editor buttons now follows the theme accent.
