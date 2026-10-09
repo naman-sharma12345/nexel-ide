@@ -1,34 +1,8 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { spawn } from 'child_process';
-import * as fs from 'fs/promises';
 import { JudgeService } from '../JudgeService';
-import { EventEmitter } from 'events';
 
 // Mock child_process and fs/promises
-vi.mock('child_process', async (importOriginal) => {
-  const original = await importOriginal<typeof import('child_process')>();
-  return {
-    ...original,
-    spawn: vi.fn(),
-  };
-});
-
-vi.mock('fs/promises', async (importOriginal) => {
-  const original = await importOriginal<typeof import('fs/promises')>();
-  return {
-    ...original,
-    readFile: vi.fn(),
-    unlink: vi.fn().mockResolvedValue(undefined),
-  };
-});
-
-interface MockChildProcess extends EventEmitter {
-  stdout: EventEmitter;
-  stderr: EventEmitter;
-  kill: ReturnType<typeof vi.fn>;
-}
-
 describe('JudgeService Contests System (New User / No Credentials)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -66,45 +40,8 @@ describe('JudgeService Contests System (New User / No Credentials)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('fetchProblems spawns scraper with isolated non-existent credential/cookie file environments', async () => {
-    const mockSpawn = spawn as unknown as ReturnType<typeof vi.fn>;
-    const mockReadFile = fs.readFile as unknown as ReturnType<typeof vi.fn>;
-
-    const childMock = new EventEmitter() as unknown as MockChildProcess;
-    childMock.stdout = new EventEmitter();
-    childMock.stderr = new EventEmitter();
-    childMock.kill = vi.fn();
-
-    mockSpawn.mockReturnValue(childMock);
-    
-    const mockProblemsJson = JSON.stringify({
-      A: { index: 'A', title: 'Problem A', url: 'https://codeforces.com/contest/99/problem/A', timeLimit: '1.0s', memoryLimit: '256MB', statement: '<p>statement</p>' }
-    });
-    mockReadFile.mockResolvedValue(mockProblemsJson);
-
+  it('fetchProblems no longer needs an external scraper', async () => {
     const judgeService = new JudgeService();
-    const fetchPromise = judgeService.fetchProblems(99);
-
-    // Simulate child process executing successfully and closing
-    setTimeout(() => {
-      childMock.emit('close', 0);
-    }, 50);
-
-    const result = await fetchPromise;
-
-    // Verify spawn details
-    expect(mockSpawn).toHaveBeenCalled();
-    const spawnArgs = mockSpawn.mock.calls[0];
-    expect(spawnArgs[0]).toBe('node');
-    expect(spawnArgs[1][0]).toContain('cf_problems.js');
-    expect(spawnArgs[1][1]).toBe('99');
-
-    // Verify env is passed correctly with NON_INTERACTIVE
-    const spawnOpts = spawnArgs[2];
-    expect(spawnOpts.env.NON_INTERACTIVE).toBe('true');
-
-    // Verify we successfully parsed the problems
-    expect(result).toHaveProperty('A');
-    expect((result as any).A.title).toBe('Problem A');
+    await expect(judgeService.fetchProblems(-5)).rejects.toThrow('Invalid contest id');
   });
 });

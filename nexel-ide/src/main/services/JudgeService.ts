@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
+import { fetchContestProblems } from './cfProblems';
 import { LocalSandboxExecutor } from '../../judge-backend/LocalSandboxExecutor';
 
 export interface TestCase {
@@ -237,48 +238,6 @@ export class JudgeService {
   }
 
   async fetchProblems(contestId: number): Promise<unknown> {
-    try {
-      const nexelJudgeDir = path.resolve(__dirname, '../../../../nexel-judge');
-      const outFile = path.join(nexelJudgeDir, `questions_${contestId}.json`);
-
-      return new Promise((resolve, reject) => {
-        const scriptPath = path.join(nexelJudgeDir, 'cf_problems.js');
-        const child = spawn('node', [scriptPath, contestId.toString()], {
-          cwd: nexelJudgeDir,
-          env: {
-            ...process.env,
-            NON_INTERACTIVE: 'true'
-          }
-        });
-
-        let stdout = '';
-        let stderr = '';
-
-        child.stdout.on('data', data => { stdout += (data as Buffer).toString(); });
-        child.stderr.on('data', data => { stderr += (data as Buffer).toString(); });
-
-        child.on('close', async (code) => {
-          if (code === 0) {
-            try {
-              const fileContent = await fs.readFile(outFile, 'utf8');
-              resolve(JSON.parse(fileContent));
-              fs.unlink(outFile).catch(err => console.error("Failed to delete temp problems file:", err));
-            } catch (err: unknown) {
-              const message = err instanceof Error ? err.message : String(err);
-              reject(new Error(`Failed to read output file: ${message}`));
-            }
-          } else {
-            reject(new Error(stderr || stdout || `Scraper exited with code ${code}`));
-          }
-        });
-
-        child.on('error', err => {
-          reject(new Error(`Failed to start scraper process: ${err.message}`));
-        });
-      });
-    } catch (err) {
-      console.error("Failed to fetch contest problems:", err);
-      throw err;
-    }
+    return fetchContestProblems(contestId);
   }
 }

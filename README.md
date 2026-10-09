@@ -347,6 +347,8 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 
 ## What's new on hark/overnight-improvements
 
+- **Codeforces fix:** built-in problem fetcher (API standings + statement parser, retries, cache, sanitised HTML) replaces the external scraper; upcoming contests now open a countdown view (IST start, Register link) and auto-load problems at start.
+
 - Two new themes: **Obsidian Gold** and **Aurora Teal** (9 themes total).
 - Two new themes: Nord Frost and Deep Forest (7 themes total).
 - Drag-and-drop tab reordering in the editor tab bar.
