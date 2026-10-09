@@ -389,3 +389,5 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 - (04:49) Global focus rings, button press feedback, thin themed scrollbars, reduced-motion support; fast-I/O C++ template module (+tests).
 
 - (overnight) Verdict classifier `src/lib/verdict.ts` (AC/WA/TLE/MLE/RE, Codeforces precedence) and animated tab entrance.
+
+- STL signature help (C++): parameter hints while typing calls like `sort(`, `lower_bound(` with complexity notes (src/lib/signatureHelp.ts).
