@@ -29,6 +29,12 @@ export const THEMES: NexelTheme[] = [
   { id: 'mono', name: 'Mono Contrast', blurb: 'Pure black and white, maximum legibility.',
     bg0: '#000000', bg1: '#090909', bg2: '#121212', editorBg: '#000000', accent: '#ffffff', accent2: '#a3a3a3',
     syntax: { keyword: 'FFFFFF', string: 'D4D4D4', number: 'BFBFBF', type: 'EDEDED', fn: 'F5F5F5', comment: '7A7A7A', fg: 'F5F5F5' } },
+  { id: 'frost', name: 'Nord Frost', blurb: 'Cool slate with glacier-blue light.',
+    bg0: '#0C1016', bg1: '#121821', bg2: '#19212D', editorBg: '#080B10', accent: '#7dd3fc', accent2: '#a5b4fc',
+    syntax: { keyword: '88C0D0', string: 'A3BE8C', number: 'D8A9C4', type: '8FBCBB', fn: 'EBCB8B', comment: '5E6B7E', fg: 'DDE5F0' } },
+  { id: 'forest', name: 'Deep Forest', blurb: 'Mossy near-black with lime sparks.',
+    bg0: '#0A0F0C', bg1: '#101712', bg2: '#16201A', editorBg: '#060A07', accent: '#a3e635', accent2: '#2dd4bf',
+    syntax: { keyword: 'B8D98A', string: 'E3D3A0', number: 'F0B98A', type: '8AD1B5', fn: 'D9E8B0', comment: '5F7064', fg: 'E1EBE3' } },
 ];
 
 export const DEFAULT_THEME_ID = 'nexel';
