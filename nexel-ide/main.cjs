@@ -21,6 +21,7 @@ require.extensions['.ts'] = function (module, filename) {
 const { FileSystemService } = require('./src/main/services/FileSystemService.ts');
 const { JudgeService } = require('./src/main/services/JudgeService.ts');
 const { StoreService } = require('./src/main/services/StoreService.ts');
+const { validateJudgeArgs } = require('./src/main/services/ipcValidate.ts');
 const { CompanionService } = require('./src/main/services/CompanionService.ts');
 
 let pty;
@@ -196,7 +197,8 @@ async function createWindow() {
 
   // Decoupled Judge IPC Routes
   ipcMain.handle('judge:run', async (event, filePath, testCases, timeLimit, memoryLimit) => {
-    return await judgeService.run(filePath, testCases, timeLimit, memoryLimit);
+    const v = validateJudgeArgs(filePath, testCases, timeLimit, memoryLimit); // renderer input is untrusted
+    return await judgeService.run(v.filePath, v.cases, v.timeLimit, v.memoryLimit);
   });
 
   ipcMain.handle('judge:fetch-contests', async (event, workspaceDir) => {
