@@ -18,6 +18,7 @@ import { useSettingsStore } from './stores/useSettingsStore';
 import { useStatusStore } from './stores/useStatusStore';
 import { useJudgeStore } from './stores/useJudgeStore';
 import { applyTheme, THEMES } from './lib/themes';
+import { switchTheme } from './lib/themeTransition';
 import { SearchPanel } from './components/SearchPanel';
 import './App.css';
 
@@ -96,7 +97,7 @@ function App() {
     { id: 'findfiles', label: 'Find in Files', hint: 'Ctrl+Shift+F', run: () => setSearchOpen(true) },
     { id: 'shortcuts', label: 'Keyboard Shortcuts', hint: 'Ctrl+/', run: () => setShortcutsOpen(true) },
     { id: 'settings', label: 'Open Settings', hint: 'Ctrl+,', run: () => useSettingsStore.getState().openSettings(true) },
-    ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => useSettingsStore.getState().setTheme(t.id) })),
+    ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => switchTheme(t.id) })),
     { id: 'minimap', label: 'Toggle Minimap', run: () => useSettingsStore.getState().toggle('minimap') },
     { id: 'wrap', label: 'Toggle Word Wrap', run: () => useSettingsStore.getState().toggle('wordWrap') },
   ];

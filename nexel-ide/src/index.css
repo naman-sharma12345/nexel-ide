@@ -148,3 +148,8 @@ button:active:not(:disabled) { transform: scale(0.97); }
 /* Line flash when jumping from Find in Files */
 .monaco-editor .nx-line-flash { background: rgb(var(--nx-accent-rgb) / .22); animation: nx-line-flash 1.4s var(--nx-ease-out) forwards; box-shadow: inset 3px 0 0 var(--nx-accent); }
 @keyframes nx-line-flash { 0% { background: rgb(var(--nx-accent-rgb) / .45); } 100% { background: rgb(var(--nx-accent-rgb) / 0); box-shadow: inset 3px 0 0 transparent; } }
+
+/* Theme reveal (View Transitions): we animate ::view-transition-new(root) from JS; disable the default cross-fade. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }

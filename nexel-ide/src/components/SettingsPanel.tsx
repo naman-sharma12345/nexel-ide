@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { THEMES } from '../lib/themes';
 import './SettingsPanel.css';
+import { switchTheme } from '../lib/themeTransition';
 
 function Toggle({ on, onClick, label, hint }: { on: boolean; onClick: () => void; label: string; hint: string }) {
   return (
@@ -34,7 +35,7 @@ export function SettingsPanel() {
             <h3>Theme</h3>
             <div className="sp-themes">
               {THEMES.map((t, i) => (
-                <button key={t.id} className={`sp-theme ${s.theme === t.id ? 'active' : ''}`} style={{ animationDelay: `${i * 45}ms` }} onClick={() => s.setTheme(t.id)} aria-pressed={s.theme === t.id}>
+                <button key={t.id} className={`sp-theme ${s.theme === t.id ? 'active' : ''}`} style={{ animationDelay: `${i * 45}ms` }} onClick={() => switchTheme(t.id)} aria-pressed={s.theme === t.id}>
                   <span className="sp-preview" style={{ background: t.editorBg, borderColor: `${t.accent}44` }}>
                     <i style={{ background: t.bg1 }} />
                     <u style={{ background: t.accent }} /><u style={{ background: t.accent2, width: '38%' }} /><u style={{ background: t.syntax.keyword, width: '52%' }} />
