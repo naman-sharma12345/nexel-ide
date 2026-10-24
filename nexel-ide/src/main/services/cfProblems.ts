@@ -92,7 +92,7 @@ type Fetch = (url: string, init?: { signal?: AbortSignal; headers?: Record<strin
 async function withRetry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
   let err: unknown;
   for (let i = 0; i < tries; i++) {
-    try { return await fn(); } catch (e) { err = e; if (i < tries - 1) await new Promise((r) => setTimeout(r, 400 * 2 ** i)); }
+    try { return await fn(); } catch (e) { err = e; if (e instanceof Error && /HTTP 40[34]/.test(e.message)) break; if (i < tries - 1) await new Promise((r) => setTimeout(r, 400 * 2 ** i)); }
   }
   throw err;
 }
@@ -111,29 +111,100 @@ async function get(f: Fetch, url: string, json: boolean): Promise<any> {
 
 const cache = new Map<number, { at: number; data: Record<string, CFProblemData> }>();
 
-/** Fetch every problem of a contest. Works for upcoming (after start), live and finished contests. */
-export async function fetchContestProblems(contestIdRaw: unknown, f: Fetch = fetch as unknown as Fetch, ttlMs = 60_000): Promise<Record<string, CFProblemData>> {
+/** Loads a Codeforces page in a real browser engine (Electron hidden window) and returns its HTML. */
+export type PageLoader = (url: string) => Promise<string>;
+
+/** True when the HTML is a Cloudflare interstitial rather than a Codeforces page. */
+export function isCloudflareChallenge(html: string): boolean {
+  if (/class="problem-statement"/.test(html)) return false;
+  return /Just a moment|cf_chl|cf-challenge|challenge-platform|Attention Required/i.test(html);
+}
+
+/** Split the complete-problemset page (/contest/X/problems) into one statement block per problem. */
+export function splitProblemsPage(html: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const parts = html.split(/(?=<div[^>]*\bproblemindex="[A-Za-z0-9]+")/i);
+  for (const part of parts) {
+    const idx = part.match(/^<div[^>]*\bproblemindex="([A-Za-z0-9]+)"/i)?.[1];
+    if (idx && /class="problem-statement"/.test(part)) out[idx.toUpperCase()] = part;
+  }
+  if (Object.keys(out).length) return out;
+  // Fallback: split on statements and read the index from each title ("A. Name").
+  for (const part of html.split(/(?=<div class="problem-statement">)/i).slice(1)) {
+    const idx = part.match(/<div class="title">\s*([A-Za-z][A-Za-z0-9]{0,2})\./)?.[1];
+    if (idx) out[idx.toUpperCase()] = part;
+  }
+  return out;
+}
+
+class HttpBlockedError extends Error {}
+
+async function getPage(f: Fetch, url: string, loader?: PageLoader): Promise<string> {
+  let html: string | undefined;
+  try {
+    html = await get(f, url, false);
+  } catch (e) {
+    if (!loader) throw e;
+  }
+  if (html !== undefined && !isCloudflareChallenge(html)) return html;
+  if (!loader) throw new HttpBlockedError('Codeforces blocked the request (Cloudflare). Sign in to Codeforces in Nexel or use Competitive Companion.');
+  const viaBrowser = await loader(url);
+  if (isCloudflareChallenge(viaBrowser)) throw new HttpBlockedError('Cloudflare check not passed yet. Solve it in the Codeforces window, then retry.');
+  return viaBrowser;
+}
+
+const stub = (contestId: number, index: string, error: string, title?: string): CFProblemData =>
+  ({ index, title, url: `https://codeforces.com/contest/${contestId}/problem/${index}`, timeLimit: '', memoryLimit: '', error });
+
+/**
+ * Fetch every problem of a contest. Works for live and finished contests.
+ * 1. contest.standings with NO extra params (CF rejects from/count for non-admins during live contests).
+ * 2. One load of /contest/X/problems (all statements), via HTTP, then a real browser window when Cloudflare blocks HTTP.
+ * 3. Per-problem pages for anything missing.
+ * 4. Names-only cards with an "open on Codeforces" error as the last resort.
+ */
+export async function fetchContestProblems(contestIdRaw: unknown, f: Fetch = fetch as unknown as Fetch, ttlMs = 60_000, loader?: PageLoader): Promise<Record<string, CFProblemData>> {
   const contestId = validateContestId(contestIdRaw);
   const hit = cache.get(contestId);
   if (hit && Date.now() - hit.at < ttlMs) return hit.data;
 
-  const st = await get(f, `https://codeforces.com/api/contest.standings?contestId=${contestId}&from=1&count=1`, true)
+  const st = await get(f, `https://codeforces.com/api/contest.standings?contestId=${contestId}`, true)
     .catch((e) => { throw new Error(`Could not load contest ${contestId}: ${e instanceof Error ? e.message : e}. Open it on Codeforces: https://codeforces.com/contest/${contestId}`); });
   if (st.status !== 'OK') throw new Error(`Codeforces: ${st.comment || 'contest unavailable'} (contest may not have started yet)`);
-  const list: Array<{ index: string }> = st.result.problems ?? [];
+  const list: Array<{ index: string; name?: string }> = st.result.problems ?? [];
   const result: Record<string, CFProblemData> = {};
-  // limit concurrency to 3 to stay polite (rate limit)
-  for (let i = 0; i < list.length; i += 3) {
-    await Promise.all(list.slice(i, i + 3).map(async (p) => {
-      const index = validateProblemIndex(p.index);
+
+  // One page load for every statement.
+  let blocks: Record<string, string> = {};
+  let lastError = '';
+  try {
+    blocks = splitProblemsPage(await getPage(f, `https://codeforces.com/contest/${contestId}/problems`, loader));
+  } catch (e) { lastError = e instanceof Error ? e.message : String(e); }
+
+  const missing: Array<{ index: string; name?: string }> = [];
+  for (const p of list) {
+    const index = validateProblemIndex(p.index);
+    const b = blocks[index];
+    const parsed = b ? parseProblemPage(b, contestId, index) : undefined;
+    if (parsed && !parsed.error) result[index] = parsed; else missing.push({ index, name: p.name });
+  }
+
+  const blocked = lastError && /Cloudflare/.test(lastError);
+  // Per-problem pages, 2 at a time with a pause to stay polite. Skip when Cloudflare already blocked us and no browser is available.
+  for (let i = 0; i < missing.length; i += 2) {
+    await Promise.all(missing.slice(i, i + 2).map(async ({ index, name }) => {
+      if (blocked && !loader) { result[index] = stub(contestId, index, lastError, name); return; }
       try {
-        result[index] = parseProblemPage(await get(f, `https://codeforces.com/contest/${contestId}/problem/${index}`, false), contestId, index);
+        const r = parseProblemPage(await getPage(f, `https://codeforces.com/contest/${contestId}/problem/${index}`, loader), contestId, index);
+        result[index] = r.error ? { ...r, title: r.title || name } : r;
       } catch (e) {
-        result[index] = { index, url: `https://codeforces.com/contest/${contestId}/problem/${index}`, timeLimit: '', memoryLimit: '', error: e instanceof Error ? e.message : String(e) };
+        result[index] = stub(contestId, index, e instanceof Error ? e.message : String(e), name);
       }
     }));
+    if (loader && i + 2 < missing.length) await new Promise((r) => setTimeout(r, 1000));
   }
-  cache.set(contestId, { at: Date.now(), data: result });
+  const ok = Object.values(result).some((r) => !r.error);
+  if (ok) cache.set(contestId, { at: Date.now(), data: result });
   return result;
 }
 export function clearProblemCache() { cache.clear(); }

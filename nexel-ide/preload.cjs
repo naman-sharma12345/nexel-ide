@@ -42,6 +42,9 @@ contextBridge.exposeInMainWorld('nexelAPI', {
     ipcRenderer.invoke('judge:fetch-contests', workspaceDir),
   fetchContestProblems: (contestId) =>
     ipcRenderer.invoke('judge:fetch-problems', contestId),
+  // Opens a Codeforces window (persistent session) to sign in, register, or pass a Cloudflare check.
+  openCodeforcesSession: (url) =>
+    ipcRenderer.invoke('cf:open-session', url),
 
   // Competitive Companion (browser extension -> IDE). Callback receives an already-validated problem.
   onCompanionProblem: (callback) => {

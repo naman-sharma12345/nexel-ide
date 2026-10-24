@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
-import { fetchContestProblems } from './cfProblems';
+import { fetchContestProblems, type PageLoader } from './cfProblems';
 import { LocalSandboxExecutor } from '../../judge-backend/LocalSandboxExecutor';
 
 export interface TestCase {
@@ -237,7 +237,11 @@ export class JudgeService {
     }
   }
 
+  private pageLoader?: PageLoader;
+  /** Real-browser page loader (Electron) used when Codeforces' Cloudflare blocks plain HTTP. */
+  setPageLoader(loader: PageLoader) { this.pageLoader = loader; }
+
   async fetchProblems(contestId: number): Promise<unknown> {
-    return fetchContestProblems(contestId);
+    return fetchContestProblems(contestId, undefined, undefined, this.pageLoader);
   }
 }

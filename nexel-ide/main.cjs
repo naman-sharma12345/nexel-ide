@@ -27,6 +27,7 @@ const { resolveClangd, clangdArgs, findCompiler } = require('./src/main/services
 const { ensureWorkspaceConfig } = require('./src/main/services/lsp/workspaceConfig.ts');
 const { validateClangdOptions } = require('./src/main/services/lsp/lspValidate.ts');
 const { CompanionService } = require('./src/main/services/CompanionService.ts');
+const { createCodeforcesLoader, openCodeforcesWindow } = require('./src/main/services/cfBrowserLoader.ts');
 
 let pty;
 try {
@@ -66,6 +67,7 @@ async function createWindow() {
   // Initialize service instances
   const fileSystemService = new FileSystemService();
   const judgeService = new JudgeService();
+  judgeService.setPageLoader(createCodeforcesLoader(BrowserWindow, { parent: mainWindow }));
   const storeService = new StoreService();
   await storeService.initialize();
 
@@ -246,6 +248,12 @@ async function createWindow() {
 
   ipcMain.handle('judge:fetch-problems', async (event, contestId) => {
     return await judgeService.fetchProblems(contestId);
+  });
+
+  ipcMain.handle('cf:open-session', async (event, url) => {
+    const target = typeof url === 'string' ? url : 'https://codeforces.com/enter';
+    openCodeforcesWindow(BrowserWindow, target, mainWindow);
+    return true;
   });
 
   // Secure Electron Store IPC Routes (Synchronous)
