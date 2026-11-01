@@ -654,3 +654,21 @@
     transform: scale(1);
   }
 }
+
+/* ============================================================================
+   Visual overhaul (visual-overhaul branch): appended so the lazy chunk still
+   picks these up after nx-polish.css loads. Token-driven, all themes.
+   ============================================================================ */
+/* ---------- Contests ---------- */
+.nx-section-title { font-family: var(--sans); letter-spacing: .14em; color: var(--nx-text-faint); }
+.nx-upcoming-card, .nx-problem-row-card, .nx-contest-card {
+  border: 1px solid var(--nx-line); border-radius: var(--nx-radius);
+  background: rgb(var(--nx-ink) / .025);
+  transition: border-color var(--nx-dur-2), background-color var(--nx-dur-2), transform var(--nx-dur-2) var(--nx-ease-out), box-shadow var(--nx-dur-2);
+}
+.nx-upcoming-card:hover, .nx-problem-row-card:hover, .nx-contest-card:hover {
+  border-color: rgb(var(--nx-accent-rgb) / .35);
+  background: rgb(var(--nx-ink) / .05);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -12px rgb(var(--nx-accent-rgb) / .35);
+}
