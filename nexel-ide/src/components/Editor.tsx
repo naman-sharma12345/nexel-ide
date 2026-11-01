@@ -168,6 +168,16 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         e.preventDefault();
         if (activeTabPath) handleCloseTab(activeTabPath);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Tab') {
+        e.preventDefault();
+        if (tabs.length > 1 && activeTabPath) {
+          const idx = tabs.findIndex(t => t.filePath === activeTabPath);
+          const step = e.shiftKey ? -1 : 1;
+          const next = tabs[(idx + step + tabs.length) % tabs.length];
+          useEditorStore.setState({ activeTabPath: next.filePath, focusedTabPath: next.filePath });
+          onFileSelect(next.filePath);
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
