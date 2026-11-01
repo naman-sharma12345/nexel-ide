@@ -118,6 +118,33 @@ const qoTab = await page.evaluate(() => document.querySelector('.nx-editor-tab.a
 report('QUICKOPEN_REAL', qoListed && qoTab === 'README.md', JSON.stringify({ listed: qoListed, items: qo.length, tab: qoTab }));
 await page.screenshot({ path: dir + '/r10-quickopen.png' });
 
+// --- Phase 2d: settings apply live and persist (word wrap + minimap) ---
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click();
+await page.waitForTimeout(1200);
+await page.click('.monaco-editor .view-lines').catch(() => {});
+await page.keyboard.press('Control+End');
+await page.keyboard.press('Enter');
+await page.keyboard.type('# ' + 'x'.repeat(240));
+await page.waitForTimeout(800);
+const linesBefore = await page.evaluate(() => document.querySelectorAll('.monaco-editor .view-lines > div').length);
+await page.keyboard.press('Control+,');
+await page.waitForTimeout(1000);
+await page.locator('button.sp-toggle:has-text("Word wrap")').click();
+await page.locator('button.sp-toggle:has-text("Minimap")').click();
+await page.waitForTimeout(300);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(1200);
+const after = await page.evaluate(() => ({
+  lines: document.querySelectorAll('.monaco-editor .view-lines > div').length,
+  minimap: !!document.querySelector('.monaco-editor .minimap'),
+}));
+const cfg2 = JSON.parse(fs.readFileSync(cfgSub + '/config.json', 'utf8'));
+const rawSettings = cfg2['nexel-settings'];
+const settings2 = typeof rawSettings === 'string' ? JSON.parse(rawSettings) : (rawSettings ?? {});
+const persisted2 = settings2?.state?.wordWrap === true && settings2?.state?.minimap === true;
+report('SETTINGS_APPLY_REAL', after.lines > linesBefore && after.minimap && persisted2, JSON.stringify({ linesBefore, ...after, persisted: persisted2 }));
+await page.screenshot({ path: dir + '/r11-settings-apply.png' });
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
 await page.waitForTimeout(3500);
@@ -190,7 +217,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
