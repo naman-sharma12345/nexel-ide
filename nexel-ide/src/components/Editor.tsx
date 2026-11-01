@@ -6,6 +6,7 @@ import { getClangd } from '../lib/clangd/session';
 import { isClangdActive } from '../lib/clangd/state';
 import { pathToUri } from '../lib/clangd/uri';
 import { useStatusStore } from '../stores/useStatusStore';
+import { getPlugin, pluginEnabled } from '../plugins/registry';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import '../lib/monacoSetup';
@@ -334,6 +335,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         if (/(\.|->|::)\s*$/.test(before)) return { suggestions: [] };
         // With clangd active, it owns keywords/containers/algorithms; Nexel keeps its CP aliases and snippets.
         const clangdOn = isClangdActive();
+        const cpOn = pluginEnabled(getPlugin('competitive-programming')!, useSettingsStore.getState().plugins);
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
@@ -342,7 +344,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         };
 
         const suggestions: any[] = [];
-        const categories = clangdOn ? ['cp'] : ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp'];
+        const categories = (clangdOn ? ['cp'] : ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp']).filter(c => c !== 'cp' || cpOn);
 
         categories.forEach(category => {
           const items = (dataset as any)[category] || [];
@@ -388,7 +390,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           });
         });
 
-        if (enableSnippets) {
+        if (enableSnippets && cpOn) {
           Object.entries(snippets).forEach(([key, val]: [string, any]) => {
             const bodyStr = Array.isArray(val.body) ? val.body.join('\n') : val.body;
             suggestions.push({
