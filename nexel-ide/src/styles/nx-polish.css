@@ -452,3 +452,13 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 /* Drop the accent glow halo and heavy backdrop blur; keep depth from a plain shadow. */
 .cp-backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgb(var(--nx-surf, 5 5 7) / .45); }
 .cp-box { box-shadow: var(--nx-shadow-2); border-color: rgb(var(--nx-ink) / .14); }
+
+/* ===== v7: quiet terminal panel ===== */
+.nx-terminal-panel {
+  background: var(--nx-bg-1);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  border-left: none; border-right: none;
+  border-top: 1px solid rgb(var(--nx-ink) / .12);
+  border-radius: 0;
+  box-shadow: none;
+}
