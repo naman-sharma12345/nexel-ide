@@ -285,9 +285,14 @@ html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .
 }
 .nx-template-textarea:focus { border-color: rgb(var(--nx-accent-rgb) / .5); box-shadow: 0 0 0 3px rgb(var(--nx-accent-rgb) / .12); outline: none; }
 
-/* Welcome card: never clip on narrow windows */
-.nx-editor-welcome-backdrop { padding: 24px; }
-.nx-welcome-glass-plate { width: 100%; max-width: 400px; box-sizing: border-box; }
+/* Welcome card: never clip on narrow or short windows; scroll instead of hiding */
+.nx-editor-welcome-backdrop { padding: 24px; overflow-y: auto; align-items: flex-start; }
+.nx-welcome-glass-plate { width: 100%; max-width: 400px; box-sizing: border-box; margin: auto; flex: none; }
+@media (max-height: 560px) {
+  .nx-welcome-logo { width: 72px; height: 72px; }
+  .nx-welcome-orb { display: none; }
+  .nx-welcome-subtitle { margin-bottom: 14px; }
+}
 .nx-welcome-subtitle { overflow-wrap: break-word; }
 .nx-shortcut-row { flex-wrap: wrap; gap: 4px 8px; }
 @media (max-width: 560px) {
