@@ -494,3 +494,4 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 .nx-titlebar-container, .nx-titlebar-left { overflow: visible; }
 .nd-dock { overflow: visible; }
 .nx-menu-bar { overflow: visible; }
+.sb-bar { overflow: clip; overflow-clip-margin: 260px; }
