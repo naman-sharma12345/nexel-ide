@@ -6,7 +6,8 @@ import { getClangd } from '../lib/clangd/session';
 import { isClangdActive } from '../lib/clangd/state';
 import { pathToUri } from '../lib/clangd/uri';
 import { useStatusStore } from '../stores/useStatusStore';
-import { getPlugin, pluginEnabled } from '../plugins/registry';
+import { pluginEnabledById } from '../plugins/registry';
+import { collectOfflineItems } from '../lib/offlineCompletions';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import '../lib/monacoSetup';
@@ -335,7 +336,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         if (/(\.|->|::)\s*$/.test(before)) return { suggestions: [] };
         // With clangd active, it owns keywords/containers/algorithms; Nexel keeps its CP aliases and snippets.
         const clangdOn = isClangdActive();
-        const cpOn = pluginEnabled(getPlugin('competitive-programming')!, useSettingsStore.getState().plugins);
+        const cpOn = pluginEnabledById('competitive-programming', useSettingsStore.getState().plugins);
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
@@ -344,67 +345,26 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         };
 
         const suggestions: any[] = [];
-        const categories = (clangdOn ? ['cp'] : ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp']).filter(c => c !== 'cp' || cpOn);
-
-        categories.forEach(category => {
-          const items = (dataset as any)[category] || [];
-          items.forEach((item: any) => {
-            let label = item.label;
-            let insertText = item.insertText || item.label;
-
-            if (hasUsingStd) {
-              if (label.startsWith('std::')) {
-                label = label.substring(5);
-              }
-              if (insertText.startsWith('std::')) {
-                insertText = insertText.substring(5);
-              }
-            }
-
-            let kind = monaco.languages.CompletionItemKind.Keyword;
-            if (category === 'containers') {
-              kind = monaco.languages.CompletionItemKind.Class;
-            } else if (category === 'algorithms' || category === 'math') {
-              kind = monaco.languages.CompletionItemKind.Function;
-            } else if (category === 'io') {
-              kind = monaco.languages.CompletionItemKind.Interface;
-            } else if (category === 'cp') {
-              kind = monaco.languages.CompletionItemKind.Snippet;
-            }
-
-            const score = item.score !== undefined ? item.score : 50;
-            // Offline items rank after clangd's semantic results (clangd sortText starts with a digit run like "3f…").
-            const sortText = (clangdOn ? '~' : '') + String(1000 - score).padStart(4, '0');
-
-            suggestions.push({
-              kind: kind,
-              detail: item.detail || `${category} (Nexel Autocomplete)`,
-              label: clangdOn ? { label, description: 'Nexel' } : label,
-              documentation: {
-                value: item.documentation || '',
-              },
-              insertText: insertText,
-              range: range,
-              sortText: sortText,
-            });
-          });
-        });
-
-        if (enableSnippets && cpOn) {
-          Object.entries(snippets).forEach(([key, val]: [string, any]) => {
-            const bodyStr = Array.isArray(val.body) ? val.body.join('\n') : val.body;
-            suggestions.push({
-              kind: monaco.languages.CompletionItemKind.Snippet,
-              detail: val.description || 'Snippet',
-              documentation: {
-                value: `**${val.description || key}**\n\n\`\`\`cpp\n${bodyStr}\n\`\`\``
-              },
-              insertText: bodyStr,
-              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              range: range,
-              label: clangdOn ? { label: val.prefix, description: 'snippet' } : val.prefix,
-              sortText: clangdOn ? '~0001' : '0001'
-            });
+        const kindFor = (cat: string, isSnippet: boolean) => {
+          const K = monaco.languages.CompletionItemKind;
+          if (isSnippet || cat === 'cp') return K.Snippet;
+          if (cat === 'containers') return K.Class;
+          if (cat === 'algorithms' || cat === 'math') return K.Function;
+          if (cat === 'io') return K.Interface;
+          return K.Keyword;
+        };
+        for (const item of collectOfflineItems({ dataset, snippets, clangdOn, cpOn, enableSnippets, hasUsingStd })) {
+          // Offline items rank after clangd's semantic results (clangd sortText starts with a digit run like "3f...").
+          const sortText = item.isSnippet ? (clangdOn ? '~0001' : '0001') : (clangdOn ? '~' : '') + String(1000 - item.score).padStart(4, '0');
+          suggestions.push({
+            kind: kindFor(item.category, item.isSnippet),
+            detail: item.detail,
+            label: clangdOn ? { label: item.label, description: item.isSnippet ? 'snippet' : 'Nexel' } : item.label,
+            documentation: { value: item.documentation },
+            insertText: item.insertText,
+            ...(item.isSnippet ? { insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet } : {}),
+            range: range,
+            sortText: sortText,
           });
         }
 
