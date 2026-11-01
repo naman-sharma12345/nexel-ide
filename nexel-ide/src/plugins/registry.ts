@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 
 /** A dock entry contributed by a plugin. */
 export interface PluginNavItem {
@@ -24,6 +24,10 @@ export interface NexelPlugin {
   commandIds: string[];
   /** True when the plugin is on by default for a fresh install. */
   defaultEnabled: boolean;
+  /** Section id -> panel component, owned and lazy-loaded by the plugin itself. */
+  panels?: Record<string, ComponentType<{ activeFilePath?: string | null }>>;
+  /** React hook the shell calls for every registered plugin with its enabled state. */
+  useActivation?: (enabled: boolean) => void;
 }
 
 const REGISTRY = new Map<string, NexelPlugin>();
