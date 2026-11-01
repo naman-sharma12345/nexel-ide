@@ -56,7 +56,13 @@ await page.screenshot({ path: dir + '/w1-workspace.png' });
 await page.screenshot({ path: dir + '/w2-statusbar-cpp.png', clip: { x: 640, y: 815, width: 800, height: 35 } });
 await page.click('.nx-editor-tab:has-text("README.md")');
 await page.waitForTimeout(900);
-await page.screenshot({ path: dir + '/w3-statusbar-md.png', clip: { x: 640, y: 815, width: 800, height: 35 } });
+const probe = await page.evaluate(() => {
+  const sb = document.querySelector('.sb-bar')?.textContent ?? '';
+  const rows = [...document.querySelectorAll('.nx-node-row')].map(r => ({
+    name: r.textContent.trim(), cls: r.className }));
+  return { sb, rows };
+});
+console.log('PROBE:', JSON.stringify(probe));
 await page.screenshot({ path: dir + '/w4-workspace-md.png' });
 await browser.close();
 console.log('done');
