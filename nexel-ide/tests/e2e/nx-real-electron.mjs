@@ -58,7 +58,16 @@ const expected = 'def greet(name):\n    return f"hello, {name}"\n\nif __name__ =
 console.log('SAVE_DISK', disk === expected ? 'OK' : 'MISMATCH', 'autosave_was', autoSave, disk === expected ? '' : JSON.stringify(disk));
 await page.screenshot({ path: dir + '/r3-saved.png' });
 
-
+// --- Phase 1c: theme switch through the real settings UI ---
+await page.keyboard.press('Control+,');
+await page.waitForTimeout(1200);
+await page.locator('button.sp-theme:has-text("Midnight Indigo")').first().click({ timeout: 10000 });
+await page.waitForTimeout(1200);
+const themeNow = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+console.log('THEME_SWITCH_REAL', themeNow === 'midnight' ? 'OK' : 'FAIL ' + themeNow);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(600);
+await app.close();
 await new Promise(r => setTimeout(r, 1500));
 
 // --- Phase 2: reopen in a fresh process, verify persistence ---
@@ -67,6 +76,8 @@ await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 1500
 await page.locator('.nx-node-row:has-text("main.py")').first().click({ timeout: 15000 }); await page.waitForTimeout(1800);
 const reopened = await page.evaluate(() => document.querySelector('.view-lines')?.textContent ?? '');
 console.log('REOPEN_PERSIST', reopened.includes('edit-mark-123') ? 'OK' : 'MISSING');
+const themePersisted = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+console.log('THEME_PERSIST_REAL', themePersisted === 'midnight' ? 'OK' : 'FAIL ' + themePersisted);
 
 // --- Phase 2b: find-in-files over the real fs ---
 await page.keyboard.press('Control+Shift+f');
