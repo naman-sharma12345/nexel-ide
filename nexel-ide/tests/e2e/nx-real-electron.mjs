@@ -103,6 +103,21 @@ if (searchOk) {
 }
 await page.screenshot({ path: dir + '/r9-search.png' });
 
+// --- Phase 2c: quick open (Ctrl+P) over the real file tree ---
+await page.keyboard.press('Escape');
+await page.waitForTimeout(500);
+await page.keyboard.press('Control+p');
+await page.waitForTimeout(800);
+await page.keyboard.type('readme');
+await page.waitForTimeout(600);
+const qo = await page.evaluate(() => [...document.querySelectorAll('.cp-item')].map((x) => x.textContent ?? ''));
+const qoListed = qo.some((t) => t.includes('README.md'));
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1200);
+const qoTab = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? '');
+report('QUICKOPEN_REAL', qoListed && qoTab === 'README.md', JSON.stringify({ listed: qoListed, items: qo.length, tab: qoTab }));
+await page.screenshot({ path: dir + '/r10-quickopen.png' });
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
 await page.waitForTimeout(3500);
@@ -175,7 +190,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
