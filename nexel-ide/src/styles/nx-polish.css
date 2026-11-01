@@ -462,3 +462,9 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
   border-radius: 0;
   box-shadow: none;
 }
+
+/* ===== v8: responsive toolbar + tab strip ===== */
+.nx-toolbar-btn { white-space: nowrap; flex: none; }
+.nx-floating-tabbar { max-width: calc(100% - 16px); }
+.nx-tabs-scroll-stack { min-width: 0; }
+.nx-editor-tab { min-width: 56px; flex: 0 1 auto; }
