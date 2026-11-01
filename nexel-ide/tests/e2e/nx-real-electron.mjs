@@ -185,6 +185,50 @@ const crumbReveal = await page.evaluate(() => {
 });
 report('CRUMB_REVEAL_REAL', !!crumbReveal.focused && crumbReveal.focused.includes('src'), JSON.stringify(crumbReveal));
 
+// --- Phase 2i: closing an INACTIVE tab keeps the active editor visible ---
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(1200);
+// main.py is active again after the explorer click? No - explorer click opens+activates README. Re-activate main.py:
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(600);
+await page.locator('.nx-editor-tab:has-text("README.md") .nx-tab-close-btn').first().click();
+await page.waitForTimeout(700);
+const closeInactive = await page.evaluate(() => ({
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
+  footer: !!document.querySelector('.nx-editor-footer-metrics'),
+  welcome: !!document.querySelector('.nx-welcome-card, .nx-welcome-backdrop'),
+  activeTitle: document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null,
+}));
+report('TABS_CLOSE_INACTIVE_REAL', !closeInactive.tabs.includes('README.md') && closeInactive.footer && !closeInactive.welcome && closeInactive.activeTitle === 'main.py', JSON.stringify(closeInactive));
+
+// --- Phase 2j: closing the ACTIVE tab selects the neighbor ---
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(1200);
+// README is now active (explorer click activates). Close it via its X:
+await page.locator('.nx-editor-tab:has-text("README.md") .nx-tab-close-btn').first().click();
+await page.waitForTimeout(700);
+const closeActive = await page.evaluate(() => ({
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
+  footer: !!document.querySelector('.nx-editor-footer-metrics'),
+  activeTitle: document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null,
+}));
+report('TABS_CLOSE_ACTIVE_REAL', !closeActive.tabs.includes('README.md') && closeActive.footer && closeActive.activeTitle === 'main.py', JSON.stringify(closeActive));
+
+// --- Phase 2k: dismissing the dirty-close confirm keeps tab and content ---
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(1200);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('dirty-marker');
+await page.waitForTimeout(400);
+await page.once('dialog', (d) => d.dismiss());
+await page.locator('.nx-editor-tab:has-text("README.md") .nx-tab-close-btn').first().click();
+await page.waitForTimeout(700);
+const dirtyCancel = await page.evaluate(() => ({
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
+  dirty: !!document.querySelector('.nx-editor-tab .nx-dirty-indicator-glow'),
+}));
+// cleanup: accept the confirm and close for real
+await page.once('dialog', (d) => d.accept());
+await page.locator('.nx-editor-tab:has-text("README.md") .nx-tab-close-btn').first().click();
+await page.waitForTimeout(700);
+const afterAccept = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+report('TABS_DIRTY_CANCEL_REAL', dirtyCancel.tabs.includes('README.md') && dirtyCancel.dirty && !afterAccept.includes('README.md'), JSON.stringify({ dirtyCancel, afterAccept }));
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
 await page.waitForFunction(() => (document.querySelector('.xterm-rows')?.textContent ?? '').includes('$'), { timeout: 20000 });
@@ -258,7 +302,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
