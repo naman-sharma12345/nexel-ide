@@ -438,7 +438,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <img src={logoImg} className="nx-welcome-logo" alt="Nexel IDE Logo" />
           <h1 className="nx-welcome-headline">NEXEL IDE</h1>
         </div>
-        <p className="nx-welcome-subtitle">A premium minimal workspace with native Monaco integration.</p>
+        <p className="nx-welcome-subtitle">A minimal, keyboard-first editor. Open a folder to get started.</p>
         <div className="nx-keycaps">
           {SHORTCUT_GROUPS[0].items.concat(SHORTCUT_GROUPS[1].items.slice(0, 2)).map((it, i) => (
             <div key={it.label} className="nx-keycap-row" style={{ animationDelay: `${220 + i * 55}ms` }}>
