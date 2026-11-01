@@ -33,6 +33,12 @@ export interface NexelPlugin {
 const REGISTRY = new Map<string, NexelPlugin>();
 export function registerPlugin(p: NexelPlugin) { REGISTRY.set(p.id, p); }
 export function listPlugins(): NexelPlugin[] { return [...REGISTRY.values()]; }
+/** Single seam for "is plugin X on" checks in core UI: core names the id, the registry owns resolution. */
+export function pluginEnabledById(id: string, prefs: Record<string, boolean>): boolean {
+  const pl = getPlugin(id);
+  return pl ? pluginEnabled(pl, prefs) : false;
+}
+
 export function getPlugin(id: string): NexelPlugin | undefined { return REGISTRY.get(id); }
 /** Whether a persisted plugins map enables this plugin (absent = default). */
 export function pluginEnabled(p: NexelPlugin, prefs: Record<string, boolean>): boolean {
