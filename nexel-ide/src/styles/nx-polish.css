@@ -444,3 +444,6 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
   background: var(--nx-bg-1); border-radius: 6px;
 }
+
+/* Explorer: clicked-but-not-open node gets a quiet focus ring, never the active fill */
+.nx-node-row.nx-row-focused { background: transparent; box-shadow: inset 0 0 0 1px rgb(var(--nx-ink) / .16); }
