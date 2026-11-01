@@ -489,3 +489,8 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 .ss-row { flex-wrap: wrap; row-gap: 4px; }
 .ss-row > span:first-child { white-space: normal; overflow-wrap: anywhere; }
 .ss-keys { flex-wrap: wrap; margin-left: auto; }
+
+/* --- v9.2: menus and dock tooltips must escape their containers (regression fix) --- */
+.nx-titlebar-container, .nx-titlebar-left { overflow: visible; }
+.nd-dock { overflow: visible; }
+.nx-menu-bar { overflow: visible; }
