@@ -283,7 +283,7 @@
   gap: 6px;
   font-family: 'Outfit', sans-serif;
   font-size: 9.5px;
-  color: rgb(var(--nx-ink) / 0.5);
+  color: rgb(var(--nx-ink) / 0.65);
 }
 
 .nx-time-icon {
@@ -455,8 +455,8 @@
 }
 
 .nx-contests-custom-btn {
-  background: rgb(var(--nx-accent-rgb) / 0.08);
-  border: 1px solid rgb(var(--nx-accent-rgb) / 0.2);
+  background: rgb(var(--nx-accent-rgb) / 0.14);
+  border: 1px solid rgb(var(--nx-accent-rgb) / 0.38);
   border-radius: 6px;
   color: var(--nx-accent);
   font-family: 'Outfit', sans-serif;
@@ -478,7 +478,7 @@
 }
 
 .nx-contests-custom-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
