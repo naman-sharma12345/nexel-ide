@@ -47,7 +47,8 @@ def text_bg(textbox, bgbox=None, mode='vs-container'):
         bg_l = lum(bg_c)
         doms = dominant(tpx)
         cands = [(abs(lum(d[2])-bg_l), d[2]) for d in doms if abs(lum(d[2])-bg_l) > 0.02]
-        txt_c = max(cands)[1] if cands else doms[1][2]
+        txt_c = max(cands)[1] if cands else (doms[1][2] if len(doms)>1 else None)
+        if txt_c is None: return None
     l1, l2 = lum(txt_c), lum(bg_c)
     hi, lo = max(l1,l2), min(l1,l2)
     return (hi+0.05)/(lo+0.05), txt_c.astype(int).tolist(), bg_c.astype(int).tolist()
@@ -62,6 +63,16 @@ targets = {
         ('contest duration','contest_duration','contest_card','vs-container'),
         ('contest date','contest_date','contest_card','vs-container'),
         ('import button','import_btn','import_btn','vs-container')],
+ 'p5': [('light failed.active name','pill_name','pill','vs-container'),
+        ('light failed.active badge','pill_badge','pill','vs-container'),
+        ('light passed idle badge','pill_passed_badge','pill_passed','vs-container')],
+ 'p6': [('light passed.active name','pill_name','pill','vs-container'),
+        ('light passed.active badge','pill_badge','pill','vs-container'),
+        ('light actual-area text','actual_area','actual_area','vs-container')],
+ 'p7': [('light diff hdr green','hdr_green','hdr_green','vs-container'),
+        ('light diff hdr red','hdr_red','hdr_red','vs-container'),
+        ('light diff expected text','exp_cell','exp_cell','vs-container'),
+        ('light diff actual text','act_cell','act_cell','vs-container')],
  'p0': [('explorer ext','explorer_ext',None,'two-cluster')],
  's1': [('ring pct text','ring_txt','ring','vs-container'),
         ('heading sub','heading_sub','field_input','vs-container'),
