@@ -256,11 +256,12 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
 
     closeTab(path);
     getClangd().closePath(path);
-    if (onCloseFile) onCloseFile(path);
 
     const updatedState = useEditorStore.getState();
     if (updatedState.activeTabPath) {
       onFileSelect(updatedState.activeTabPath);
+    } else if (onCloseFile) {
+      onCloseFile(path);
     }
   };
 
@@ -677,7 +678,19 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <nav className="nx-crumbs" key={activeTab.filePath} aria-label="File path" title={activeTab.filePath}>
             {toCrumbs(activeTab.filePath, useWorkspaceStore.getState().rootPath).map((c, i, arr) => (
               <React.Fragment key={i}>
-                <span className={`nx-crumb ${c.isFile ? 'nx-crumb-file' : ''}`} style={{ animationDelay: `${i * 35}ms` }}>{c.label}</span>
+                {c.path ? (
+                  <button
+                    type="button"
+                    className={`nx-crumb nx-crumb-btn ${c.isFile ? 'nx-crumb-file' : ''}`}
+                    style={{ animationDelay: `${i * 35}ms` }}
+                    title={`Reveal ${c.label} in Explorer`}
+                    onClick={() => useWorkspaceStore.getState().revealPath(c.path!)}
+                  >
+                    {c.label}
+                  </button>
+                ) : (
+                  <span className="nx-crumb" style={{ animationDelay: `${i * 35}ms` }}>{c.label}</span>
+                )}
                 {i < arr.length - 1 && <svg className="nx-crumb-sep" viewBox="0 0 8 8" aria-hidden="true"><path d="M2.5 1l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
               </React.Fragment>
             ))}
