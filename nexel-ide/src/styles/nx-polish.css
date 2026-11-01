@@ -261,16 +261,11 @@
 .nx-crumb { color: rgb(var(--nx-ink) / .5); }
 .nx-win-ctrl-btn { color: rgb(var(--nx-ink) / .55); }
 
-/* Explorer header: title gets the full row, tool belt reveals on hover */
-.nx-explorer-header { position: relative; }
-.nx-explorer-title { overflow: visible; text-overflow: clip; letter-spacing: .1em; }
-.nx-action-bar {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  padding-left: 16px;
-  background: linear-gradient(90deg, transparent, rgb(var(--nx-bg-1) / .95) 30%);
-  opacity: 0; pointer-events: none; transition: opacity var(--nx-dur-2);
-}
-.nx-explorer-header:hover .nx-action-bar, .nx-action-bar:focus-within { opacity: 1; pointer-events: auto; }
+/* Explorer header: title truncates, tool belt always visible and clickable */
+.nx-explorer-header { position: relative; gap: 8px; }
+.nx-explorer-title { flex: 1 1 auto; max-width: none; overflow: hidden; text-overflow: ellipsis; letter-spacing: .1em; }
+.nx-action-bar { flex: none; opacity: .8; transition: opacity var(--nx-dur-2); }
+.nx-explorer-header:hover .nx-action-bar, .nx-action-bar:focus-within { opacity: 1; }
 
 /* Template modal: accent primary action, ghost cancel */
 .nx-template-modal-btn.save {
