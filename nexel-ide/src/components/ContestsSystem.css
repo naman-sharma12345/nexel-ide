@@ -231,13 +231,13 @@
 .nx-contest-id {
   font-family: ui-monospace, Consolas, monospace;
   font-size: 9px;
-  color: rgb(var(--nx-ink) / 0.25);
+  color: rgb(var(--nx-ink) / 0.75);
 }
 
 .nx-contest-duration {
   font-family: 'Outfit', sans-serif;
   font-size: 9px;
-  color: rgb(var(--nx-ink) / 0.4);
+  color: rgb(var(--nx-ink) / 0.8);
 }
 
 .nx-contest-name {
@@ -273,7 +273,7 @@
 }
 
 .nx-contest-status-line.completed {
-  color: rgb(var(--nx-ink) / 0.3);
+  color: rgb(var(--nx-ink) / 0.7);
   font-weight: 500;
 }
 
