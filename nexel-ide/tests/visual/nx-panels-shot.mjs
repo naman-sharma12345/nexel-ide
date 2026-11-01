@@ -148,6 +148,19 @@ for (const [name, sel] of Object.entries({
   const el = page2.locator(sel).first();
   if (await el.count()) boxes['p5'][name] = await el.boundingBox();
 }
+await page2.locator('.nx-judge-tab-pill:has-text("Diff"), button:has-text("Diff"), .nx-judge-tab:has-text("Diff")').first().click().catch(()=>{});
+await page2.waitForTimeout(600);
+await page2.screenshot({ path: dir + '/p7-light-diff.png' });
+boxes['p7'] = {};
+for (const [name, sel] of Object.entries({
+  hdr_green: '.nx-diff-column-hdr.green',
+  hdr_red: '.nx-diff-column-hdr.red',
+  exp_cell: '.nx-diff-line-row.mismatch .expected-cell .nx-line-text',
+  act_cell: '.nx-diff-line-row.mismatch .actual-cell .nx-line-text',
+})) {
+  const el = page2.locator(sel).first();
+  if (await el.count()) boxes['p7'][name] = await el.boundingBox();
+}
 await page2.locator('.nx-tc-pill').nth(0).click().catch(()=>{});
 await page2.waitForTimeout(400);
 await page2.screenshot({ path: dir + '/p6-light-passed-active.png' });
@@ -156,9 +169,23 @@ for (const [name, sel] of Object.entries({
   pill: '.nx-tc-pill.passed.active',
   pill_name: '.nx-tc-pill.passed.active .nx-tc-pill-name',
   pill_badge: '.nx-tc-pill.passed.active .nx-tc-verdict-dot',
+  actual_area: '.nx-judge-textarea.passed-area',
 })) {
   const el = page2.locator(sel).first();
   if (await el.count()) boxes['p6'][name] = await el.boundingBox();
+}
+await page2.locator('.nx-judge-tab-pill:has-text("Diff"), button:has-text("Diff"), .nx-judge-tab:has-text("Diff")').first().click().catch(()=>{});
+await page2.waitForTimeout(600);
+await page2.screenshot({ path: dir + '/p7-light-diff.png' });
+boxes['p7'] = {};
+for (const [name, sel] of Object.entries({
+  hdr_green: '.nx-diff-column-hdr.green',
+  hdr_red: '.nx-diff-column-hdr.red',
+  exp_cell: '.nx-diff-line-row.mismatch .expected-cell .nx-line-text',
+  act_cell: '.nx-diff-line-row.mismatch .actual-cell .nx-line-text',
+})) {
+  const el = page2.locator(sel).first();
+  if (await el.count()) boxes['p7'][name] = await el.boundingBox();
 }
 fs.writeFileSync(dir + '/bboxes.json', JSON.stringify(boxes, null, 2));
 await browser.close();
