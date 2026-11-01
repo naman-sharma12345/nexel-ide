@@ -7,6 +7,12 @@ import os from 'node:os';
 const dir = '/tmp/nxshots/real';
 fs.mkdirSync(dir, { recursive: true });
 const ws = '/tmp/nxreal-ws';
+// Fresh disposable fixture every run: leftovers from a previous run can never hide regressions.
+fs.rmSync(ws, { recursive: true, force: true });
+fs.mkdirSync(ws + '/src', { recursive: true });
+fs.writeFileSync(ws + '/src/main.py', 'def greet(name):\n    return f"hello, {name}"\n\nif __name__ == "__main__":\n    print(greet("nexel"))\n');
+fs.writeFileSync(ws + '/src/main.cpp', '#include <iostream>\nint main() { std::cout << "hi\\n"; }\n');
+fs.writeFileSync(ws + '/README.md', '# Real harness workspace\nPlain project, CP off by default.\n');
 const cfg = fs.mkdtempSync('/tmp/nxe2e-config-');
 const cfgSub = cfg + '/Nexel IDE';
 fs.mkdirSync(cfgSub, { recursive: true });
@@ -34,6 +40,10 @@ const cpOff = await page.evaluate(() => ({
   cpSnippetsBtn: [...document.querySelectorAll('button')].some((b) => (b.title ?? '').includes('CP Snippets')),
 }));
 console.log('CP_OFF_REAL', JSON.stringify(cpOff), !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn ? 'OK' : 'FAIL');
+// clangd must stay silent for a Python-only session: no missing-binary toast.
+await page.waitForTimeout(6000);
+const toastPy = await page.evaluate(() => [...document.querySelectorAll('.tz-toast')].map((t) => t.textContent));
+console.log('CLANGD_QUIET_PYTHON', toastPy.some((t) => (t ?? '').includes('clangd')) ? 'FAIL ' + JSON.stringify(toastPy) : 'OK');
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(700);
 await page.locator('.nx-node-row:has-text("main.py")').first().click({ timeout: 15000 }); await page.waitForTimeout(1800);
 await page.locator('.view-lines').first().click({ timeout: 15000 });
@@ -44,7 +54,8 @@ const autoSave = await page.evaluate(() => (document.querySelector('.sb-bar')?.t
 if (!autoSave) { await page.keyboard.press('Control+s'); }
 await page.waitForTimeout(3000);
 const disk = fs.readFileSync(ws + '/src/main.py', 'utf8');
-console.log('SAVE_DISK', disk.includes('edit-mark-123') ? 'OK' : 'MISSING', 'autosave_was', autoSave);
+const expected = 'def greet(name):\n    return f"hello, {name}"\n\nif __name__ == "__main__":\n    print(greet("nexel"))\n\nprint(\'edit-mark-123\')';
+console.log('SAVE_DISK', disk === expected ? 'OK' : 'MISMATCH', 'autosave_was', autoSave, disk === expected ? '' : JSON.stringify(disk));
 await page.screenshot({ path: dir + '/r3-saved.png' });
 await app.close();
 await new Promise(r => setTimeout(r, 1500));
@@ -67,6 +78,19 @@ await page.waitForTimeout(2500);
 const termText = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
 console.log('TERM_PTY', termText.includes('NX42') ? 'OK' : 'MISSING', JSON.stringify(termText.slice(-120)));
 await page.screenshot({ path: dir + '/r4-terminal.png' });
+
+// --- Phase 3b: opening a real C++ file still surfaces the missing-clangd notice ---
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click({ timeout: 15000 });
+await page.waitForTimeout(3500);
+const cppEvidence = await page.evaluate(() => ({
+  toasts: [...document.querySelectorAll('.tz-toast')].map((t) => t.textContent),
+  sb: document.querySelector('.sb-bar')?.textContent ?? '',
+}));
+const toastHit = cppEvidence.toasts.some((t) => (t ?? '').includes('clangd not found'));
+const chipHit = cppEvidence.sb.includes('clangd');
+console.log('CLANGD_NOTICE_CPP', toastHit && chipHit ? 'OK' : 'MISSING ' + JSON.stringify(cppEvidence));
+await page.screenshot({ path: dir + '/r6-cpp-notice.png' });
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
