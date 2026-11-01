@@ -5,6 +5,8 @@ import { useLspStore, STATUS_LABEL } from '../lib/clangd/state';
 import { getClangd } from '../lib/clangd/session';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { THEMES } from '../lib/themes';
+import { listPlugins, pluginEnabled } from '../plugins/registry';
+import '../plugins/competitive-programming';
 import './SettingsPanel.css';
 import { switchTheme } from '../lib/themeTransition';
 
@@ -14,6 +16,18 @@ function Toggle({ on, onClick, label, hint }: { on: boolean; onClick: () => void
       <span><b>{label}</b><small>{hint}</small></span>
       <i className={`sp-switch ${on ? 'on' : ''}`}><em /></i>
     </button>
+  );
+}
+
+function ExtensionsSection() {
+  const s = useSettingsStore();
+  return (
+    <section id="sp-extensions">
+      <h3>Extensions</h3>
+      {listPlugins().map(pl => (
+        <Toggle key={pl.id} on={pluginEnabled(pl, s.plugins)} onClick={() => s.togglePlugin(pl.id)} label={pl.name} hint={pl.blurb} />
+      ))}
+    </section>
   );
 }
 
@@ -105,6 +119,7 @@ export function SettingsPanel() {
             <Toggle on={s.wordWrap} onClick={() => s.toggle('wordWrap')} label="Word wrap" hint="Wrap long lines at the viewport edge" />
             <Toggle on={s.minimap} onClick={() => s.toggle('minimap')} label="Minimap" hint="Code overview on the right edge" />
           </section>
+          <ExtensionsSection />
           <IntelliSenseSection />
         </div>
         <footer className="sp-foot">
