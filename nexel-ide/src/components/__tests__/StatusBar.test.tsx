@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { languageLabel, judgeSummary } from '../StatusBar';
+import { languageLabel, judgeSummary, isClangdRelevant } from '../StatusBar';
 import { useStatusStore } from '../../stores/useStatusStore';
 
 describe('StatusBar helpers', () => {
@@ -8,6 +8,17 @@ describe('StatusBar helpers', () => {
     expect(languageLabel('x.py')).toBe('Python');
     expect(languageLabel('README')).toBe('Plain Text');
     expect(languageLabel()).toBe('—');
+  });
+
+  it('shows the clangd chip only for C/C++ sources', () => {
+    expect(isClangdRelevant('main.cpp')).toBe(true);
+    expect(isClangdRelevant('utils.hpp')).toBe(true);
+    expect(isClangdRelevant('x.c')).toBe(true);
+    expect(isClangdRelevant('script.py')).toBe(false);
+    expect(isClangdRelevant('app.ts')).toBe(false);
+    expect(isClangdRelevant('README.md')).toBe(false);
+    expect(isClangdRelevant('Makefile')).toBe(false);
+    expect(isClangdRelevant(undefined)).toBe(false);
   });
   it('summarises judge state', () => {
     expect(judgeSummary([], true).tone).toBe('run');
