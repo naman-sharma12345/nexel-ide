@@ -18,6 +18,15 @@ export function languageLabel(name?: string): string {
   return LANGS[ext] ?? 'Plain Text';
 }
 
+/** clangd only serves C/C++ sources; the chip is hidden for other files so the
+ *  status bar never implies a language server that is not running for that file. */
+const CLANGD_EXTS = new Set(['c', 'cc', 'cpp', 'cxx', 'h', 'hh', 'hpp', 'hxx', 'm', 'mm']);
+export function isClangdRelevant(name?: string): boolean {
+  if (!name) return false;
+  const ext = name.includes('.') ? name.split('.').pop()!.toLowerCase() : '';
+  return CLANGD_EXTS.has(ext);
+}
+
 /** Summarises the judge: a pulsing dot while running, otherwise passed/total of the last run. */
 export function judgeSummary(cases: { verdict?: string }[], running: boolean): { tone: 'run' | 'ok' | 'bad' | 'idle'; text: string } {
   if (running) return { tone: 'run', text: 'Judging…' };
@@ -97,7 +106,7 @@ export const StatusBar = memo(function StatusBar() {
       <div className="sb-group sb-right">
         {cpOn && <button className={`sb-item sb-judge sb-${judge.tone}`} title="Judge status"><i className="sb-pulse" />{judge.text}</button>}
         {tab && <span className="sb-item sb-num">Ln {line}, Col {col}{selected > 0 && <em> ({selected} sel)</em>}</span>}
-        <ClangdChip />
+        {isClangdRelevant(tab?.name) && <ClangdChip />}
         <span className="sb-item">{languageLabel(tab?.name)}</span>
         <span className="sb-item">UTF-8</span>
         <button className="sb-item sb-btn sb-theme" onClick={() => openSettings(true)} title="Settings (Ctrl+,)"><i className="sb-swatch" />{themeName}</button>
