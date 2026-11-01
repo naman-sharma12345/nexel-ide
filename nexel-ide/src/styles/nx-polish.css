@@ -303,3 +303,26 @@ html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .
 @media (max-width: 520px) {
   .nx-explorer-wrapper, .nx-sidebar-container { width: 168px !important; min-width: 168px !important; }
 }
+
+/* Overflow hardening: title bar, welcome keycaps, status bar */
+.nx-titlebar-container { overflow: hidden; }
+.nx-titlebar-left { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.nx-menu-bar { min-width: 0; overflow: hidden; }
+.nx-titlebar-right { flex: none; margin-left: auto; }
+
+.nx-keycap-row { flex-wrap: wrap; }
+.nx-keycap-row > span:first-child { white-space: normal; }
+.nx-keycap-row span:last-child { flex-wrap: wrap; }
+
+.sb-bar { overflow: hidden; }
+.sb-group { min-width: 0; flex-wrap: nowrap; }
+.sb-file { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .nx-titlebar-toggle-label, .nx-titlebar-snippets-btn { display: none; }
+}
+@media (max-width: 560px) {
+  .nx-menu-bar { display: none; }
+  .nx-keycaps { grid-template-columns: 1fr; }
+  .sb-right .sb-item:not(.sb-judge):not(.sb-lsp):not(.sb-theme) { display: none; }
+}
