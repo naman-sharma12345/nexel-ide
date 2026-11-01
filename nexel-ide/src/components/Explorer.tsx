@@ -283,6 +283,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
           ) : (
             <div 
               className={`nx-node-row ${isSelected ? 'nx-row-selected' : ''}`}
+              data-ext={!isFolder && node.name.includes('.') ? node.name.split('.').pop()!.toLowerCase() : undefined}
               style={{ paddingLeft: `${depth * 14 + 18}px` }}
               draggable
               onDragStart={(e) => handleDragStart(e, node)}
