@@ -468,3 +468,19 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 .nx-floating-tabbar { max-width: calc(100% - 16px); }
 .nx-tabs-scroll-stack { min-width: 0; }
 .nx-editor-tab { min-width: 56px; flex: 0 1 auto; }
+
+/* ===== v9: flat popovers and sheets - no remaining glass ===== */
+.nx-tab-dropdown-menu, .nx-titlebar-dropdown, .nd-tooltip, .sb-menu {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.nx-tab-dropdown-menu, .nx-titlebar-dropdown { background: var(--nx-bg-1); }
+.sb-menu { background: var(--nx-bg-1); }
+/* dialog backdrops: plain dim, no blur */
+.ss-backdrop, .sp-backdrop, .sf-backdrop {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+/* dialog boxes: depth from a plain shadow, no accent glow halo */
+.ss-box, .sp-box, .sf-box { box-shadow: var(--nx-shadow-2); }
+.ss-box::before { content: none; }
+/* toasts: solid surface, no blur */
+.tz-toast { background: var(--nx-bg-1); backdrop-filter: none; -webkit-backdrop-filter: none; }
