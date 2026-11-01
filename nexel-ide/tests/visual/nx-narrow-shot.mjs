@@ -4,8 +4,8 @@ import fs from 'node:fs';
 const dir = '/tmp/nxshots/narrow';
 fs.mkdirSync(dir, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome' });
-for (const w of [725, 520, 380]) {
-  const page = await browser.newPage({ viewport: { width: w, height: 800 }, deviceScaleFactor: 1.5 });
+for (const [w, h] of [[1280, 720], [725, 800], [720, 480], [520, 800], [380, 800]]) {
+  const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1.5 });
   await page.addInitScript(() => {
     const store = new Map();
     store.set('nexel-workspace-store', JSON.stringify({ state: { recentWorkspaces: [], pinnedPaths: [], rootPath: null, rootName: '', activeDir: null, searchQuery: '', isRegex: false, isMatchCase: false }, version: 0 }));
@@ -28,10 +28,19 @@ for (const w of [725, 520, 380]) {
     const el = document.querySelector('.nx-welcome-glass-plate');
     if (!el) return 'no-card';
     const r = el.getBoundingClientRect();
-    return JSON.stringify({ left: Math.round(r.left), right: Math.round(r.right), vw: window.innerWidth, clippedRight: r.right > window.innerWidth, clippedLeft: r.left < 0 });
+    const backdrop = document.querySelector('.nx-editor-welcome-backdrop');
+    const last = document.querySelector('.nx-keycap-row:last-of-type');
+    const lastR = last ? last.getBoundingClientRect() : null;
+    return JSON.stringify({
+      left: Math.round(r.left), right: Math.round(r.right), vw: window.innerWidth,
+      clippedRight: r.right > window.innerWidth, clippedLeft: r.left < 0,
+      vh: window.innerHeight, cardH: Math.round(r.height),
+      scrollable: backdrop ? backdrop.scrollHeight > backdrop.clientHeight : false,
+      lastRowVisible: lastR ? lastR.bottom <= window.innerHeight : null,
+    });
   });
-  console.log(w, clip);
-  await page.screenshot({ path: `${dir}/narrow-${w}.png` });
+  console.log(w + 'x' + h, clip);
+  await page.screenshot({ path: `${dir}/narrow-${w}x${h}.png` });
   await page.close();
 }
 await browser.close();
