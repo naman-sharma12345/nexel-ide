@@ -34,14 +34,14 @@ await page.fill('.nx-inline-textbox', 'solve.cpp');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(1200);
 await page.screenshot({ path: dir + '/s2-file-created.png' });
-await page.locator('button[title="New Folder"]').dispatchEvent('click');
+await page.click('button[title="New Folder"]');
 await page.waitForTimeout(500);
 await page.fill('.nx-inline-textbox', 'stress');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(1200);
 await page.screenshot({ path: dir + '/s3-folder-created.png' });
 // refresh from "disk": entries must persist
-await page.locator('button[title="Refresh Tree"]').dispatchEvent('click');
+await page.click('button[title="Refresh Tree"]');
 await page.waitForTimeout(900);
 await page.screenshot({ path: dir + '/s4-after-refresh.png' });
 const names = await page.$$eval('.nx-node-name, .nx-tree-node', els => els.map(e => e.textContent));
