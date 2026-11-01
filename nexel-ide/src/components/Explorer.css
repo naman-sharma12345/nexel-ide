@@ -620,3 +620,39 @@
 .nx-tree-scroll::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--nx-ink) / 0.1);
 }
+/* Empty workspace (folder open, nothing inside yet) */
+.nx-empty-state--ws {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nx-empty-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgb(var(--nx-ink) / 0.4);
+}
+
+.nx-empty-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.nx-empty-action-btn {
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgb(var(--nx-accent, 52 211 153) / 0.08);
+  color: var(--nx-accent, #34d399);
+  border: 1px solid rgb(var(--nx-accent, 52 211 153) / 0.25);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nx-empty-action-btn:hover {
+  background: rgb(var(--nx-accent, 52 211 153) / 0.16);
+  border-color: rgb(var(--nx-accent, 52 211 153) / 0.45);
+  transform: translateY(-1px);
+}
