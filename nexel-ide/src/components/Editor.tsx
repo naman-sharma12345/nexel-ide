@@ -307,6 +307,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     };
     editor.onDidChangeCursorSelection(reportCursor);
     editor.onDidFocusEditorText(reportCursor);
+    editor.onDidChangeModel(reportCursor); // tab switch swaps the model; re-report the new cursor instead of leaving stale Ln/Col
     reportCursor();
 
     THEMES.forEach(t => monaco.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)));
