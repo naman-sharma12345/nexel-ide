@@ -484,3 +484,8 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 .ss-box::before { content: none; }
 /* toasts: solid surface, no blur */
 .tz-toast { background: var(--nx-bg-1); backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+/* --- v9.1: shortcuts sheet rows wrap instead of clipping keycaps --- */
+.ss-row { flex-wrap: wrap; row-gap: 4px; }
+.ss-row > span:first-child { white-space: normal; overflow-wrap: anywhere; }
+.ss-keys { flex-wrap: wrap; margin-left: auto; }
