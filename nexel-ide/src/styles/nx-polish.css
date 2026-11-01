@@ -203,6 +203,9 @@
   letter-spacing: .34em; font-weight: 800;
 }
 .nx-welcome-logo { filter: drop-shadow(0 8px 26px rgb(var(--nx-accent-rgb) / .45)); }
+/* Paper Light: the logo glyph is pure white, so ink it for light surfaces */
+html[data-theme='light'] .nx-welcome-logo { filter: invert(.88) drop-shadow(0 6px 18px rgb(var(--nx-accent-rgb) / .16)); }
+html[data-theme='light'] .nx-logo-img { filter: invert(.88) drop-shadow(0 0 4px rgb(var(--nx-accent-rgb) / .25)); }
 .nx-welcome-subtitle { color: var(--nx-text-dim); }
 .nx-keycaps kbd, .nx-welcome-glass-plate kbd {
   font-family: var(--sans); font-weight: 600; font-size: 10px;
