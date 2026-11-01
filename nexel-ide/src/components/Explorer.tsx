@@ -15,6 +15,13 @@ interface ExplorerProps {
   activeFilePath?: string | null;
 }
 
+/** Active file and clicked (selected) node are different states: only one row may look active. */
+export function explorerRowState(activePath: string | null | undefined, selectedPath: string | null, nodePath: string): 'active' | 'selected' | 'none' {
+  if (activePath && activePath === nodePath) return 'active';
+  if (selectedPath && selectedPath === nodePath) return 'selected';
+  return 'none';
+}
+
 export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath }) => {
   const {
     rootPath,
@@ -244,7 +251,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
   // Tree recursive rendering
   const renderTree = (nodes: FileNode[], depth = 0) => {
     return nodes.map((node, index) => {
-      const isSelected = activeFilePath === node.path || (lastSelectedNode ? lastSelectedNode.path === node.path : false);
+      const rowState = explorerRowState(activeFilePath, lastSelectedNode?.path ?? null, node.path);
       const isFolder = node.type === 'folder';
 
       // Inline editing element placement
@@ -282,7 +289,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
             </form>
           ) : (
             <div 
-              className={`nx-node-row ${isSelected ? 'nx-row-selected' : ''}`}
+              className={`nx-node-row ${rowState === 'active' ? 'nx-row-selected' : rowState === 'selected' ? 'nx-row-focused' : ''}`}
               data-ext={!isFolder && node.name.includes('.') ? node.name.split('.').pop()!.toLowerCase() : undefined}
               style={{ paddingLeft: `${depth * 14 + 18}px` }}
               draggable
@@ -329,7 +336,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
                 )}
               </span>
 
-              {renderLabelWithHighlights(node.name, isSelected)}
+              {renderLabelWithHighlights(node.name, rowState !== 'none')}
 
               {/* Hover quick shortcut overlay */}
               <div className="nx-row-actions">
