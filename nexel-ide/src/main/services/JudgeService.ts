@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
+import { fetchContestProblems, type PageLoader } from './cfProblems';
 import { LocalSandboxExecutor } from '../../judge-backend/LocalSandboxExecutor';
 
 export interface TestCase {
@@ -187,11 +188,28 @@ export class JudgeService {
     return results;
   }
 
+  private contestsCache: { at: number; data: ContestsData } | null = null;
+
   async fetchContests(): Promise<ContestsData> {
+    // TTL cache (5 min) avoids hammering the API; stale data served if network fails.
+    if (this.contestsCache && Date.now() - this.contestsCache.at < 300_000) return this.contestsCache.data;
     try {
-      const response = await fetch('https://codeforces.com/api/contest.list?gym=false');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let response: Response | undefined;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const ctl = new AbortController();
+          const timer = setTimeout(() => ctl.abort(), 8000);
+          try {
+            response = await fetch('https://codeforces.com/api/contest.list?gym=false', { signal: ctl.signal });
+          } finally { clearTimeout(timer); }
+          if (response.ok) break;
+        } catch (e) {
+          if (attempt === 2) throw e;
+        }
+        await new Promise((r) => setTimeout(r, 400 * 2 ** attempt)); // exponential backoff
+      }
+      if (!response || !response.ok) {
+        throw new Error(`HTTP error! status: ${response?.status}`);
       }
       const data = (await response.json()) as { status: string; comment?: string; result: Contest[] };
       if (data.status !== 'OK') {
@@ -209,56 +227,21 @@ export class JudgeService {
         .sort((a: Contest, b: Contest) => a.startTimeSeconds - b.startTimeSeconds)
         .slice(0, upcomingCount);
 
-      return { active, upcoming, passed };
+      const result = { active, upcoming, passed };
+      this.contestsCache = { at: Date.now(), data: result };
+      return result;
     } catch (err) {
       console.error("Failed to fetch contests in main process:", err);
+      if (this.contestsCache) return this.contestsCache.data;
       throw err;
     }
   }
 
+  private pageLoader?: PageLoader;
+  /** Real-browser page loader (Electron) used when Codeforces' Cloudflare blocks plain HTTP. */
+  setPageLoader(loader: PageLoader) { this.pageLoader = loader; }
+
   async fetchProblems(contestId: number): Promise<unknown> {
-    try {
-      const nexelJudgeDir = path.resolve(__dirname, '../../../../nexel-judge');
-      const outFile = path.join(nexelJudgeDir, `questions_${contestId}.json`);
-
-      return new Promise((resolve, reject) => {
-        const scriptPath = path.join(nexelJudgeDir, 'cf_problems.js');
-        const child = spawn('node', [scriptPath, contestId.toString()], {
-          cwd: nexelJudgeDir,
-          env: {
-            ...process.env,
-            NON_INTERACTIVE: 'true'
-          }
-        });
-
-        let stdout = '';
-        let stderr = '';
-
-        child.stdout.on('data', data => { stdout += (data as Buffer).toString(); });
-        child.stderr.on('data', data => { stderr += (data as Buffer).toString(); });
-
-        child.on('close', async (code) => {
-          if (code === 0) {
-            try {
-              const fileContent = await fs.readFile(outFile, 'utf8');
-              resolve(JSON.parse(fileContent));
-              fs.unlink(outFile).catch(err => console.error("Failed to delete temp problems file:", err));
-            } catch (err: unknown) {
-              const message = err instanceof Error ? err.message : String(err);
-              reject(new Error(`Failed to read output file: ${message}`));
-            }
-          } else {
-            reject(new Error(stderr || stdout || `Scraper exited with code ${code}`));
-          }
-        });
-
-        child.on('error', err => {
-          reject(new Error(`Failed to start scraper process: ${err.message}`));
-        });
-      });
-    } catch (err) {
-      console.error("Failed to fetch contest problems:", err);
-      throw err;
-    }
+    return fetchContestProblems(contestId, undefined, undefined, this.pageLoader);
   }
 }

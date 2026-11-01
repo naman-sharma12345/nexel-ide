@@ -198,6 +198,63 @@ npm run electron:dev
 | `npm run test` | Run all Vitest unit/integration tests |
 | `npm run test:coverage` | Run Vitest with v8 coverage (70% threshold) |
 | `npm run test:e2e` | Run Playwright end-to-end tests |
+| `npm run fetch:clangd` | Download + verify the pinned clangd for this OS into `resources/clangd/` |
+| `npm run fetch:clangd:all` | Same for Windows, macOS and Linux (for release machines) |
+| `npm run test:clangd` | clangd unit tests + the real-binary end-to-end test |
+| `npm run dist` / `dist:win` / `dist:mac` / `dist:linux` | Build, fetch clangd and package with electron-builder |
+
+---
+
+## 🧩 C/C++ IntelliSense (clangd)
+
+Nexel ships the official [clangd](https://clangd.llvm.org) language server (pinned **19.1.2**) and wires it straight into Monaco. Without clangd (or if it crashes) the editor quietly falls back to the built-in, zero-install providers, so C++ always has completions.
+
+**What you get in `.cpp` / `.c` / `.h` files**
+
+- Semantic completions (`v.` → `push_back`, `size`, … with signatures, return types and docs), snippets and the Nexel CP aliases merged into one list, no duplicates
+- Hovers with the exact type (`vector<int>`), plus a short Nexel CP note (complexity, pitfalls) for STL names
+- Signature help on `(` and `,`, diagnostics as themed squiggles (errors, warnings, unused code), go to definition / declaration (Ctrl+click, F12, peek into headers), find references, rename (F2), document outline, highlight occurrences, format document / selection (clang-format)
+- A **clangd** chip in the status bar: `ready`, `indexing` (soft pulse), `starting`, `fallback` (not installed), `error` (crashed). Click it to restart clangd, switch to built-in IntelliSense, or open the settings
+- **Settings → IntelliSense**: enable/disable clangd, C++ standard (17 / 20 / 23), extra compiler flags (for example `-DLOCAL -Wshadow`)
+
+**How it works**
+
+```
+Monaco providers ──► ClangdSession (renderer)          src/lib/clangd/session.ts
+                       │  LSP JSON-RPC, debounced incremental didChange, markers, fallback
+                       ▼
+          preload: nexelAPI.lspStart / lspSend / lspRestart / lspStop
+                       ▼  (allowlisted methods only, 4 MB cap, sender check)
+main.cjs ──► LanguageServerManager ──► clangd (stdio, fixed argv, no shell)
+             src/main/services/lsp/    restart with backoff, killed on quit / window close
+```
+
+- **Which clangd runs**: a bundled copy (`<resources>/clangd/<os>-<arch>/bin/clangd`) → the repo copy in dev (`resources/clangd/…`) → `clangd` on your `PATH` → built-in fallback.
+- **Single-file CP folders**: when a workspace has no `compile_commands.json`, `compile_flags.txt` or `.clangd` of its own, Nexel writes a small `.clangd` marked `# nexel:generated` (C++ standard, `-Wall`, your extra flags, C rules for `.c` files). It only ever rewrites files carrying that marker; delete the first line to make it yours.
+- **`#include <bits/stdc++.h>` everywhere**: Linux (libstdc++) and MinGW have it; for macOS (libc++) and MSVC toolchains Nexel adds `-I` to a bundled `nexel-include/bits/stdc++.h` shim.
+- **System headers**: Nexel finds `g++` (then `clang++`) on `PATH` and passes that exact path to clangd's `--query-driver`, so clangd uses the same headers your compiler does (MinGW on Windows, Xcode tools on macOS).
+- **Security**: the renderer can never choose the binary or its arguments. Extra flags go into `.clangd` only after an allowlist check (`-D -U -W -f -O -m -I -isystem`; `-fplugin`, `-Xclang`, `-load`, `@file` and shell characters are dropped), and only `initialize`, `textDocument/*`, `completionItem/resolve`, `$/cancelRequest` and a few `workspace/*` notifications cross the IPC bridge.
+
+**Packaged builds bundle clangd on every OS**
+
+`scripts/fetch-clangd.mjs` downloads the official release zips from `github.com/clangd/clangd/releases/tag/19.1.2`, checks each SHA256 (pinned in `scripts/clangd-assets.mjs`), caches them (`~/.cache/nexel-clangd`, or `NEXEL_CLANGD_CACHE`) and extracts `bin/` + `lib/clang/19/include` into `resources/clangd/`. electron-builder then copies only the matching folder into each installer through per-target `extraResources`:
+
+| Target | Release asset | Bundled as |
+|---|---|---|
+| Windows x64 (NSIS) | `clangd-windows-19.1.2.zip` | `resources/clangd/win-x64` (also used on Windows on ARM via emulation) |
+| macOS universal (DMG, arm64 + x64) | `clangd-mac-19.1.2.zip` (universal Mach-O) | `resources/clangd/mac-universal` |
+| Linux x64 (AppImage, deb) | `clangd-linux-19.1.2.zip` | `resources/clangd/linux-x64` |
+
+The binaries are gitignored and never committed. Linux on ARM has no official build: install `clangd` from your distro and Nexel picks it up from `PATH`.
+
+```bash
+npm run fetch:clangd      # dev: this OS only
+npm run dist:win          # or dist:mac / dist:linux: build + fetch + package
+```
+
+**Verified end to end**: `src/main/services/lsp/__tests__/clangd.e2e.test.ts` spawns the real pinned clangd through `LanguageServerManager`, opens a file with `#include <bits/stdc++.h>` (resolved to the shim) and `vector<int> v; v.`, and checks completion (`push_back`), hover (`vector<int>`), an undeclared-identifier diagnostic, signature help, incremental sync, definition, references, rename, highlights, formatting and symbols, both raw and through the renderer's `ClangdSession` + Monaco providers. It is skipped when no clangd is available.
+
+**Troubleshooting**: chip says `fallback` → run `npm run fetch:clangd` (dev) or install clangd. Standard headers not found → install a compiler (`g++`/MinGW on Windows, Xcode command line tools on macOS) and restart clangd from the chip.
 
 ---
 
@@ -344,3 +401,60 @@ Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
 <sub>Built with caffeine and stubbornness by the Nexel Team ☕⚡</sub>
 
 </div>
+
+## What's new on hark/overnight-improvements
+
+- **Paper Light is now a true light theme** (10:50 IST): white-alpha overlays run through a new `--nx-ink` token, near-black surfaces through `--nx-surf`, plus a light Monaco palette (`vs` base). The old invert filter is gone.
+
+- **clangd IntelliSense, finished** (Oct 9): real clangd 19.1.2 in Monaco for C/C++ with completions, hovers, signature help, diagnostics, go to definition, references, rename, outline, highlights and formatting; automatic fallback to the built-in providers; a status-bar chip (ready / indexing / starting / fallback / error) with a restart menu and failure toasts; Settings → IntelliSense (toggle, C++17/20/23, extra flags); auto-generated `.clangd` for CP folders; checksum-verified clangd bundled into Windows, macOS (universal) and Linux builds. See [C/C++ IntelliSense (clangd)](#-cc-intellisense-clangd).
+- **Theme fix**: dark themes now define the `--nx-ink` / `--nx-surf` tokens (hairlines, text tints and glass widgets were falling back to defaults), and Monaco suggest / hover / peek widgets follow the active theme, Paper Light included.
+
+- **Codeforces fix:** built-in problem fetcher (API standings + statement parser, retries, cache, sanitised HTML) replaces the external scraper; upcoming contests now open a countdown view (IST start, Register link) and auto-load problems at start.
+
+- Two new themes: **Obsidian Gold** and **Aurora Teal** (9 themes total).
+- Two new themes: Nord Frost and Deep Forest (7 themes total).
+- Drag-and-drop tab reordering in the editor tab bar.
+
+- Replace in files: replace field + Replace all (Ctrl+Enter) in the Find-in-files panel, with confirm.
+
+- **Zen mode** (Ctrl+Alt+Z or palette): sidebar, dock and status bar fade away; Esc exits.
+- **Breadcrumbs** (design): the editor footer path is now workspace-relative clickable-looking crumbs (`cp-workspace › codeforces › 1950A.cpp`) with chevrons, staggered slide-in on every file switch and an accent-coloured file name.
+- **Living welcome backdrop** (design): dot grid that lights up under the cursor, an accent spotlight that follows the mouse (rAF-throttled CSS vars, no React re-renders) and two slow drifting aurora orbs tinted by the active theme; respects reduced motion.
+- **Session restore** (feature): reopens the tabs you had open in the last workspace (paths only, validated to live inside the workspace root, capped at 24, bounded storage) and focuses the active one.
+- **Judge sandbox hardening** (security / OS): the `ulimit` fallback no longer interpolates file paths into a shell string (positional args, so a hostile file name cannot inject commands), and now also sets `RLIMIT_NPROC` (fork-bomb guard), `RLIMIT_FSIZE` and no core dumps; stdin EPIPE is handled.
+- **Find in files** (feature + design, Ctrl+Shift+F): glass search overlay with case / whole-word / regex toggles, debounced and abortable. The engine (`src/lib/searchInFiles.ts`) is a bounded worker pool: capped files, bytes, matches and concurrency, skips binaries, guards zero-width regexes. Enter jumps to the match and the line flashes in the accent colour.
+- **Theme circular reveal** (design): switching themes now expands the new palette as a circle from where you clicked (View Transitions API), with the colour-glide fallback and reduced-motion respected.
+- **Judge IPC hardening** (security): `judge:run` arguments are validated in the main process (path type/extension, max 200 cases, 2 MB of data, clamped time/memory limits) because the renderer is treated as untrusted.
+- **Stress tester** (feature + design, Judge → ⚡ STRESS): runs your solution against a brute-force file on seeded random inputs until the first mismatch. Animated SVG progress ring (pulses while running, pops ✓ / ! at the end), abortable (STOP), bounded to 2000 tests, shows the counter-example with the first differing line and saves it as a test case in one click.
+- **Hover docs** (feature, zero-install): hover STL calls (`lower_bound`, `priority_queue`, `gcd`…) and Python helpers (`heappush`, `bisect_left`…) for signature, note and complexity. Monaco hover, suggest and find widgets restyled as glass cards with accent-highlighted matches.
+- **Python + Java IntelliSense (tier 1, zero-install)**: snippet/completion providers for fast IO, heaps, DSU, main guards, collections, working on every machine without a language server. Nav dock gets a theme-aware accent sheen (respects reduced motion).
+- **Live contest fetch fix (Oct 24 2026):** problems now load during live Codeforces rounds. The API call drops `from`/`count` (CF rejects them for non-admins while a contest runs), all statements come from one `/contest/X/problems` load, and when Cloudflare blocks plain HTTP (403 or a "Just a moment" page) Nexel loads the page in a hidden Chromium window on a persistent `persist:codeforces` session. If a check needs a human, that window appears once; the clearance is kept. Codeforces-only URLs, sandboxed, no password stored, 2 s between loads. Last resort: named problem cards with an Open on Codeforces hint, and Competitive Companion still works.
+- **Competitive Companion** (feature + security): the IDE listens on `127.0.0.1:27121` (loopback only) for the Competitive Companion browser extension. Sending a problem creates `<Problem>.cpp` (with your C++ template, never overwriting an existing file) and loads the samples into the Judge. Hardened: POST only, 1 MB cap enforced while streaming, strict schema validation, sanitised file names, bounded test count, 5 s request timeout, silent fallback if the port is busy.
+- **Keyboard shortcuts sheet** (design, Ctrl+/): glass cheat-sheet with 3D keycaps that physically press and glow when you hit the matching key. Welcome screen now shows live keycap chips.
+- **Recent workspaces** on the welcome card (MRU, de-duplicated, capped at 5, persisted): one click re-opens a folder.
+- **Theme system** (design): 5 themes (Nexel Emerald, Midnight Indigo, Ember, Sakura Night, Mono Contrast) driven by design tokens (`--nx-bg-*`, `--nx-editor-bg`, `--nx-accent-rgb`). Switching glides colours over ~380ms; Monaco, terminal and chrome change together. All hard-coded accent colours across the CSS migrated to tokens.
+- **Settings panel** (Ctrl+,): theme cards with live mini-previews, font size, tab size, ligatures, word wrap and minimap toggles, persisted and validated (clamped, unknown themes rejected). Also in the command palette (`Theme: …`, `Toggle Minimap`, `Toggle Word Wrap`) and via the status bar theme chip.
+- **Status bar** (design + feature): glass strip with a breathing accent dot, active file with unsaved dot, live `Ln/Col` and selection length, language, judge status (pulsing while judging, `passed/total` after), terminal toggle and shortcut hint. New `--nx-status-h` layout token.
+- **Toast notifications**: spring-in glass toasts with a countdown bar (`Saved main.cpp`), bounded queue (max 4) with de-duplication.
+- Editor canvas now sizes to its container, not 100vh, so the status bar never overlaps.
+- **Quick open (Ctrl+P)**: fuzzy file finder with match highlighting, reusing the command palette.
+- Judge verdict chips: spring pop-in, green/red glow, pulsing RUNNING state.
+
+- **Command palette** (Ctrl/Cmd+Shift+P): fuzzy-searchable, animated, keyboard-driven (navigate sections, toggle sidebar/terminal, edit C++ template).
+
+- **Design:** tabs get a glowing gradient underline that scales in, hover lift, and close buttons that fade in and rotate on hover.
+- **Performance:** Judge and Contests panels are lazy-loaded (React.lazy) with shimmer skeleton fallbacks.
+
+- **Design:** glass dock sheen with accent glow, hover lift on dock items; Monaco accent selection/cursor/indent guides, smooth scrolling, bracket colorization, ligatures.
+- **Security:** CSP meta in index.html; window-open deny and off-origin navigation block in Electron main; Outfit font self-hosted (no Google Fonts request).
+- **Performance:** Monaco bundled locally with slim entry and code-split chunks (earlier run).
+
+- Command palette: matched letters now glow in accent, plus a keyboard-hint footer with result count.
+
+- Stress-test core (`src/lib/stress.ts`): seeded PRNG case generator + first-diff finder, with tests.
+
+- (04:49) Global focus rings, button press feedback, thin themed scrollbars, reduced-motion support; fast-I/O C++ template module (+tests).
+
+- (overnight) Verdict classifier `src/lib/verdict.ts` (AC/WA/TLE/MLE/RE, Codeforces precedence) and animated tab entrance.
+
+- STL signature help (C++): parameter hints while typing calls like `sort(`, `lower_bound(` with complexity notes (src/lib/signatureHelp.ts).

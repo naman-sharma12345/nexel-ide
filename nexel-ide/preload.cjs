@@ -17,6 +17,14 @@ contextBridge.exposeInMainWorld('nexelAPI', {
   readFileContent: (filePath) => ipcRenderer.invoke('fs:read-file-content', filePath),
   writeFileContent: (filePath, content) => ipcRenderer.invoke('fs:write-file-content', filePath, content),
 
+  // clangd bridge (main validates every message)
+  lspStart: (root, opts) => ipcRenderer.invoke('lsp:start', root, opts),
+  lspSend: (msg) => ipcRenderer.invoke('lsp:send', msg),
+  lspRestart: () => ipcRenderer.invoke('lsp:restart'),
+  lspStop: () => ipcRenderer.invoke('lsp:stop'),
+  onLspMessage: (cb) => { ipcRenderer.removeAllListeners('lsp:message'); ipcRenderer.on('lsp:message', (e, m) => cb(m)); },
+  onLspStatus: (cb) => { ipcRenderer.removeAllListeners('lsp:status'); ipcRenderer.on('lsp:status', (e, s) => cb(s)); },
+
   // Terminal PTY integration
   createTerminal: () => ipcRenderer.invoke('terminal:create'),
   writeTerminal: (data) => ipcRenderer.send('terminal:write', data),
@@ -34,6 +42,15 @@ contextBridge.exposeInMainWorld('nexelAPI', {
     ipcRenderer.invoke('judge:fetch-contests', workspaceDir),
   fetchContestProblems: (contestId) =>
     ipcRenderer.invoke('judge:fetch-problems', contestId),
+  // Opens a Codeforces window (persistent session) to sign in, register, or pass a Cloudflare check.
+  openCodeforcesSession: (url) =>
+    ipcRenderer.invoke('cf:open-session', url),
+
+  // Competitive Companion (browser extension -> IDE). Callback receives an already-validated problem.
+  onCompanionProblem: (callback) => {
+    ipcRenderer.removeAllListeners('companion:problem');
+    ipcRenderer.on('companion:problem', (event, problem) => callback(problem));
+  },
 
   // Secure Electron Store bindings
   getStoreSync: (key) => ipcRenderer.sendSync('store:get-sync', key),

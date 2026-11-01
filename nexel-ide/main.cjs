@@ -21,6 +21,13 @@ require.extensions['.ts'] = function (module, filename) {
 const { FileSystemService } = require('./src/main/services/FileSystemService.ts');
 const { JudgeService } = require('./src/main/services/JudgeService.ts');
 const { StoreService } = require('./src/main/services/StoreService.ts');
+const { validateJudgeArgs } = require('./src/main/services/ipcValidate.ts');
+const { LanguageServerManager } = require('./src/main/services/lsp/LanguageServerManager.ts');
+const { resolveClangd, clangdArgs, findCompiler } = require('./src/main/services/lsp/resolveClangd.ts');
+const { ensureWorkspaceConfig } = require('./src/main/services/lsp/workspaceConfig.ts');
+const { validateClangdOptions } = require('./src/main/services/lsp/lspValidate.ts');
+const { CompanionService } = require('./src/main/services/CompanionService.ts');
+const { createCodeforcesLoader, openCodeforcesWindow } = require('./src/main/services/cfBrowserLoader.ts');
 
 let pty;
 try {
@@ -43,7 +50,16 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
     },
+  });
+
+  // Hardening: deny popups and off-origin navigation
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    if (!/^(file:|http:\/\/localhost)/.test(url)) e.preventDefault();
   });
 
   mainWindow.setMenu(null);
@@ -51,8 +67,51 @@ async function createWindow() {
   // Initialize service instances
   const fileSystemService = new FileSystemService();
   const judgeService = new JudgeService();
+  judgeService.setPageLoader(createCodeforcesLoader(BrowserWindow, { parent: mainWindow }));
   const storeService = new StoreService();
   await storeService.initialize();
+
+  // Competitive Companion: loopback-only HTTP listener (127.0.0.1:27121), forwards validated problems to the UI
+  const companion = new CompanionService((problem) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companion:problem', problem);
+  });
+  companion.start();
+  app.on('before-quit', () => { companion.stop(); if (lsp) lsp.stop(); });
+
+  // clangd language server bridge. The renderer can only: start (workspace root + validated std/flags that end up in a
+  // generated .clangd, never in argv), send allowlisted JSON-RPC, restart, stop. Binary path and argv are fixed here.
+  let lsp = null;
+  const fromMain = (event) => mainWindow && !mainWindow.isDestroyed() && event.sender === mainWindow.webContents;
+  const sendStatus = (s) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:status', s); };
+  const shimDir = () => {
+    const packaged = path.join(process.resourcesPath || '', 'nexel-include');
+    return app.isPackaged && fs.existsSync(packaged) ? packaged : path.join(__dirname, 'resources', 'nexel-include');
+  };
+  ipcMain.handle('lsp:start', async (event, root, rawOpts) => {
+    if (!fromMain(event)) return { ok: false, reason: 'bad-sender' };
+    if (typeof root !== 'string' || root.length > 4096 || !path.isAbsolute(root) || root.includes('\0')) return { ok: false, reason: 'invalid-root' };
+    let st; try { st = fs.statSync(root); } catch { st = null; }
+    if (!st || !st.isDirectory()) return { ok: false, reason: 'invalid-root' };
+    const opts = validateClangdOptions(rawOpts);
+    if (lsp) { lsp.stop(); lsp = null; }
+    const env = { platform: process.platform, arch: process.arch, resourcesPath: app.isPackaged ? process.resourcesPath : undefined, appRoot: __dirname, pathEnv: process.env.PATH };
+    const bin = resolveClangd(env);
+    if (!bin) { sendStatus('off'); return { ok: false, reason: 'clangd-not-found' }; }
+    const compiler = findCompiler(env);
+    // libstdc++ (Linux, MinGW) already has bits/stdc++.h; the shim is for libc++/MSVC toolchains.
+    const includeDir = process.platform === 'linux' ? null : shimDir();
+    const config = ensureWorkspaceConfig(root, { ...opts, includeDir, compiler });
+    lsp = new LanguageServerManager(bin.path, clangdArgs({ queryDriver: compiler }), root,
+      (m) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('lsp:message', m); }, sendStatus);
+    lsp.start();
+    return { ok: true, source: bin.source, compiler: compiler ? path.basename(compiler) : null, config: config.action };
+  });
+  ipcMain.handle('lsp:send', async (event, msg) => { if (!fromMain(event) || !lsp) return false; try { lsp.send(msg); return true; } catch { return false; } });
+  ipcMain.handle('lsp:restart', async (event) => { if (!fromMain(event) || !lsp) return false; lsp.restart(); return true; });
+  ipcMain.handle('lsp:stop', async (event) => { if (!fromMain(event)) return false; if (lsp) lsp.stop(); lsp = null; return true; });
+  // Never leave clangd behind: quit, window close, renderer crash.
+  mainWindow.on('closed', () => { if (lsp) { lsp.stop(); lsp = null; } });
+  mainWindow.webContents.on('render-process-gone', () => { if (lsp) { lsp.stop(); lsp = null; } });
 
   // Window frame control receivers
   ipcMain.on('window-control', (event, action) => {
@@ -179,7 +238,8 @@ async function createWindow() {
 
   // Decoupled Judge IPC Routes
   ipcMain.handle('judge:run', async (event, filePath, testCases, timeLimit, memoryLimit) => {
-    return await judgeService.run(filePath, testCases, timeLimit, memoryLimit);
+    const v = validateJudgeArgs(filePath, testCases, timeLimit, memoryLimit); // renderer input is untrusted
+    return await judgeService.run(v.filePath, v.cases, v.timeLimit, v.memoryLimit);
   });
 
   ipcMain.handle('judge:fetch-contests', async (event, workspaceDir) => {
@@ -188,6 +248,12 @@ async function createWindow() {
 
   ipcMain.handle('judge:fetch-problems', async (event, contestId) => {
     return await judgeService.fetchProblems(contestId);
+  });
+
+  ipcMain.handle('cf:open-session', async (event, url) => {
+    const target = typeof url === 'string' ? url : 'https://codeforces.com/enter';
+    openCodeforcesWindow(BrowserWindow, target, mainWindow);
+    return true;
   });
 
   // Secure Electron Store IPC Routes (Synchronous)
@@ -205,8 +271,9 @@ async function createWindow() {
     event.returnValue = true;
   });
 
-  const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:5173';
-  mainWindow.loadURL(startUrl);
+  // Packaged builds load the Vite bundle from disk; dev uses the Vite server.
+  if (app.isPackaged && !process.env.ELECTRON_START_URL) mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  else mainWindow.loadURL(process.env.ELECTRON_START_URL || 'http://localhost:5173');
 
   if (process.env.ELECTRON_START_URL) {
     mainWindow.webContents.openDevTools();

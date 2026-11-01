@@ -43,6 +43,24 @@ export const ContestsSystem: React.FC = () => {
   const [problems, setProblems] = useState<CFProblem[] | null>(null);
   const [problemsLoading, setProblemsLoading] = useState<boolean>(false);
 
+  // Upcoming contest detail view (countdown + auto-load at start)
+  const [upcoming, setUpcoming] = useState<Contest | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    if (!upcoming) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [upcoming]);
+  const upcomingStarted = !!upcoming && now >= upcoming.startTimeSeconds * 1000;
+  useEffect(() => {
+    if (upcoming && upcomingStarted) {
+      const c = upcoming;
+      setUpcoming(null);
+      void handleContestClick({ preventDefault() {} } as React.MouseEvent, { ...c, phase: 'CODING' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upcomingStarted]);
+
   // Custom fetch inputs
   const [customInput, setCustomInput] = useState<string>('');
   const [customLoading, setCustomLoading] = useState<boolean>(false);
@@ -184,11 +202,11 @@ export const ContestsSystem: React.FC = () => {
   };
 
   const handleContestClick = async (e: React.MouseEvent, contest: Contest) => {
+    e.preventDefault();
     if (contest.phase === 'BEFORE') {
+      setUpcoming(contest);
       return;
     }
-
-    e.preventDefault();
     setSelectedContest({ id: contest.id, name: contest.name });
     setProblemsLoading(true);
     setProblems(null);
@@ -205,6 +223,30 @@ export const ContestsSystem: React.FC = () => {
       setProblemsLoading(false);
     }
   };
+
+  if (upcoming && !selectedContest) {
+    const left = Math.max(0, Math.floor(upcoming.startTimeSeconds - now / 1000));
+    const d = Math.floor(left / 86400), h = Math.floor((left % 86400) / 3600), m = Math.floor((left % 3600) / 60), sec = left % 60;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const startIst = new Date(upcoming.startTimeSeconds * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+    return (
+      <div className="nx-contests-wrapper">
+        <div className="nx-contests-header">
+          <button className="nx-contests-back-btn" onClick={() => setUpcoming(null)}>← Back</button>
+          <h3 className="nx-contests-title">{upcoming.name}</h3>
+        </div>
+        <div className="nx-contests-status-msg" style={{ gap: 12 }}>
+          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: 1, fontVariantNumeric: 'tabular-nums', color: 'var(--nx-accent, #4ade80)' }}>
+            {d > 0 ? `${d}d ` : ''}{pad(h)}:{pad(m)}:{pad(sec)}
+          </div>
+          <p>Starts {startIst} IST · {formatDuration(upcoming.durationSeconds)}</p>
+          <p style={{ opacity: 0.7 }}>Problems load automatically when the contest starts.</p>
+          <button className="nx-retry-btn" onClick={() => window.open(`https://codeforces.com/contestRegistration/${upcoming.id}`, '_blank', 'noopener')}>Register on Codeforces</button>
+          <button className="nx-retry-btn" onClick={() => void handleContestClick({ preventDefault() {} } as React.MouseEvent, { ...upcoming, phase: 'CODING' })}>Try loading problems now</button>
+        </div>
+      </div>
+    );
+  }
 
   if (selectedContest) {
     return (

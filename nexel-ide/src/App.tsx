@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { getClangd } from './lib/clangd/session';
 import { useUIStore } from './stores/useUIStore';
 import { useEditorStore } from './stores/useEditorStore';
 import { NavDock } from './components/NavDock';
@@ -6,8 +7,21 @@ import { Explorer } from './components/Explorer';
 import { Editor } from './components/Editor';
 import { TitleBar } from './components/TitleBar';
 import { Terminal } from './components/Terminal';
-import { JudgeSystem } from './components/JudgeSystem';
-import { ContestsSystem } from './components/ContestsSystem';
+const JudgeSystem = lazy(() => import('./components/JudgeSystem'));
+const ContestsSystem = lazy(() => import('./components/ContestsSystem'));
+import { useWorkspaceStore, type FileNode } from './stores/useWorkspaceStore';
+import { StatusBar } from './components/StatusBar';
+import { Toasts } from './components/Toasts';
+import { CommandPalette } from './components/CommandPalette';
+import { ShortcutsSheet } from './components/ShortcutsSheet';
+import { SettingsPanel } from './components/SettingsPanel';
+import { useSettingsStore } from './stores/useSettingsStore';
+import { useStatusStore } from './stores/useStatusStore';
+import { useJudgeStore } from './stores/useJudgeStore';
+import { applyTheme, THEMES } from './lib/themes';
+import { switchTheme } from './lib/themeTransition';
+import { SearchPanel } from './components/SearchPanel';
+import { loadSession, saveSession } from './lib/session';
 import './App.css';
 
 function App() {
@@ -34,6 +48,109 @@ function App() {
   } = useEditorStore();
 
   const [tempTemplate, setTempTemplate] = useState('');
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [zen, setZen] = useState(false);
+  useEffect(() => { document.documentElement.classList.toggle('nx-zen', zen); return () => document.documentElement.classList.remove('nx-zen'); }, [zen]);
+  const tree = useWorkspaceStore(s => s.tree);
+  const themeId = useSettingsStore(s => s.theme);
+  const firstTheme = useRef(true);
+  useEffect(() => { applyTheme(themeId, document.documentElement, !firstTheme.current); firstTheme.current = false; }, [themeId]);
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(false); setSearchOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(false); setPaletteOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === '/' && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) { e.preventDefault(); setShortcutsOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'z') { e.preventDefault(); setZen(z => !z); }
+      else if (e.key === 'Escape' && document.documentElement.classList.contains('nx-zen') && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) setZen(false);
+      else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); const st = useSettingsStore.getState(); st.openSettings(!st.settingsOpen); }
+      else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+  // Session restore: reopen last workspace's tabs once, then keep the session saved (debounced).
+  const restored = useRef(false);
+  const rootPath = useWorkspaceStore(s => s.rootPath);
+  useEffect(() => {
+    if (restored.current || !rootPath) return;
+    restored.current = true;
+    if (useEditorStore.getState().tabs.length) return;
+    const sess = loadSession(rootPath);
+    if (!sess) return;
+    void (async () => {
+      for (const p of sess.paths.filter(x => x !== sess.active)) {
+        try { useEditorStore.getState().openFile(p, p.split(/[\\/]/).pop() ?? p, await window.nexelAPI.readFileContent(p)); } catch { /* file gone: skip */ }
+      }
+      if (sess.active) { try { useEditorStore.getState().openFile(sess.active, sess.active.split(/[\\/]/).pop() ?? sess.active, await window.nexelAPI.readFileContent(sess.active)); } catch { /* skip */ } }
+      useStatusStore.getState().pushToast(`Restored ${sess.paths.length} tab${sess.paths.length === 1 ? '' : 's'}`, 'info', 2500);
+    })();
+  }, [rootPath]);
+  useEffect(() => {
+    if (!rootPath || !restored.current) return;
+    const t = window.setTimeout(() => { if (tabs.length) saveSession({ root: rootPath, paths: tabs.map(x => x.filePath), active: activeTabPath }); }, 400);
+    return () => window.clearTimeout(t);
+  }, [tabs, activeTabPath, rootPath]);
+  // clangd IntelliSense follows the workspace root and the IntelliSense settings (restarts only when they change).
+  const clangdEnabled = useSettingsStore(s => s.clangdEnabled);
+  const cppStd = useSettingsStore(s => s.cppStd);
+  const clangdFlags = useSettingsStore(s => s.clangdFlags);
+  useEffect(() => {
+    void getClangd((m, k, ttl) => useStatusStore.getState().pushToast(m, k, ttl))
+      .configure({ root: rootPath, enabled: clangdEnabled, std: cppStd, extraFlags: clangdFlags.split(' ').filter(Boolean) });
+  }, [rootPath, clangdEnabled, cppStd, clangdFlags]);
+  // Go to Definition into another file (clangd): open it as a tab, then reveal the line.
+  useEffect(() => {
+    const onOpenAt = (e: Event) => {
+      const { path: p, line, col } = (e as CustomEvent<{ path: string; line: number; col: number }>).detail ?? {};
+      if (typeof p !== 'string') return;
+      void handleFileSelect(p).then(() => window.setTimeout(() => window.dispatchEvent(new CustomEvent('nexel:reveal', { detail: { path: p, line, col } })), 160));
+    };
+    window.addEventListener('nexel:open-at', onOpenAt);
+    return () => window.removeEventListener('nexel:open-at', onOpenAt);
+  });
+  // Competitive Companion: browser extension -> new solution file + judge samples
+  useEffect(() => {
+    window.nexelAPI.onCompanionProblem?.(async (p) => {
+      const ws = useWorkspaceStore.getState();
+      const dir = ws.activeDir ?? ws.rootPath;
+      const toast = useStatusStore.getState().pushToast;
+      if (!dir) { toast('Open a workspace folder first, then re-send the problem', 'error', 4000); return; }
+      try {
+        const taken = new Set((function walk(ns: FileNode[]): string[] { return ns.flatMap(n => [n.name, ...walk(n.children ?? [])]); })(ws.tree));
+        let name = `${p.fileName}.cpp`, i = 2;
+        while (taken.has(name)) name = `${p.fileName}_${i++}.cpp`; // never overwrite an existing solution
+        const filePath = await window.nexelAPI.createFile(dir, name);
+        const body = useEditorStore.getState().cppTemplate;
+        if (body) await window.nexelAPI.writeFileContent(filePath, body);
+        await ws.refreshTree();
+        openFile(filePath, name, body);
+        useJudgeStore.getState().importSamples(p.tests);
+        toast(`Imported ${p.name} · ${p.tests.length} sample${p.tests.length === 1 ? '' : 's'}`, 'success', 4000);
+      } catch (e) { console.error(e); toast('Could not import problem from Competitive Companion', 'error', 4000); }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const paletteCommands = [
+    { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
+    { id: 'judge', label: 'Go to Judge', run: () => setSection('judge') },
+    { id: 'contests', label: 'Go to Contests', run: () => setSection('contests') },
+    { id: 'zen', label: 'Toggle Zen Mode', hint: 'Ctrl+Alt+Z', run: () => setZen(z => !z) },
+    { id: 'sidebar', label: 'Toggle Sidebar', run: () => toggleSidebar() },
+    { id: 'term', label: 'Toggle Terminal', run: () => setTerminalVisible(!terminalVisible) },
+    { id: 'tpl', label: 'Edit C++ Template', run: () => openTemplateModal(true) },
+    { id: 'findfiles', label: 'Find in Files', hint: 'Ctrl+Shift+F', run: () => setSearchOpen(true) },
+    { id: 'shortcuts', label: 'Keyboard Shortcuts', hint: 'Ctrl+/', run: () => setShortcutsOpen(true) },
+    { id: 'settings', label: 'Open Settings', hint: 'Ctrl+,', run: () => useSettingsStore.getState().openSettings(true) },
+    ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => switchTheme(t.id) })),
+    { id: 'minimap', label: 'Toggle Minimap', run: () => useSettingsStore.getState().toggle('minimap') },
+    { id: 'wrap', label: 'Toggle Word Wrap', run: () => useSettingsStore.getState().toggle('wordWrap') },
+  ];
+
+  const flatFiles = (nodes: FileNode[]): FileNode[] => nodes.flatMap(n => n.type === 'file' ? [n] : flatFiles(n.children ?? []));
+  const fileCommands = flatFiles(tree).map(n => ({ id: n.path, label: n.name, hint: n.path.split('/').slice(-2, -1)[0] ?? '', run: () => { void handleFileSelect(n.path); } }));
 
   useEffect(() => {
     if (templateModalVisible) {
@@ -48,7 +165,7 @@ function App() {
     } else {
       try {
         const content = await window.nexelAPI.readFileContent(filePath);
-        const name = filePath.split('/').pop() || filePath;
+        const name = filePath.split(/[\\/]/).pop() || filePath;
         openFile(filePath, name, content);
       } catch (err) {
         console.error("Failed to read selected file:", err);
@@ -81,14 +198,18 @@ function App() {
       width: '100vw', 
       height: '100vh', 
       overflow: 'hidden', 
-      backgroundColor: '#0B0B0D' 
+      backgroundColor: 'var(--nx-bg-0)' 
     }}>
+      {shortcutsOpen && <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />}
+      {paletteOpen && <CommandPalette commands={paletteCommands} onClose={() => setPaletteOpen(false)} />}
+      {searchOpen && <SearchPanel files={flatFiles(tree)} onClose={() => setSearchOpen(false)} onOpen={async (p, line, col) => { await handleFileSelect(p); window.setTimeout(() => window.dispatchEvent(new CustomEvent('nexel:reveal', { detail: { path: p, line, col } })), 120); }} />}
+      {quickOpen && <CommandPalette commands={fileCommands} placeholder="Go to file…" label="Quick open" onClose={() => setQuickOpen(false)} />}
       <TitleBar />
 
       <div style={{ 
         flexGrow: 1,
         width: '100vw',
-        height: 'calc(100vh - 34px)',
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'row',
         overflow: 'hidden',
@@ -104,7 +225,7 @@ function App() {
               left: 0,
               top: '34px',
               width: '24px',
-              height: 'calc(100vh - 34px)',
+              height: 'calc(100vh - 34px - var(--nx-status-h))',
               zIndex: 9999,
               background: 'transparent'
             }}
@@ -116,7 +237,7 @@ function App() {
           className={`nx-navdock-wrapper-container ${sidebarCollapsed ? 'collapsed' : ''} ${isHoverRevealed ? 'hover-revealed' : ''}`}
           onMouseLeave={() => setIsHoverRevealed(false)}
           style={{
-            height: 'calc(100vh - 34px)',
+            height: 'calc(100vh - 34px - var(--nx-status-h))',
             zIndex: 10000,
             position: 'fixed',
             top: '34px',
@@ -146,10 +267,10 @@ function App() {
             />
           </div>
           <div style={{ display: currentSection === 'judge' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-            <JudgeSystem activeFilePath={focusedTabPath || activeTabPath} />
+            <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><JudgeSystem activeFilePath={focusedTabPath || activeTabPath} /></Suspense>
           </div>
           <div style={{ display: currentSection === 'contests' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-            <ContestsSystem />
+            <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><ContestsSystem /></Suspense>
           </div>
         </div>
 
@@ -160,7 +281,7 @@ function App() {
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box',
-          background: '#0B0B0D',
+          background: 'var(--nx-bg-0)',
           position: 'relative'
         }}>
           {/* Editor panel is always mounted but toggled using CSS to prevent vanishing tabs */}
@@ -174,6 +295,9 @@ function App() {
         </div>
       </div>
       
+      <StatusBar />
+      <Toasts />
+      <SettingsPanel />
       <Terminal 
         visible={terminalVisible} 
         onClose={() => setTerminalVisible(false)} 

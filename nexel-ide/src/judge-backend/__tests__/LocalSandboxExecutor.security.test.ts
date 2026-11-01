@@ -18,7 +18,7 @@ interface MockProcess extends EventEmitter {
 vi.mock('child_process', () => {
   const mockExports = {
     spawn: vi.fn(),
-    exec: vi.fn((cmd: string, cb: (err: Error | null, stdout: string, stderr: string) => void) => {
+    exec: vi.fn((_cmd: string, cb: (err: Error | null, stdout: string, stderr: string) => void) => {
       if (typeof cb === 'function') {
         cb(null, '999 K', '');
       }
@@ -109,7 +109,7 @@ describe('LocalSandboxExecutor security robustness', () => {
 
     mockSpawn.mockReturnValue(mockProc);
 
-    const killSpy = vi.spyOn(process, 'kill').mockImplementation((pid: number, signal: string | number) => {
+    const killSpy = vi.spyOn(process, 'kill').mockImplementation(() => {
       return true;
     });
 

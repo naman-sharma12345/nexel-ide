@@ -3,6 +3,8 @@ import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 import './Terminal.css';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { getTheme } from '../lib/themes';
 
 interface TerminalProps {
   visible: boolean;
@@ -15,6 +17,12 @@ export const Terminal: React.FC<TerminalProps> = ({ visible, onClose, sidebarCol
   const xtermInstance = useRef<XTerm | null>(null);
   const fitAddonInstance = useRef<FitAddon | null>(null);
 
+  const themeId = useSettingsStore(st => st.theme);
+  useEffect(() => {
+    const t = xtermInstance.current;
+    if (t) t.options.theme = { ...t.options.theme, background: getTheme(themeId).bg0 };
+  }, [themeId]);
+
   useEffect(() => {
     if (!visible || !terminalRef.current) return;
 
@@ -25,7 +33,7 @@ export const Terminal: React.FC<TerminalProps> = ({ visible, onClose, sidebarCol
       fontSize: 12,
       fontFamily: 'Consolas, "Courier New", monospace',
       theme: {
-        background: '#0B0B0D', // Match editor background exactly
+        background: getTheme(useSettingsStore.getState().theme).bg0, // follows the active Nexel theme
         foreground: '#e2e3e5', // Light gray text
         cursor: '#ffffff',
         selectionBackground: 'rgba(255, 255, 255, 0.1)',

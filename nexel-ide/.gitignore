@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# clangd binaries fetched by scripts/fetch-clangd.mjs (shipped via electron-builder extraResources, never committed)
+resources/clangd/

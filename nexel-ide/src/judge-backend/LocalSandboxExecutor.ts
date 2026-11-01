@@ -16,6 +16,27 @@ import type { ISandboxExecutor, SandboxConfig, SandboxResult } from './SandboxEx
  *   Enforces strict memory checks and kills the process tree recursively using taskkill & WMIC query loops.
  * - Under all platforms: Strictly enforces a 5MB standard output capping to prevent disk/memory bloating.
  */
+/**
+ * Builds argv for `sh` that applies POSIX resource limits (the setrlimit(2) family) then execs the target:
+ *  -v address space, -t CPU seconds, -u max processes (fork-bomb guard), -f max written file size, -c no core dumps.
+ * User-controlled values only appear as positional parameters ($1, $2...), which the shell never re-parses.
+ */
+export function buildUlimitFallback(
+  config: Pick<SandboxConfig, 'extension' | 'executablePath' | 'javaClassName'>,
+  memoryLimitKb: number,
+  timeLimitSec: number
+): string[] {
+  const kb = Math.max(1, Math.floor(Number(memoryLimitKb)) || 262144);
+  const sec = Math.max(1, Math.floor(Number(timeLimitSec)) || 1);
+  // Java reserves a huge virtual address range, so -v would kill the JVM at startup; cap CPU/procs instead.
+  const vLimit = config.extension === '.java' ? '' : `ulimit -v ${kb} 2>/dev/null; `;
+  const limits = `${vLimit}ulimit -t ${sec} 2>/dev/null; ulimit -u 256 2>/dev/null; ulimit -f 65536 2>/dev/null; ulimit -c 0 2>/dev/null; `;
+  if (config.extension === '.py') return ['-c', `${limits}exec python3 "$1"`, 'nexel-sandbox', config.executablePath];
+  if (config.extension === '.java' && config.javaClassName)
+    return ['-c', `${limits}exec java -cp "$1" "$2"`, 'nexel-sandbox', config.executablePath, config.javaClassName];
+  return ['-c', `${limits}exec "$1"`, 'nexel-sandbox', config.executablePath];
+}
+
 export class LocalSandboxExecutor implements ISandboxExecutor {
   private hasBwrap: boolean | null = null;
 
@@ -121,16 +142,10 @@ export class LocalSandboxExecutor implements ISandboxExecutor {
 
           child = spawn('bwrap', bwrapArgs, spawnOpts);
         } else {
-          // Fallback to basic ulimit constraints
-          let execCmd = '';
-          if (config.extension === '.py') {
-            execCmd = `ulimit -v ${memoryLimitKb} -t ${timeLimitSec} && exec python3 "${config.executablePath}"`;
-          } else if (config.extension === '.java' && config.javaClassName) {
-            execCmd = `ulimit -v ${memoryLimitKb} -t ${timeLimitSec} && exec java -cp "${config.executablePath}" "${config.javaClassName}"`;
-          } else {
-            execCmd = `ulimit -v ${memoryLimitKb} -t ${timeLimitSec} && exec "${config.executablePath}"`;
-          }
-          child = spawn('sh', ['-c', execCmd], spawnOpts);
+          // Fallback to ulimit constraints. Paths travel as positional args ("$@"), never interpolated
+          // into the shell string, so a file name containing quotes or $() cannot inject commands.
+          const fb = buildUlimitFallback(config, memoryLimitKb, timeLimitSec);
+          child = spawn('sh', fb, spawnOpts);
         }
       }
 
@@ -142,6 +157,7 @@ export class LocalSandboxExecutor implements ISandboxExecutor {
 
       // Pipe inputs
       if (child.stdin) {
+        if (typeof child.stdin.on === 'function') child.stdin.on('error', () => { /* EPIPE: program exited before reading all input */ });
         child.stdin.write(config.input || '');
         child.stdin.end();
       }

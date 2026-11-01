@@ -1,0 +1,62 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version without the v prefix'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: nexel-ide
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set release version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ inputs.version }}"
+          } else {
+            $version = "${env:GITHUB_REF_NAME}".TrimStart("v")
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+([-.].+)?$') {
+            throw "Invalid release version: $version"
+          }
+          npm version $version --no-git-tag-version
+          "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: nexel-ide/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installer
+        run: npm run dist:win
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.RELEASE_VERSION }}
+          name: Nexel IDE v${{ env.RELEASE_VERSION }}
+          generate_release_notes: true
+          files: |
+            nexel-ide/release/*.exe
+            nexel-ide/release/*.yml

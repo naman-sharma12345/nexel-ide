@@ -1,10 +1,24 @@
+import { registerLangCompletions } from '../lib/langCompletions';
+import { registerHoverDocs } from '../lib/hoverDocs';
+import { registerSignatureHelp } from '../lib/signatureHelp';
+import { toCrumbs } from '../lib/breadcrumbs';
+import { getClangd } from '../lib/clangd/session';
+import { isClangdActive } from '../lib/clangd/state';
+import { pathToUri } from '../lib/clangd/uri';
+import { useStatusStore } from '../stores/useStatusStore';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
+import '../lib/monacoSetup';
 import './Editor.css';
 import { useEditorStore } from '../stores/useEditorStore';
 import type { EditorTab } from '../stores/useEditorStore';
 import { useJudgeStore } from '../stores/useJudgeStore';
+import { useWorkspaceStore } from '../stores/useWorkspaceStore';
+import { SHORTCUT_GROUPS } from '../lib/shortcuts';
+import './ShortcutsSheet.css';
 import logoImg from '../assets/logo.png';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { THEMES, monacoThemeName, monacoThemeData } from '../lib/themes';
 import dataset from '../../dataset.json';
 import snippets from '../../snippets.json';
 
@@ -15,6 +29,9 @@ interface EditorProps {
 }
 
 export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, onCloseFile }) => {
+  const settings = useSettingsStore();
+  const recent = useWorkspaceStore(st => st.recentWorkspaces);
+  const openRecent = useWorkspaceStore(st => st.openRecent);
   const {
     tabs,
     activeTabPath,
@@ -127,7 +144,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     const loadFile = async () => {
       try {
         const content = await window.nexelAPI.readFileContent(activeFilePath);
-        const name = activeFilePath.split('/').pop() || activeFilePath;
+        const name = activeFilePath.split(/[\\/]/).pop() || activeFilePath;
         useEditorStore.getState().openFile(activeFilePath, name, content);
       } catch (err) {
         console.error("Failed to read selected file:", err);
@@ -192,8 +209,11 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     try {
       await window.nexelAPI.writeFileContent(activeTab.filePath, activeTab.content);
       useEditorStore.getState().saveTabSuccess(activeTab.filePath);
+      getClangd().notifySaved(activeTab.filePath);
+      useStatusStore.getState().pushToast(`Saved ${activeTab.name}`, 'success');
     } catch (err) {
       console.error("Failed to save active file:", err);
+      useStatusStore.getState().pushToast(`Could not save ${activeTab.name}`, 'error', 4000);
     }
   };
 
@@ -203,6 +223,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
       try {
         await window.nexelAPI.writeFileContent(tab.filePath, tab.content);
         useEditorStore.getState().saveTabSuccess(tab.filePath);
+        getClangd().notifySaved(tab.filePath);
       } catch (err) {
         console.error("Auto-save write operation failed:", err);
       }
@@ -221,6 +242,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     }
 
     closeTab(path);
+    getClangd().closePath(path);
     if (onCloseFile) onCloseFile(path);
 
     const updatedState = useEditorStore.getState();
@@ -257,39 +279,45 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     }
   };
 
+  const langProvidersRef = useRef<{ dispose(): void }[] | null>(null);
+  // Find-in-files / palette jump: reveal a line and pulse-highlight it.
+  const flashRef = useRef<string[]>([]);
+  useEffect(() => {
+    const onReveal = (e: Event) => {
+      const { line, col } = (e as CustomEvent<{ path: string; line: number; col: number }>).detail ?? {};
+      const ed = editorRef.current;
+      if (!ed || !Number.isFinite(line)) return;
+      ed.revealLineInCenter(line);
+      ed.setPosition({ lineNumber: line, column: col || 1 });
+      ed.focus();
+      flashRef.current = ed.deltaDecorations(flashRef.current, [{ range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 }, options: { isWholeLine: true, className: 'nx-line-flash' } }]);
+      window.setTimeout(() => { flashRef.current = editorRef.current?.deltaDecorations(flashRef.current, []) ?? []; }, 1400);
+    };
+    window.addEventListener('nexel:reveal', onReveal);
+    return () => window.removeEventListener('nexel:reveal', onReveal);
+  }, []);
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+    // Feed the status bar: cursor + selection length (store skips no-op updates).
+    const reportCursor = () => {
+      const pos = editor.getPosition(); const sel = editor.getSelection(); const model = editor.getModel();
+      if (!pos) return;
+      useStatusStore.getState().setCursor(pos.lineNumber, pos.column, sel && model && !sel.isEmpty() ? model.getValueInRange(sel).length : 0);
+    };
+    editor.onDidChangeCursorSelection(reportCursor);
+    editor.onDidFocusEditorText(reportCursor);
+    reportCursor();
 
-    monaco.editor.defineTheme('nexel-minimal-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '6D727C', fontStyle: 'italic' },
-        { token: 'keyword', foreground: 'C5A3A3', fontStyle: 'bold' },
-        { token: 'string', foreground: 'B0C4DE' },
-        { token: 'number', foreground: 'D3C1A5' },
-        { token: 'regexp', foreground: 'C5B0C5' },
-        { token: 'type', foreground: 'A3C5B5', fontStyle: 'bold' },
-        { token: 'class', foreground: 'D5D6D8', fontStyle: 'bold' },
-        { token: 'function', foreground: 'D4C2AD' },
-        { token: 'variable', foreground: 'E2E3E5' },
-        { token: 'identifier', foreground: 'E2E3E5' },
-      ],
-      colors: {
-        'editor.background': '#050507',
-        'editor.foreground': '#E2E3E5',
-        'editorCursor.foreground': '#FFFFFF',
-        'editor.lineHighlightBackground': '#0F0F12',
-        'editorLineNumber.foreground': '#303035',
-        'editorLineNumber.activeForeground': '#FFFFFF',
-        'editor.selectionBackground': '#252528',
-        'editorWidget.background': '#0D0D10',
-        'editorWidget.border': '#202025',
-      }
-    });
+    THEMES.forEach(t => monaco.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)));
+    monaco.editor.setTheme(monacoThemeName(useSettingsStore.getState().theme));
 
-    monaco.editor.setTheme('nexel-minimal-dark');
-
+    if (!langProvidersRef.current) langProvidersRef.current = [...registerLangCompletions(monaco), ...registerHoverDocs(monaco), ...registerSignatureHelp(monaco)];
+    // clangd: providers registered after the offline ones (so they are asked first); every C/C++ model shown in an
+    // editor is synced. When clangd is absent or crashes the providers no-op and the offline ones serve alone.
+    const clangd = getClangd((m, k, ttl) => useStatusStore.getState().pushToast(m, k, ttl));
+    clangd.attachMonaco(monaco);
+    clangd.track(editor.getModel());
+    editor.onDidChangeModel(() => clangd.track(editor.getModel()));
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
     }
@@ -299,6 +327,11 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         const hasUsingStd = /\busing\s+namespace\s+std\s*;/.test(text);
 
         const word = model.getWordUntilPosition(position);
+        // Member / scope access (v.  p->  std::) belongs to clangd; dataset words there would only be noise.
+        const before = model.getLineContent(position.lineNumber).slice(0, word.startColumn - 1);
+        if (/(\.|->|::)\s*$/.test(before)) return { suggestions: [] };
+        // With clangd active, it owns keywords/containers/algorithms; Nexel keeps its CP aliases and snippets.
+        const clangdOn = isClangdActive();
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
@@ -307,7 +340,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         };
 
         const suggestions: any[] = [];
-        const categories = ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp'];
+        const categories = clangdOn ? ['cp'] : ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp'];
 
         categories.forEach(category => {
           const items = (dataset as any)[category] || [];
@@ -336,12 +369,13 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
             }
 
             const score = item.score !== undefined ? item.score : 50;
-            const sortText = String(1000 - score).padStart(4, '0');
+            // Offline items rank after clangd's semantic results (clangd sortText starts with a digit run like "3f…").
+            const sortText = (clangdOn ? '~' : '') + String(1000 - score).padStart(4, '0');
 
             suggestions.push({
-              label: label,
               kind: kind,
               detail: item.detail || `${category} (Nexel Autocomplete)`,
+              label: clangdOn ? { label, description: 'Nexel' } : label,
               documentation: {
                 value: item.documentation || '',
               },
@@ -356,7 +390,6 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           Object.entries(snippets).forEach(([key, val]: [string, any]) => {
             const bodyStr = Array.isArray(val.body) ? val.body.join('\n') : val.body;
             suggestions.push({
-              label: val.prefix,
               kind: monaco.languages.CompletionItemKind.Snippet,
               detail: val.description || 'Snippet',
               documentation: {
@@ -365,7 +398,8 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               insertText: bodyStr,
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               range: range,
-              sortText: '0001'
+              label: clangdOn ? { label: val.prefix, description: 'snippet' } : val.prefix,
+              sortText: clangdOn ? '~0001' : '0001'
             });
           });
         }
@@ -385,20 +419,43 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     };
   };
 
+  // Cursor-follow spotlight: writes CSS vars straight to the element (no React re-render per mousemove), rAF-throttled.
+  const welcomeRaf = useRef(0);
+  const onWelcomeMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget; const r = el.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+    cancelAnimationFrame(welcomeRaf.current);
+    welcomeRaf.current = requestAnimationFrame(() => { el.style.setProperty('--mx', x + 'px'); el.style.setProperty('--my', y + 'px'); });
+  };
+
   const renderWelcomeBackdrop = () => (
-    <div className="nx-editor-welcome-backdrop">
+    <div className="nx-editor-welcome-backdrop" onMouseMove={onWelcomeMove}>
+      <div className="nx-welcome-grid" aria-hidden="true" />
+      <div className="nx-welcome-spot" aria-hidden="true" />
+      <div className="nx-welcome-orb nx-welcome-orb-a" aria-hidden="true" />
+      <div className="nx-welcome-orb nx-welcome-orb-b" aria-hidden="true" />
       <div className="nx-welcome-glass-plate">
         <div className="nx-welcome-branding-wrapper">
           <img src={logoImg} className="nx-welcome-logo" alt="Nexel IDE Logo" />
           <h1 className="nx-welcome-headline">NEXEL IDE</h1>
         </div>
         <p className="nx-welcome-subtitle">A premium minimal workspace with native Monaco integration.</p>
-        <div className="nx-shortcut-box">
-          <div className="nx-shortcut-row"><span>Open Workspace Folder</span> <kbd>Click Explorer Header</kbd></div>
-          <div className="nx-shortcut-row"><span>Create New File</span> <kbd>Right Click in Sidebar</kbd></div>
-          <div className="nx-shortcut-row"><span>Save Working Changes</span> <kbd>Ctrl + S</kbd></div>
-          <div className="nx-shortcut-row"><span>Close Active Tab</span> <kbd>Ctrl + W</kbd></div>
+        <div className="nx-keycaps">
+          {SHORTCUT_GROUPS[0].items.concat(SHORTCUT_GROUPS[1].items.slice(0, 2)).map((it, i) => (
+            <div key={it.label} className="nx-keycap-row" style={{ animationDelay: `${220 + i * 55}ms` }}>
+              <span>{it.label}</span><span>{it.keys.map((k, j) => <kbd key={j}>{k}</kbd>)}</span>
+            </div>
+          ))}
         </div>
+        {recent.length > 0 && (
+          <div className="nx-recent">
+            <h4>Recent workspaces</h4>
+            {recent.map((d, i) => (
+              <button key={d} style={{ animationDelay: `${520 + i * 60}ms` }} onClick={() => { void openRecent(d); }}>
+                <b>{d.split(/[\\/]/).filter(Boolean).pop() ?? d}</b><small title={d}>{d}</small>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -424,13 +481,18 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <MonacoEditor
             height="100%"
             language={getLanguage(tab.name)}
+            theme={monacoThemeName(settings.theme)}
             value={tab.content}
+            // One Monaco model per file, keyed by its file:// URI, so clangd sees each document separately.
+            path={pathToUri(tab.filePath)}
             onChange={(val) => handleEditorChangeForTab(tab.filePath, val)}
+            beforeMount={(m: any) => THEMES.forEach(t => m.editor.defineTheme(monacoThemeName(t.id), monacoThemeData(t)))}
             onMount={handleEditorDidMount}
             options={{
-              fontSize: 13,
+              fontSize: settings.fontSize,
               fontFamily: 'Consolas, "Courier New", Courier, monospace',
-              minimap: { enabled: false },
+              minimap: { enabled: settings.minimap },
+              wordWrap: settings.wordWrap ? 'on' : 'off',
               scrollbar: {
                 vertical: 'visible',
                 horizontal: 'visible',
@@ -441,8 +503,12 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               automaticLayout: true,
               cursorBlinking: 'smooth',
               cursorSmoothCaretAnimation: 'on',
+              smoothScrolling: true,
+              bracketPairColorization: { enabled: true },
+              fontLigatures: settings.ligatures,
+              roundedSelection: true,
               padding: { top: 16 },
-              tabSize: 2,
+              tabSize: settings.tabSize,
             }}
           />
         </div>
@@ -462,6 +528,10 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
               {tabs.map((tab) => (
                 <div 
                   key={tab.filePath} 
+                  draggable
+                  onDragStart={(e) => { e.dataTransfer.setData('text/nx-tab', tab.filePath); e.dataTransfer.effectAllowed = 'move'; }}
+                  onDragOver={(e) => { if (e.dataTransfer.types.includes('text/nx-tab')) e.preventDefault(); }}
+                  onDrop={(e) => { const from = e.dataTransfer.getData('text/nx-tab'); if (from) { e.preventDefault(); useEditorStore.getState().moveTab(from, tab.filePath); } }}
                   className={`nx-editor-tab ${focusedTabPath === tab.filePath ? 'active' : ''} ${focusedTabPath === tab.filePath && acCelebration ? 'ac-celebrate-glow' : ''}`}
                   onClick={() => {
                     if (isSplit && rightTabPath === tab.filePath) {
@@ -621,10 +691,16 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
       {/* Status metrics footer */}
       {activeTab && (
         <div className="nx-editor-footer-metrics">
-          <span className="nx-footer-path">{activeTab.filePath}</span>
+          <nav className="nx-crumbs" key={activeTab.filePath} aria-label="File path" title={activeTab.filePath}>
+            {toCrumbs(activeTab.filePath, useWorkspaceStore.getState().rootPath).map((c, i, arr) => (
+              <React.Fragment key={i}>
+                <span className={`nx-crumb ${c.isFile ? 'nx-crumb-file' : ''}`} style={{ animationDelay: `${i * 35}ms` }}>{c.label}</span>
+                {i < arr.length - 1 && <svg className="nx-crumb-sep" viewBox="0 0 8 8" aria-hidden="true"><path d="M2.5 1l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              </React.Fragment>
+            ))}
+          </nav>
           <div className="nx-footer-right-cluster">
             <span className="nx-footer-metric-pill">Monaco Editor</span>
-            <span className="nx-footer-metric-pill">UTF-8</span>
             <span className="nx-footer-metric-pill">Lines: {getStats().lines}</span>
             <span className="nx-footer-metric-pill">Chars: {getStats().chars}</span>
             <span className="nx-footer-metric-pill active">Nexel Engine</span>

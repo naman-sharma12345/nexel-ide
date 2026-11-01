@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;800&display=swap');
 
 :root {
   --sans: 'Outfit', system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -14,7 +13,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #0B0B0D;
+  background-color: var(--nx-bg-0);
 }
 
 /* Redesigned full-bleed layout core for an elegant desktop app shell */
@@ -31,4 +30,195 @@ body {
 
 h1, h2, p {
   margin: 0;
+}
+/* ───────────────────────── Nexel design tokens (v2) ─────────────────────────
+   One source of truth for colour, depth, radius and motion. Components should
+   reach for these instead of hard-coded values so themes stay coherent. */
+:root {
+  --nx-ink: 255 255 255;         /* overlay ink: white-alpha on dark themes (Paper Light flips it to ink) */
+  --nx-surf: 17 17 20;           /* glass surface base for floating widgets */
+  --nx-info: #60a5fa;
+  --nx-bg-0: #0B0B0D;            /* window */
+  --nx-editor-bg: #050507;       /* code canvas */
+  --nx-accent-rgb: 52 211 153;
+  --nx-accent2-rgb: 34 211 238;
+  --nx-bg-1: #111114;            /* panels */
+  --nx-bg-2: #17171B;            /* raised */
+  --nx-line: rgb(var(--nx-ink) / 0.06);
+  --nx-line-strong: rgb(var(--nx-ink) / 0.12);
+  --nx-text: rgb(var(--nx-ink) / 0.92);
+  --nx-text-dim: rgb(var(--nx-ink) / 0.55);
+  --nx-text-faint: rgb(var(--nx-ink) / 0.32);
+  --nx-accent: #34d399;
+  --nx-accent-2: #22d3ee;
+  --nx-accent-soft: rgb(var(--nx-accent-rgb) / 0.15);
+  --nx-accent-glow: 0 0 0 1px rgb(var(--nx-accent-rgb) / 0.35), 0 0 24px -4px rgb(var(--nx-accent-rgb) / 0.45);
+  --nx-danger: #ef4444;
+  --nx-warn: #fbbf24;
+  --nx-radius-sm: 6px;
+  --nx-radius: 10px;
+  --nx-radius-lg: 16px;
+  --nx-shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 4px 12px -2px rgba(0,0,0,.35);
+  --nx-shadow-2: 0 8px 24px -6px rgba(0,0,0,.55), 0 24px 64px -12px rgba(0,0,0,.6);
+  --nx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);      /* expo-out: snappy, settles softly */
+  --nx-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --nx-status-h: 26px;
+  --nx-dur-1: 120ms;
+  --nx-dur-2: 220ms;
+  --nx-dur-3: 380ms;
+  color-scheme: dark;
+}
+
+::selection { background: rgb(var(--nx-accent-rgb) / 0.28); color: #fff; }
+
+/* Slim, auto-hiding-feel scrollbars everywhere (Chromium/Electron). */
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--nx-ink) / .14) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--nx-ink) / .10);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color var(--nx-dur-2);
+}
+*::-webkit-scrollbar-thumb:hover { background-color: rgb(var(--nx-ink) / .22); }
+
+/* Keyboard focus is always visible, never on mouse click. */
+:where(button, [role="button"], a, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--nx-accent-glow);
+  border-radius: var(--nx-radius-sm);
+}
+
+/* Tactile press feedback on every button. */
+:where(button) { transition: transform var(--nx-dur-1) var(--nx-ease-out), background-color var(--nx-dur-2), color var(--nx-dur-2), box-shadow var(--nx-dur-2), opacity var(--nx-dur-2); }
+:where(button:not(:disabled)):active { transform: scale(0.96); }
+
+/* App boot: the shell fades and lifts in instead of popping. */
+@keyframes nx-boot { from { opacity: 0; transform: translateY(6px) scale(.995); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+#root > * { animation: nx-boot var(--nx-dur-3) var(--nx-ease-out) both; }
+#root > *:nth-child(2) { animation-delay: 60ms; }
+#root > *:nth-child(3) { animation-delay: 120ms; }
+
+/* Shared motion primitives for components. */
+@keyframes nx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nx-pop-in { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes nx-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+.nx-skeleton {
+  border-radius: var(--nx-radius-sm);
+  background: linear-gradient(90deg, rgb(var(--nx-ink) / .04) 25%, rgb(var(--nx-ink) / .09) 37%, rgb(var(--nx-ink) / .04) 63%);
+  background-size: 400% 100%;
+  animation: nx-shimmer 1.4s ease infinite;
+}
+
+/* Respect OS-level "reduce motion" (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Animated theme switching: colours glide for ~350ms, then the helper class is removed so normal UI stays snappy. */
+html.nx-theme-switching, html.nx-theme-switching *, html.nx-theme-switching *::before, html.nx-theme-switching *::after {
+  transition: background-color 380ms var(--nx-ease-out), border-color 380ms var(--nx-ease-out), color 380ms var(--nx-ease-out), box-shadow 380ms var(--nx-ease-out), fill 380ms, stroke 380ms !important;
+}
+
+/* Motion polish: focus rings, press feedback, smooth scrolling (run 04:49) */
+:focus-visible { outline: 2px solid rgb(var(--nx-accent-rgb) / 0.7); outline-offset: 2px; transition: outline-offset .15s ease; }
+button { transition: transform .12s ease, background-color .18s ease, box-shadow .18s ease; }
+button:active:not(:disabled) { transform: scale(0.97); }
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--nx-accent-rgb) / 0.25) transparent; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* --- Monaco floating widgets: glass cards that match the Nexel tokens --- */
+.monaco-editor .monaco-hover, .monaco-editor .suggest-widget, .monaco-editor .parameter-hints-widget, .monaco-editor .find-widget {
+  background: rgb(var(--nx-surf) / .86) !important;
+  color: var(--nx-text);
+  backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid var(--nx-line-strong) !important;
+  border-radius: var(--nx-radius) !important;
+  box-shadow: var(--nx-shadow-2) !important;
+  animation: nx-pop-in var(--nx-dur-2) var(--nx-ease-out) both;
+}
+.monaco-editor .monaco-hover .hover-row:not(:first-child):not(:empty) { border-top: 1px solid var(--nx-line) !important; }
+.monaco-editor .monaco-hover code, .monaco-editor .monaco-hover .monaco-tokenized-source { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused { background: var(--nx-accent-soft) !important; box-shadow: inset 2px 0 0 var(--nx-accent); transition: background var(--nx-dur-1); }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .highlight { color: var(--nx-accent) !important; font-weight: 600; }
+
+/* --- clangd IntelliSense widgets: themed in every theme (tokens only) --- */
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row { color: var(--nx-text); }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .label-name { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .signature-label { color: var(--nx-text-dim) !important; opacity: 1 !important; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .label-description { color: var(--nx-text-faint) !important; opacity: 1 !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon { color: var(--nx-accent-2) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon.codicon-symbol-snippet { color: var(--nx-warn) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row .suggest-icon.codicon-symbol-keyword { color: var(--nx-text-dim) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .suggest-icon { color: var(--nx-accent) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .label-name,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .monaco-icon-label { color: var(--nx-text) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .label-description,
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .signature-label { color: var(--nx-text-dim) !important; }
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused .label-name .highlight { color: var(--nx-accent) !important; }
+.monaco-editor .suggest-details-container, .monaco-editor .suggest-details { background: rgb(var(--nx-surf) / .92) !important; color: var(--nx-text) !important; border-color: var(--nx-line-strong) !important; border-radius: var(--nx-radius) !important; }
+.monaco-editor .suggest-details .header .type { color: var(--nx-text-dim) !important; }
+/* Monaco sizes the docs side panel once (often before markdown finishes rendering) and can clip clangd's docs:
+   let it grow with its content up to a sane cap and scroll beyond that. */
+.monaco-editor .suggest-details-container, .monaco-editor .suggest-details-container .suggest-details,
+.monaco-editor .suggest-details > .monaco-scrollable-element { height: auto !important; max-height: 360px; }
+.monaco-editor .suggest-details > .monaco-scrollable-element > .body { max-height: 358px; overflow-y: auto !important; }
+.monaco-editor .suggest-details .docs { color: var(--nx-text-dim); }
+.monaco-editor .suggest-widget .suggest-status-bar { border-top-color: var(--nx-line) !important; color: var(--nx-text-faint) !important; }
+.monaco-editor .monaco-hover { color: var(--nx-text) !important; }
+.monaco-editor .monaco-hover a { color: var(--nx-accent) !important; }
+.monaco-editor .monaco-hover .hover-contents h3, .monaco-editor .monaco-hover .markdown-hover h3 { font: 600 12px/1.4 var(--sans); margin: 4px 0 6px; color: var(--nx-text); }
+.monaco-editor .monaco-hover hr { border-color: var(--nx-line) !important; }
+.monaco-editor .monaco-hover .hover-row.status-bar { background: rgb(var(--nx-ink) / .03) !important; border-top: 1px solid var(--nx-line) !important; }
+.monaco-editor .monaco-hover .marker.hover-contents .code { color: var(--nx-text-faint); }
+.monaco-editor .parameter-hints-widget .signature .parameter.active { color: var(--nx-accent) !important; font-weight: 600; text-decoration: underline 1px rgb(var(--nx-accent-rgb) / .5); text-underline-offset: 3px; }
+.monaco-editor .parameter-hints-widget .docs { color: var(--nx-text-dim) !important; }
+.monaco-editor .peekview-widget .head { background: rgb(var(--nx-surf) / .95) !important; }
+.monaco-editor .peekview-widget .peekview-title .filename { color: var(--nx-text); }
+.monaco-editor .rename-box { background: rgb(var(--nx-surf) / .95) !important; border: 1px solid rgb(var(--nx-accent-rgb) / .45) !important; border-radius: var(--nx-radius-sm) !important; box-shadow: var(--nx-shadow-2) !important; }
+
+/* Line flash when jumping from Find in Files */
+.monaco-editor .nx-line-flash { background: rgb(var(--nx-accent-rgb) / .22); animation: nx-line-flash 1.4s var(--nx-ease-out) forwards; box-shadow: inset 3px 0 0 var(--nx-accent); }
+@keyframes nx-line-flash { 0% { background: rgb(var(--nx-accent-rgb) / .45); } 100% { background: rgb(var(--nx-accent-rgb) / 0); box-shadow: inset 3px 0 0 transparent; } }
+
+/* Theme reveal (View Transitions): we animate ::view-transition-new(root) from JS; disable the default cross-fade. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+
+/* Zen mode: chrome fades away, editor stays */
+.nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: opacity .35s ease, transform .35s ease, max-width .35s ease; }
+html.nx-zen .nx-sidebar-container, html.nx-zen .nx-navdock-wrapper-container, html.nx-zen .nx-status-h { opacity: 0; pointer-events: none; }
+html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: none; } }
+
+/* Tab entrance: gentle slide + fade */
+@keyframes nx-tab-in { from { opacity: 0; transform: translateY(4px) scale(.97); } to { opacity: 1; transform: none; } }
+.nx-tab, [class*="tab-item"] { animation: nx-tab-in .22s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .nx-tab, [class*="tab-item"] { animation: none; } }
+
+/* Soft top-edge sheen on raised glass surfaces */
+.nx-sheen { position: relative; }
+.nx-sheen::before { content:''; position:absolute; inset:0 0 auto 0; height:1px; background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .5), transparent); opacity:.7; pointer-events:none; }
+
+/* Paper Light: a true light palette driven by tokens (--nx-ink flips white-alpha overlays to ink-alpha). */
+html[data-theme='light'] {
+  --nx-ink: 28 25 20;
+  --nx-surf: 247 245 239;
+  --nx-text: rgba(28, 25, 20, 0.92);
+  --nx-text-dim: rgba(28, 25, 20, 0.62);
+  --nx-text-faint: rgba(28, 25, 20, 0.4);
+  --nx-line: rgba(28, 25, 20, 0.09);
+  --nx-line-strong: rgba(28, 25, 20, 0.18);
+  --nx-shadow-1: 0 1px 2px rgba(60,50,30,.12), 0 4px 12px -2px rgba(60,50,30,.1);
+  --nx-shadow-2: 0 8px 24px -6px rgba(60,50,30,.2), 0 24px 64px -12px rgba(60,50,30,.22);
+  color-scheme: light;
+  background: #f7f5ef;
 }

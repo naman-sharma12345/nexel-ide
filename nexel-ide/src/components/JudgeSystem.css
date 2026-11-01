@@ -6,8 +6,8 @@
   display: flex;
   flex-direction: column;
   user-select: none;
-  background: #08080a; /* Deep matte premium black */
-  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgb(var(--nx-surf, 8 8 10)); /* Deep matte premium black */
+  border-right: 1px solid rgb(var(--nx-ink) / 0.03);
   padding-left: 72px; /* Reserves space for NavDock exactly like Explorer */
   z-index: 10;
   position: relative;
@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   padding: 0 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgb(var(--nx-ink) / 0.02);
 }
 
 .nx-judge-title {
@@ -29,7 +29,7 @@
   font-size: 10.5px;
   font-weight: 400;
   letter-spacing: 0.28em;
-  color: #ffffff;
+  color: rgb(var(--nx-ink));
   text-indent: 0.28em;
   text-transform: uppercase;
   opacity: 0.85;
@@ -38,8 +38,8 @@
 /* Dynamic Testcase Pills Slider - Floating Glass style */
 .nx-judge-tcs-shelf {
   padding: 12px 18px;
-  background: rgba(255, 255, 255, 0.003);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  background: rgb(var(--nx-ink) / 0.003);
+  border-bottom: 1px solid rgb(var(--nx-ink) / 0.02);
   min-height: 52px;
   box-sizing: border-box;
 }
@@ -60,11 +60,11 @@
   background: transparent;
 }
 .nx-judge-tcs-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--nx-ink) / 0.05);
   border-radius: 99px;
 }
 .nx-judge-tcs-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgb(var(--nx-ink) / 0.15);
 }
 
 .nx-tc-pill {
@@ -72,8 +72,8 @@
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
-  background: rgba(255, 255, 255, 0.015);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgb(var(--nx-ink) / 0.015);
+  border: 1px solid rgb(var(--nx-ink) / 0.04);
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
@@ -81,15 +81,15 @@
 }
 
 .nx-tc-pill:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgb(var(--nx-ink) / 0.04);
+  border-color: rgb(var(--nx-ink) / 0.08);
   transform: translateY(-0.5px);
 }
 
 .nx-tc-pill.active {
   background: #ffffff;
   border-color: #ffffff;
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgb(var(--nx-ink) / 0.08);
 }
 
 .nx-tc-pill-name {
@@ -97,7 +97,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgb(var(--nx-ink) / 0.35);
   transition: color 0.2s;
 }
 
@@ -106,13 +106,13 @@
 }
 
 .nx-tc-pill:hover:not(.active) .nx-tc-pill-name {
-  color: #ffffff;
+  color: rgb(var(--nx-ink));
 }
 
 .nx-tc-pill-del {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgb(var(--nx-ink) / 0.2);
   font-size: 11px;
   cursor: pointer;
   display: inline-flex;
@@ -139,9 +139,9 @@
 }
 
 .nx-tc-add-btn {
-  background: rgba(255, 255, 255, 0.015);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.3);
+  background: rgb(var(--nx-ink) / 0.015);
+  border: 1px solid rgb(var(--nx-ink) / 0.03);
+  color: rgb(var(--nx-ink) / 0.3);
   width: 24px;
   height: 24px;
   min-width: 24px;
@@ -155,17 +155,17 @@
 }
 
 .nx-tc-add-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgb(var(--nx-ink) / 0.05);
+  color: rgb(var(--nx-ink));
+  border-color: rgb(var(--nx-ink) / 0.1);
 }
 
 /* Sliding Segment Selector for Tabs */
 .nx-judge-tabs {
   margin: 12px 18px 4px 18px;
   display: flex;
-  background: rgba(255, 255, 255, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgb(var(--nx-ink) / 0.01);
+  border: 1px solid rgb(var(--nx-ink) / 0.03);
   padding: 2px;
   border-radius: 8px;
   box-sizing: border-box;
@@ -175,7 +175,7 @@
   flex: 1;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgb(var(--nx-ink) / 0.3);
   font-family: 'Outfit', sans-serif;
   font-size: 9.5px;
   font-weight: 500;
@@ -187,12 +187,12 @@
 }
 
 .nx-judge-tab-pill:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgb(var(--nx-ink) / 0.7);
 }
 
 .nx-judge-tab-pill.active {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: rgb(var(--nx-ink));
+  background: rgb(var(--nx-ink) / 0.05);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -209,10 +209,10 @@
 .nx-judge-textarea {
   width: 100%;
   height: 100%;
-  background: #0b0b0d;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--nx-bg-0);
+  border: 1px solid rgb(var(--nx-ink) / 0.05);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgb(var(--nx-ink) / 0.85);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
   line-height: 1.5;
@@ -225,26 +225,26 @@
 }
 
 .nx-judge-textarea:focus {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: #0d0d10;
+  border-color: rgb(var(--nx-ink) / 0.15);
+  background: rgb(var(--nx-surf, 13 13 16));
 }
 
 .nx-judge-textarea:disabled {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgb(var(--nx-ink) / 0.25);
   cursor: not-allowed;
 }
 
 /* Masterpiece Run Section - Anchor at Screen Bottom */
 .nx-judge-run-footer {
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgb(var(--nx-ink) / 0.03);
   display: flex;
   align-items: center;
   gap: 12px;
   box-sizing: border-box;
   height: 68px;
   min-height: 68px;
-  background: rgba(8, 8, 10, 0.7);
+  background: rgb(var(--nx-surf, 8 8 10) / 0.7);
   backdrop-filter: blur(10px);
 }
 
@@ -252,10 +252,10 @@
 .nx-judge-run-btn {
   width: 48%;
   height: 36px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgb(var(--nx-ink) / 0.03);
+  border: 1px solid rgb(var(--nx-ink) / 0.08);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgb(var(--nx-ink) / 0.85);
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
   font-weight: 600;
@@ -268,7 +268,7 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgb(var(--nx-ink) / 0.05);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -279,7 +279,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgb(var(--nx-ink) / 0.08) 0%, transparent 100%);
   opacity: 1;
   transition: opacity 0.4s ease;
 }
@@ -289,7 +289,7 @@
   background: #ffffff;
   color: #000000;
   border-color: #ffffff;
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.16), inset 0 1px 0px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 20px rgb(var(--nx-ink) / 0.16), inset 0 1px 0px rgb(var(--nx-ink) / 0.2);
 }
 
 .nx-judge-run-btn:hover:not(:disabled) .nx-run-icon {
@@ -314,14 +314,14 @@
 .nx-run-icon {
   width: 9px;
   height: 9px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgb(var(--nx-ink) / 0.8);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nx-run-spinner {
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgb(var(--nx-ink) / 0.2);
   border-top-color: #ffffff;
   border-radius: 50%;
   animation: nx-spin 0.6s linear infinite;
@@ -336,8 +336,8 @@
 .nx-judge-metrics-panel {
   width: 52%;
   height: 36px;
-  background: rgba(255, 255, 255, 0.015);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgb(var(--nx-ink) / 0.015);
+  border: 1px solid rgb(var(--nx-ink) / 0.04);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -351,7 +351,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 8.5px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgb(var(--nx-ink) / 0.45);
   letter-spacing: 0.05em;
   white-space: nowrap;
   text-transform: uppercase;
@@ -359,22 +359,22 @@
 
 .nx-metric-divider {
   font-size: 8px;
-  color: rgba(255, 255, 255, 0.05);
+  color: rgb(var(--nx-ink) / 0.05);
 }
 
 /* CP Judge State Pills & Badges */
 .nx-tc-pill.passed {
-  background: rgba(52, 211, 153, 0.01);
-  border-color: rgba(52, 211, 153, 0.12);
+  background: rgb(var(--nx-accent-rgb) / 0.01);
+  border-color: rgb(var(--nx-accent-rgb) / 0.12);
 }
 .nx-tc-pill.passed:hover {
-  background: rgba(52, 211, 153, 0.04);
-  border-color: rgba(52, 211, 153, 0.2);
+  background: rgb(var(--nx-accent-rgb) / 0.04);
+  border-color: rgb(var(--nx-accent-rgb) / 0.2);
 }
 .nx-tc-pill.passed.active {
-  background: #34d399;
-  border-color: #34d399;
-  box-shadow: 0 4px 16px rgba(52, 211, 153, 0.15);
+  background: var(--nx-accent);
+  border-color: var(--nx-accent);
+  box-shadow: 0 4px 16px var(--nx-accent-soft);
 }
 
 .nx-tc-pill.failed {
@@ -395,9 +395,9 @@
   animation: pulse-border 1.5s infinite ease-in-out;
 }
 @keyframes pulse-border {
-  0% { border-color: rgba(255, 255, 255, 0.04); }
-  50% { border-color: rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.03); }
-  100% { border-color: rgba(255, 255, 255, 0.04); }
+  0% { border-color: rgb(var(--nx-ink) / 0.04); }
+  50% { border-color: rgb(var(--nx-ink) / 0.25); background: rgb(var(--nx-ink) / 0.03); }
+  100% { border-color: rgb(var(--nx-ink) / 0.04); }
 }
 
 /* Dynamic Verdict small tags inside Pills */
@@ -410,12 +410,12 @@
   letter-spacing: 0.02em;
 }
 .nx-tc-verdict-dot.passed {
-  background: rgba(52, 211, 153, 0.15);
-  color: #34d399;
+  background: var(--nx-accent-soft);
+  color: var(--nx-accent);
 }
 .nx-tc-pill.active .nx-tc-verdict-dot.passed {
   background: rgba(0, 0, 0, 0.2);
-  color: #ffffff;
+  color: rgb(var(--nx-ink));
 }
 .nx-tc-verdict-dot.failed {
   background: rgba(248, 113, 113, 0.15);
@@ -423,7 +423,7 @@
 }
 .nx-tc-pill.active .nx-tc-verdict-dot.failed {
   background: rgba(0, 0, 0, 0.2);
-  color: #ffffff;
+  color: rgb(var(--nx-ink));
 }
 
 /* Viewport diffing columns */
@@ -451,7 +451,7 @@
   opacity: 0.85;
 }
 .nx-diff-column-hdr.green {
-  color: #34d399;
+  color: var(--nx-accent);
 }
 .nx-diff-column-hdr.red {
   color: #f87171;
@@ -463,17 +463,17 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgb(var(--nx-ink) / 0.04);
   border-radius: 6px;
   padding: 6px;
-  background: #0b0b0d;
+  background: var(--nx-bg-0);
   box-sizing: border-box;
 }
 
 .nx-diff-empty {
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgb(var(--nx-ink) / 0.25);
   text-align: center;
   padding: 24px 0;
   width: 100%;
@@ -503,7 +503,7 @@
 }
 
 .nx-line-num {
-  color: rgba(255, 255, 255, 0.15);
+  color: rgb(var(--nx-ink) / 0.15);
   user-select: none;
   width: 16px;
   text-align: right;
@@ -511,17 +511,17 @@
 }
 
 .nx-line-text {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgb(var(--nx-ink) / 0.75);
 }
 
 .nx-diff-line-row.match .nx-diff-cell {
-  background: rgba(255, 255, 255, 0.003);
+  background: rgb(var(--nx-ink) / 0.003);
 }
 
 .nx-diff-line-row.mismatch .expected-cell {
-  background: rgba(52, 211, 153, 0.02);
+  background: rgb(var(--nx-accent-rgb) / 0.02);
   color: #a7f3d0;
-  border-left: 2px solid #34d399;
+  border-left: 2px solid var(--nx-accent);
 }
 .nx-diff-line-row.mismatch .expected-cell .nx-line-text {
   color: #a7f3d0;
@@ -537,8 +537,8 @@
 }
 
 .nx-judge-textarea.passed-area {
-  background: rgba(52, 211, 153, 0.02);
-  border-color: rgba(52, 211, 153, 0.12);
+  background: rgb(var(--nx-accent-rgb) / 0.02);
+  border-color: rgb(var(--nx-accent-rgb) / 0.12);
   color: #a7f3d0;
 }
 .nx-judge-textarea.failed-area {
@@ -549,8 +549,8 @@
 
 /* Premium feedback states for metrics panel */
 .nx-judge-metrics-panel.passed {
-  border-color: rgba(52, 211, 153, 0.15);
-  background: rgba(52, 211, 153, 0.01);
+  border-color: var(--nx-accent-soft);
+  background: rgb(var(--nx-accent-rgb) / 0.01);
 }
 .nx-judge-metrics-panel.failed {
   border-color: rgba(248, 113, 113, 0.15);
@@ -558,7 +558,7 @@
 }
 
 .verdict-chip.passed {
-  color: #34d399;
+  color: var(--nx-accent);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -568,7 +568,7 @@
   letter-spacing: 0.08em;
 }
 .nx-metric-chip.running {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgb(var(--nx-ink) / 0.7);
   animation: pulse-text 1s infinite alternate;
 }
 @keyframes pulse-text {
@@ -579,21 +579,21 @@
 /* --- Dopamine AC and WA Animations --- */
 @keyframes green-glow-wash {
   0% {
-    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
-    border-color: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 0 0 rgb(var(--nx-accent-rgb) / 0);
+    border-color: rgb(var(--nx-ink) / 0.03);
   }
   20% {
-    box-shadow: 0 0 35px rgba(52, 211, 153, 0.4), inset 0 0 20px rgba(52, 211, 153, 0.15);
-    border-color: rgba(52, 211, 153, 0.4);
-    background: rgba(52, 211, 153, 0.02);
+    box-shadow: 0 0 35px rgb(var(--nx-accent-rgb) / 0.4), inset 0 0 20px var(--nx-accent-soft);
+    border-color: rgb(var(--nx-accent-rgb) / 0.4);
+    background: rgb(var(--nx-accent-rgb) / 0.02);
   }
   80% {
-    box-shadow: 0 0 20px rgba(52, 211, 153, 0.15), inset 0 0 10px rgba(52, 211, 153, 0.08);
-    border-color: rgba(52, 211, 153, 0.25);
+    box-shadow: 0 0 20px var(--nx-accent-soft), inset 0 0 10px rgb(var(--nx-accent-rgb) / 0.08);
+    border-color: rgb(var(--nx-accent-rgb) / 0.25);
   }
   100% {
-    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
-    border-color: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 0 0 rgb(var(--nx-accent-rgb) / 0);
+    border-color: rgb(var(--nx-ink) / 0.03);
   }
 }
 
@@ -613,3 +613,29 @@
   box-shadow: 0 0 12px rgba(248, 113, 113, 0.25) !important;
 }
 
+
+/* Verdict polish: pop-in + soft glow (tokens from index.css) */
+.nx-tc-verdict-dot,
+.nx-metric-chip.verdict-chip {
+  animation: nx-pop-in var(--nx-dur-2, 240ms) var(--nx-ease-spring, cubic-bezier(.34,1.56,.64,1)) both;
+}
+.nx-tc-verdict-dot.passed,
+.verdict-chip.passed {
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--nx-accent, var(--nx-accent)) 55%, transparent);
+}
+.nx-tc-verdict-dot.failed,
+.verdict-chip.failed {
+  box-shadow: 0 0 14px -2px rgba(248, 113, 113, 0.5);
+}
+.nx-tc-pill.running { animation: nx-verdict-pulse 1.2s ease-in-out infinite; }
+@keyframes nx-verdict-pulse { 50% { opacity: .6; } }
+
+/* Stress toggle (header) */
+.nx-judge-header { justify-content: space-between; }
+.nx-judge-stress-toggle { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:99px; border:1px solid var(--nx-line); background:transparent; color:var(--nx-text-dim); font:500 9px 'Outfit',sans-serif; letter-spacing:.18em; cursor:pointer; }
+.nx-judge-stress-toggle:hover { color:var(--nx-warn); border-color:rgb(251 191 36 / .4); box-shadow:0 0 16px -4px rgb(251 191 36 / .5); }
+.nx-judge-stress-toggle:hover svg { animation: nx-zap .5s var(--nx-ease-spring); }
+.nx-judge-stress-toggle.on { color:var(--nx-accent); border-color:rgb(var(--nx-accent-rgb) / .5); background:var(--nx-accent-soft); }
+@keyframes nx-zap { 0% { transform:scale(1) rotate(0); } 40% { transform:scale(1.45) rotate(-12deg); } 100% { transform:scale(1) rotate(0); } }
+.nx-judge-header { padding-right: 14px; gap: 8px; }
+.nx-judge-title { white-space: nowrap; letter-spacing: .2em; text-indent: 0; }
