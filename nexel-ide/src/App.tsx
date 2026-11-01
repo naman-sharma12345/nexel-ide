@@ -7,8 +7,6 @@ import { Explorer } from './components/Explorer';
 import { Editor } from './components/Editor';
 import { TitleBar } from './components/TitleBar';
 import { Terminal } from './components/Terminal';
-const JudgeSystem = lazy(() => import('./components/JudgeSystem'));
-const ContestsSystem = lazy(() => import('./components/ContestsSystem'));
 import { useWorkspaceStore, type FileNode } from './stores/useWorkspaceStore';
 import { StatusBar } from './components/StatusBar';
 import { Toasts } from './components/Toasts';
@@ -17,7 +15,6 @@ import { ShortcutsSheet } from './components/ShortcutsSheet';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useSettingsStore } from './stores/useSettingsStore';
 import { useStatusStore } from './stores/useStatusStore';
-import { useJudgeStore } from './stores/useJudgeStore';
 import { applyTheme, THEMES } from './lib/themes';
 import { switchTheme } from './lib/themeTransition';
 import { SearchPanel } from './components/SearchPanel';
@@ -123,30 +120,9 @@ function App() {
     window.addEventListener('nexel:open-at', onOpenAt);
     return () => window.removeEventListener('nexel:open-at', onOpenAt);
   });
-  // Competitive Companion: browser extension -> new solution file + judge samples
-  const companionEnabled = pluginCommands.has('judge') || pluginSections.has('judge');
-  useEffect(() => {
-    if (!companionEnabled) return;
-    window.nexelAPI.onCompanionProblem?.(async (p) => {
-      const ws = useWorkspaceStore.getState();
-      const dir = ws.activeDir ?? ws.rootPath;
-      const toast = useStatusStore.getState().pushToast;
-      if (!dir) { toast('Open a workspace folder first, then re-send the problem', 'error', 4000); return; }
-      try {
-        const taken = new Set((function walk(ns: FileNode[]): string[] { return ns.flatMap(n => [n.name, ...walk(n.children ?? [])]); })(ws.tree));
-        let name = `${p.fileName}.cpp`, i = 2;
-        while (taken.has(name)) name = `${p.fileName}_${i++}.cpp`; // never overwrite an existing solution
-        const filePath = await window.nexelAPI.createFile(dir, name);
-        const body = useEditorStore.getState().cppTemplate;
-        if (body) await window.nexelAPI.writeFileContent(filePath, body);
-        await ws.refreshTree();
-        openFile(filePath, name, body);
-        useJudgeStore.getState().importSamples(p.tests);
-        toast(`Imported ${p.name} · ${p.tests.length} sample${p.tests.length === 1 ? '' : 's'}`, 'success', 4000);
-      } catch (e) { console.error(e); toast('Could not import problem from Competitive Companion', 'error', 4000); }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companionEnabled]);
+  // Plugin activation hooks (e.g. the CP companion listener attaches only while its plugin is on)
+  const pluginsAll = useMemo(() => listPlugins(), []);
+  for (const pl of pluginsAll) pl.useActivation?.(enabledIds.has(pl.id));
   const paletteCommands = [
     { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
     { id: 'judge', label: 'Go to Judge', run: () => setSection('judge') },
@@ -284,12 +260,15 @@ function App() {
               activeFilePath={focusedTabPath || activeTabPath}
             />
           </div>
-          <div style={{ display: pluginSections.has('judge') && currentSection === 'judge' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-            <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><JudgeSystem activeFilePath={focusedTabPath || activeTabPath} /></Suspense>
-          </div>
-          <div style={{ display: pluginSections.has('contests') && currentSection === 'contests' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-            <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><ContestsSystem /></Suspense>
-          </div>
+          {/* Plugin-owned dock sections render their panels from the registry; the shell imports no plugin modules */}
+          {pluginsAll.flatMap(pl => (pl.sections ?? []).filter(sec => pluginSections.has(sec) && pl.panels?.[sec]).map(sec => {
+            const Panel = pl.panels![sec];
+            return (
+              <div key={sec} style={{ display: currentSection === sec ? 'flex' : 'none', height: '100%', width: '100%' }}>
+                <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><Panel activeFilePath={focusedTabPath || activeTabPath} /></Suspense>
+              </div>
+            );
+          }))}
         </div>
 
         {/* Main UI Text Editor Core Canvas */}
