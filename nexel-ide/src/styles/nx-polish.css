@@ -399,3 +399,27 @@ html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .
 .nx-explorer-title { color: rgb(var(--nx-ink) / .5); }
 .nx-node-row { border-radius: 6px; margin: 1px 6px; }
 .nx-row-selected { background: rgb(var(--nx-accent-rgb) / .13); }
+
+/* ===== v5: quiet welcome screen ===== */
+/* Remove the floating aurora/orb/mouse-spotlight show; keep a calm, flat start page. */
+.nx-welcome-orb, .nx-welcome-spot { display: none; }
+.nx-welcome-grid {
+  background-image: radial-gradient(rgb(var(--nx-ink) / .05) 1px, transparent 1.2px);
+  -webkit-mask-image: none; mask-image: none; opacity: .8;
+}
+.nx-welcome-glass-plate {
+  background: var(--nx-bg-1);
+  border: 1px solid rgb(var(--nx-ink) / .10);
+  border-radius: 10px;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+.nx-welcome-glass-plate::before { display: none; }
+.nx-welcome-logo { filter: none; }
+html[data-theme='light'] .nx-welcome-logo { filter: invert(.88); }
+.nx-welcome-headline {
+  letter-spacing: .14em; text-indent: .14em;
+  font-size: 20px; color: rgb(var(--nx-ink) / .92);
+}
+.nx-welcome-subtitle { color: rgb(var(--nx-ink) / .55); }
+html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68); }
