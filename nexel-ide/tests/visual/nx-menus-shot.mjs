@@ -66,5 +66,11 @@ await page.click('.nx-tab-menu-btn');
 await page.waitForTimeout(500);
 console.log('TABMENU', JSON.stringify(await probe('.nx-tab-dropdown-menu')));
 await page.screenshot({ path: dir + '/m3-tabmenu.png', clip: { x: 700, y: 0, width: 656, height: 400 } });
+// 4. Status-bar clangd menu
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.click('.sb-lsp');
+await page.waitForTimeout(600);
+console.log('SBMENU', JSON.stringify(await probe('.sb-menu')));
+await page.screenshot({ path: dir + '/m4-sbmenu.png', clip: { x: 0, y: 600, width: 1440, height: 300 } });
 await browser.close();
 console.log('done');
