@@ -91,6 +91,17 @@ const chipHit = cppEvidence.sb.includes('clangd');
 console.log('CLANGD_NOTICE_CPP', toastHit && chipHit ? 'OK' : 'MISSING ' + JSON.stringify(cppEvidence));
 await page.screenshot({ path: dir + '/r6-cpp-notice.png' });
 
+// --- Phase 3c: real file creation through the explorer header ---
+await page.locator('button.nx-action-btn[title="New File"]').first().click({ timeout: 15000 });
+await page.waitForTimeout(800);
+await page.locator('.nx-inline-input-wrapper input').first().fill('notes.txt');
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1500);
+const createdRow = await page.evaluate(() => [...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('notes.txt')));
+const createdDisk = fs.existsSync(ws + '/src/notes.txt') && fs.readFileSync(ws + '/src/notes.txt', 'utf8') === '';
+console.log('CREATE_FILE_REAL', createdRow && createdDisk ? 'OK' : 'FAIL row=' + createdRow + ' disk=' + createdDisk);
+await page.screenshot({ path: dir + '/r7-created.png' });
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
