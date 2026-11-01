@@ -21,6 +21,8 @@ fs.writeFileSync(cfgSub + '/config.json', JSON.stringify({
   'nexel-settings': JSON.stringify({ state: { theme: 'nexel' }, version: 0 }),
 }));
 console.log('CFG_ISOLATED', cfg, 'persistent config untouched:', fs.existsSync(os.homedir() + '/.config/Nexel IDE/config.json'));
+const results = {};
+function report(name, ok, extra = '') { results[name] = !!ok; console.log(name, ok ? 'OK' : 'FAIL', extra); }
 
 async function boot() {
   const app = await electron.launch({ args: ['.'], env: { ...process.env, ELECTRON_START_URL: 'http://localhost:5199', XDG_CONFIG_HOME: cfg } });
@@ -39,11 +41,11 @@ const cpOff = await page.evaluate(() => ({
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
   cpSnippetsBtn: [...document.querySelectorAll('button')].some((b) => (b.title ?? '').includes('CP Snippets')),
 }));
-console.log('CP_OFF_REAL', JSON.stringify(cpOff), !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn ? 'OK' : 'FAIL');
+report('CP_OFF_REAL', !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn, JSON.stringify(cpOff));
 // clangd must stay silent for a Python-only session: no missing-binary toast.
 await page.waitForTimeout(6000);
 const toastPy = await page.evaluate(() => [...document.querySelectorAll('.tz-toast')].map((t) => t.textContent));
-console.log('CLANGD_QUIET_PYTHON', toastPy.some((t) => (t ?? '').includes('clangd')) ? 'FAIL ' + JSON.stringify(toastPy) : 'OK');
+report('CLANGD_QUIET_PYTHON', !toastPy.some((t) => (t ?? '').includes('clangd')), JSON.stringify(toastPy));
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(700);
 await page.locator('.nx-node-row:has-text("main.py")').first().click({ timeout: 15000 }); await page.waitForTimeout(1800);
 await page.locator('.view-lines').first().click({ timeout: 15000 });
@@ -55,7 +57,7 @@ if (!autoSave) { await page.keyboard.press('Control+s'); }
 await page.waitForTimeout(3000);
 const disk = fs.readFileSync(ws + '/src/main.py', 'utf8');
 const expected = 'def greet(name):\n    return f"hello, {name}"\n\nif __name__ == "__main__":\n    print(greet("nexel"))\n\nprint(\'edit-mark-123\')';
-console.log('SAVE_DISK', disk === expected ? 'OK' : 'MISMATCH', 'autosave_was', autoSave, disk === expected ? '' : JSON.stringify(disk));
+report('SAVE_DISK', disk === expected, 'autosave_was ' + autoSave + (disk === expected ? '' : ' ' + JSON.stringify(disk)));
 await page.screenshot({ path: dir + '/r3-saved.png' });
 
 // --- Phase 1c: theme switch through the real settings UI ---
@@ -64,7 +66,7 @@ await page.waitForTimeout(1200);
 await page.locator('button.sp-theme:has-text("Midnight Indigo")').first().click({ timeout: 10000 });
 await page.waitForTimeout(1200);
 const themeNow = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-console.log('THEME_SWITCH_REAL', themeNow === 'midnight' ? 'OK' : 'FAIL ' + themeNow);
+report('THEME_SWITCH_REAL', themeNow === 'midnight', String(themeNow));
 await page.keyboard.press('Escape');
 await page.waitForTimeout(600);
 await app.close();
@@ -72,12 +74,15 @@ await new Promise(r => setTimeout(r, 1500));
 
 // --- Phase 2: reopen in a fresh process, verify persistence ---
 ({ app, page } = await boot());
+await page.waitForTimeout(2500);
+const restoredTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+report('SESSION_RESTORE_REAL', restoredTabs.includes('main.py'), JSON.stringify(restoredTabs));
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(700);
 await page.locator('.nx-node-row:has-text("main.py")').first().click({ timeout: 15000 }); await page.waitForTimeout(1800);
 const reopened = await page.evaluate(() => document.querySelector('.view-lines')?.textContent ?? '');
-console.log('REOPEN_PERSIST', reopened.includes('edit-mark-123') ? 'OK' : 'MISSING');
+report('REOPEN_PERSIST', reopened.includes('edit-mark-123'));
 const themePersisted = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-console.log('THEME_PERSIST_REAL', themePersisted === 'midnight' ? 'OK' : 'FAIL ' + themePersisted);
+report('THEME_PERSIST_REAL', themePersisted === 'midnight', String(themePersisted));
 
 // --- Phase 2b: find-in-files over the real fs ---
 await page.keyboard.press('Control+Shift+f');
@@ -89,12 +94,12 @@ const search = await page.evaluate(() => ({
   hits: document.querySelectorAll('.sf-hit').length,
 }));
 const searchOk = search.files.includes('main.py') && search.hits >= 2;
-console.log('SEARCH_REAL', searchOk ? 'OK' : 'FAIL ' + JSON.stringify(search));
+report('SEARCH_REAL', searchOk, JSON.stringify(search));
 if (searchOk) {
   await page.locator('.sf-hit').first().click();
   await page.waitForTimeout(1200);
   const openedTab = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? '');
-  console.log('SEARCH_OPEN_REAL', openedTab === 'main.py' ? 'OK' : 'FAIL tab=' + openedTab);
+  report('SEARCH_OPEN_REAL', openedTab === 'main.py', 'tab=' + openedTab);
 }
 await page.screenshot({ path: dir + '/r9-search.png' });
 
@@ -107,7 +112,7 @@ await page.keyboard.type('echo NX$((20+22))');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(2500);
 const termText = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
-console.log('TERM_PTY', termText.includes('NX42') ? 'OK' : 'MISSING', JSON.stringify(termText.slice(-120)));
+report('TERM_PTY', termText.includes('NX42'), JSON.stringify(termText.slice(-120)));
 await page.screenshot({ path: dir + '/r4-terminal.png' });
 
 // --- Phase 3b: opening a real C++ file still surfaces the missing-clangd notice ---
@@ -119,7 +124,7 @@ const cppEvidence = await page.evaluate(() => ({
 }));
 const toastHit = cppEvidence.toasts.some((t) => (t ?? '').includes('clangd not found'));
 const chipHit = cppEvidence.sb.includes('clangd');
-console.log('CLANGD_NOTICE_CPP', toastHit && chipHit ? 'OK' : 'MISSING ' + JSON.stringify(cppEvidence));
+report('CLANGD_NOTICE_CPP', toastHit && chipHit, JSON.stringify(cppEvidence));
 await page.screenshot({ path: dir + '/r6-cpp-notice.png' });
 
 // --- Phase 3c: real file creation through the explorer header ---
@@ -130,7 +135,7 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(1500);
 const createdRow = await page.evaluate(() => [...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('notes.txt')));
 const createdDisk = fs.existsSync(ws + '/src/notes.txt') && fs.readFileSync(ws + '/src/notes.txt', 'utf8') === '';
-console.log('CREATE_FILE_REAL', createdRow && createdDisk ? 'OK' : 'FAIL row=' + createdRow + ' disk=' + createdDisk);
+report('CREATE_FILE_REAL', createdRow && createdDisk, 'row=' + createdRow + ' disk=' + createdDisk);
 await page.screenshot({ path: dir + '/r7-created.png' });
 
 // --- Phase 3d: real rename + delete through the context menu ---
@@ -143,7 +148,7 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(1200);
 const renamedOk = fs.existsSync(ws + '/src/todo.txt') && !fs.existsSync(ws + '/src/notes.txt');
 const renamedRow = await page.evaluate(() => [...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
-console.log('RENAME_REAL', renamedOk && renamedRow ? 'OK' : 'FAIL disk=' + renamedOk + ' row=' + renamedRow);
+report('RENAME_REAL', renamedOk && renamedRow, 'disk=' + renamedOk + ' row=' + renamedRow);
 
 page.on('dialog', (d) => d.accept());
 await page.locator('.nx-node-row:has-text("todo.txt")').first().click({ button: 'right', timeout: 15000 });
@@ -152,7 +157,7 @@ await page.locator('.nx-context-item:has-text("Delete")').first().click({ timeou
 await page.waitForTimeout(1200);
 const deletedOk = !fs.existsSync(ws + '/src/todo.txt');
 const deletedRow = await page.evaluate(() => ![...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
-console.log('DELETE_REAL', deletedOk && deletedRow ? 'OK' : 'FAIL disk=' + deletedOk + ' row=' + deletedRow);
+report('DELETE_REAL', deletedOk && deletedRow, 'disk=' + deletedOk + ' row=' + deletedRow);
 
 await app.close();
 
@@ -167,7 +172,12 @@ const cpOn = await page.evaluate(() => ({
   judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
 }));
-console.log('CP_ON_REAL', JSON.stringify(cpOn), cpOn.judgeNav && cpOn.contestsNav ? 'OK' : 'FAIL');
+report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const missing = EXPECTED.filter((n) => !(n in results));
+const failed = EXPECTED.filter((n) => results[n] === false);
+console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
+if (missing.length || failed.length) { console.log('done WITH FAILURES'); process.exit(1); }
 console.log('done');
