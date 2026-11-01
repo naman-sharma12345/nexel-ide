@@ -22,6 +22,8 @@ import { applyTheme, THEMES } from './lib/themes';
 import { switchTheme } from './lib/themeTransition';
 import { SearchPanel } from './components/SearchPanel';
 import { loadSession, saveSession } from './lib/session';
+import { listPlugins, pluginEnabled } from './plugins/registry';
+import './plugins/competitive-programming';
 import './App.css';
 
 function App() {
@@ -56,6 +58,16 @@ function App() {
   useEffect(() => { document.documentElement.classList.toggle('nx-zen', zen); return () => document.documentElement.classList.remove('nx-zen'); }, [zen]);
   const tree = useWorkspaceStore(s => s.tree);
   const themeId = useSettingsStore(s => s.theme);
+  const pluginPrefs = useSettingsStore(s => s.plugins);
+  const enabledPlugins = listPlugins().filter(pl => pluginEnabled(pl, pluginPrefs));
+  const pluginSections = new Set(enabledPlugins.flatMap(pl => pl.sections));
+  const pluginCommands = new Set(enabledPlugins.flatMap(pl => pl.commandIds));
+  const pluginNavItems = enabledPlugins.flatMap(pl => pl.navItems);
+  // Disabled-plugin section still active (e.g. just toggled off): fall back to workspace.
+  useEffect(() => {
+    const owned = listPlugins().some(pl => pl.sections.includes(currentSection));
+    if (owned && !pluginSections.has(currentSection)) setSection('workspace');
+  }, [currentSection, pluginPrefs]);
   const firstTheme = useRef(true);
   useEffect(() => { applyTheme(themeId, document.documentElement, !firstTheme.current); firstTheme.current = false; }, [themeId]);
   useEffect(() => {
@@ -112,7 +124,9 @@ function App() {
     return () => window.removeEventListener('nexel:open-at', onOpenAt);
   });
   // Competitive Companion: browser extension -> new solution file + judge samples
+  const companionEnabled = pluginCommands.has('judge') || pluginSections.has('judge');
   useEffect(() => {
+    if (!companionEnabled) return;
     window.nexelAPI.onCompanionProblem?.(async (p) => {
       const ws = useWorkspaceStore.getState();
       const dir = ws.activeDir ?? ws.rootPath;
@@ -132,7 +146,7 @@ function App() {
       } catch (e) { console.error(e); toast('Could not import problem from Competitive Companion', 'error', 4000); }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [companionEnabled]);
   const paletteCommands = [
     { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
     { id: 'judge', label: 'Go to Judge', run: () => setSection('judge') },
@@ -147,7 +161,10 @@ function App() {
     ...THEMES.map(t => ({ id: 'theme-' + t.id, label: `Theme: ${t.name}`, run: () => switchTheme(t.id) })),
     { id: 'minimap', label: 'Toggle Minimap', run: () => useSettingsStore.getState().toggle('minimap') },
     { id: 'wrap', label: 'Toggle Word Wrap', run: () => useSettingsStore.getState().toggle('wordWrap') },
-  ];
+  ].filter(c => {
+    const owner = listPlugins().find(pl => pl.commandIds.includes(c.id));
+    return !owner || pluginCommands.has(c.id);
+  });
 
   const flatFiles = (nodes: FileNode[]): FileNode[] => nodes.flatMap(n => n.type === 'file' ? [n] : flatFiles(n.children ?? []));
   const fileCommands = flatFiles(tree).map(n => ({ id: n.path, label: n.name, hint: n.path.split('/').slice(-2, -1)[0] ?? '', run: () => { void handleFileSelect(n.path); } }));
@@ -246,7 +263,8 @@ function App() {
         >
           <NavDock 
             activeSection={currentSection} 
-            onSelect={handleSelectSection} 
+            onSelect={handleSelectSection}
+            pluginItems={pluginNavItems}
             sidebarCollapsed={sidebarCollapsed}
           />
         </div>
@@ -255,7 +273,7 @@ function App() {
         <div 
           className={`nx-sidebar-container ${sidebarCollapsed ? 'collapsed' : ''}`}
           style={{ 
-            display: (currentSection === 'workspace' || currentSection === 'judge' || currentSection === 'contests') ? 'flex' : 'none',
+            display: (currentSection === 'workspace' || pluginSections.has(currentSection)) ? 'flex' : 'none',
             transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             height: '100%'
           }}
@@ -266,10 +284,10 @@ function App() {
               activeFilePath={focusedTabPath || activeTabPath}
             />
           </div>
-          <div style={{ display: currentSection === 'judge' ? 'flex' : 'none', height: '100%', width: '100%' }}>
+          <div style={{ display: pluginSections.has('judge') && currentSection === 'judge' ? 'flex' : 'none', height: '100%', width: '100%' }}>
             <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><JudgeSystem activeFilePath={focusedTabPath || activeTabPath} /></Suspense>
           </div>
-          <div style={{ display: currentSection === 'contests' ? 'flex' : 'none', height: '100%', width: '100%' }}>
+          <div style={{ display: pluginSections.has('contests') && currentSection === 'contests' ? 'flex' : 'none', height: '100%', width: '100%' }}>
             <Suspense fallback={<div className="nx-skeleton" style={{flex:1,margin:12,borderRadius:12}} />}><ContestsSystem /></Suspense>
           </div>
         </div>
@@ -286,7 +304,7 @@ function App() {
           position: 'relative'
         }}>
           {/* Editor panel is always mounted but toggled using CSS to prevent vanishing tabs */}
-          <div style={{ display: (currentSection === 'workspace' || currentSection === 'judge' || currentSection === 'contests') ? 'flex' : 'none', width: '100%', height: '100%' }}>
+          <div style={{ display: (currentSection === 'workspace' || pluginSections.has(currentSection)) ? 'flex' : 'none', width: '100%', height: '100%' }}>
             <Editor 
               activeFilePath={activeTabPath} 
               onFileSelect={handleFileSelect}
