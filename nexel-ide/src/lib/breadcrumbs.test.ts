@@ -21,3 +21,23 @@ describe('toCrumbs', () => {
     expect(c[4].label).toBe('g.cpp');
   });
 });
+
+describe('toCrumbs paths', () => {
+  it('maps each segment to its absolute path (windows)', () => {
+    const c = toCrumbs('C:\\cp\\codeforces\\1950A.cpp', 'C:/cp');
+    expect(c.map(x => x.path)).toEqual(['C:/cp', 'C:/cp/codeforces', 'C:/cp/codeforces/1950A.cpp']);
+  });
+  it('maps each segment to its absolute path (posix)', () => {
+    const c = toCrumbs('/home/u/ws/src/main.py', '/home/u/ws');
+    expect(c.map(x => x.path)).toEqual(['/home/u/ws', '/home/u/ws/src', '/home/u/ws/src/main.py']);
+  });
+  it('builds absolute paths outside the workspace too', () => {
+    const c = toCrumbs('/tmp/a.cpp', '/home/u/ws');
+    expect(c.map(x => x.path)).toEqual(['/tmp', '/tmp/a.cpp']);
+  });
+  it('ellipsis crumb has no path', () => {
+    const c = toCrumbs('/r/a/b/c/d/e/f/g.cpp', '/r', 5);
+    expect(c[1].path).toBeNull();
+    expect(c[2].path).toBe('/r/a/b/c/d/e');
+  });
+});
