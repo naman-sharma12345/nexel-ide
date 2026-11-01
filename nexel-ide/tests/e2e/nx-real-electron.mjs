@@ -145,11 +145,22 @@ const persisted2 = settings2?.state?.wordWrap === true && settings2?.state?.mini
 report('SETTINGS_APPLY_REAL', after.lines > linesBefore && after.minimap && persisted2, JSON.stringify({ linesBefore, ...after, persisted: persisted2 }));
 await page.screenshot({ path: dir + '/r11-settings-apply.png' });
 
+// --- Phase 2e: Ctrl+backquote toggles the terminal (listed binding was dead) ---
+const termBefore = await page.evaluate(() => !!document.querySelector('.nx-terminal-panel'));
+await page.keyboard.press('Control+`');
+await page.waitForTimeout(900);
+const termAfterOpen = await page.evaluate(() => !!document.querySelector('.nx-terminal-panel'));
+await page.keyboard.press('Control+`');
+await page.waitForTimeout(600);
+const termAfterClose = await page.evaluate(() => !!document.querySelector('.nx-terminal-panel'));
+report('TERMINAL_HOTKEY_REAL', !termBefore && termAfterOpen && !termAfterClose, JSON.stringify({ termBefore, termAfterOpen, termAfterClose }));
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
-await page.waitForTimeout(3500);
-const termArea = page.locator('.nx-terminal-panel .xterm, .nx-terminal-panel').first();
-await termArea.click().catch(() => {});
+await page.waitForFunction(() => (document.querySelector('.xterm-rows')?.textContent ?? '').includes('$'), { timeout: 20000 });
+await page.evaluate(() => { const ta = document.querySelector('.xterm textarea'); if (ta) ta.focus(); });
+await page.mouse.click(720, 500);
+await page.evaluate(() => { const ta = document.querySelector('.xterm textarea'); if (ta) ta.focus(); });
 await page.keyboard.type('echo NX$((20+22))');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(2500);
@@ -217,7 +228,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
