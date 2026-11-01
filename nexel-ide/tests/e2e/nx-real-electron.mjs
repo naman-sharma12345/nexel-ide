@@ -26,8 +26,14 @@ async function boot() {
   return { app, page };
 }
 
-// --- Phase 1: open file, edit, save, verify on disk ---
+// --- Phase 1: open file, edit, save, verify on disk (CP default OFF) ---
 let { app, page } = await boot();
+const cpOff = await page.evaluate(() => ({
+  judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
+  contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
+  cpSnippetsBtn: [...document.querySelectorAll('button')].some((b) => (b.title ?? '').includes('CP Snippets')),
+}));
+console.log('CP_OFF_REAL', JSON.stringify(cpOff), !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn ? 'OK' : 'FAIL');
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(700);
 await page.locator('.nx-node-row:has-text("main.py")').first().click({ timeout: 15000 }); await page.waitForTimeout(1800);
 await page.locator('.view-lines').first().click({ timeout: 15000 });
@@ -61,5 +67,20 @@ await page.waitForTimeout(2500);
 const termText = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
 console.log('TERM_PTY', termText.includes('NX42') ? 'OK' : 'MISSING', JSON.stringify(termText.slice(-120)));
 await page.screenshot({ path: dir + '/r4-terminal.png' });
+await app.close();
+
+// --- Phase 4: CP explicitly enabled -> surfaces appear ---
+fs.writeFileSync(cfgSub + '/config.json', JSON.stringify({
+  'nexel-workspace-store': JSON.stringify({ state: { recentWorkspaces: [], pinnedPaths: [], rootPath: ws, rootName: 'REALWS', activeDir: ws, searchQuery: '', isRegex: false, isMatchCase: false }, version: 0 }),
+  'nexel-settings': JSON.stringify({ state: { theme: 'nexel', plugins: { 'competitive-programming': true } }, version: 0 }),
+}));
+({ app, page } = await boot());
+await page.waitForTimeout(1500);
+const cpOn = await page.evaluate(() => ({
+  judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
+  contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
+}));
+console.log('CP_ON_REAL', JSON.stringify(cpOn), cpOn.judgeNav && cpOn.contestsNav ? 'OK' : 'FAIL');
+await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
 console.log('done');
