@@ -92,6 +92,74 @@ await grab('p2', {
   contest_date: '.nx-contest-card.upcoming-card .nx-contest-time-info span',
   import_btn: 'button:has-text("Import")',
 });
+// Paper Light pass: verdict chips render on a dark ink-blue accent there
+const ctx2 = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5 });
+await ctx2.addInitScript(() => {
+  const files = [{ name: 'solve.cpp', type: 'file' }];
+  const store = new Map();
+  store.set('nexel-workspace-store', JSON.stringify({ state: { recentWorkspaces: [], pinnedPaths: [], rootPath: 'C:/ws', rootName: 'WS', activeDir: 'C:/ws', searchQuery: '', isRegex: false, isMatchCase: false }, version: 0 }));
+  store.set('nexel-settings', JSON.stringify({ state: { theme: 'light' }, version: 0 }));
+  const nowSec = Math.floor(Date.now() / 1000);
+  window.nexelAPI = {
+    minimizeWindow() {}, maximizeWindow() {}, closeWindow() {},
+    openWorkspaceDir: async () => 'C:/ws',
+    readWorkspaceFiles: async (d) => files.map(f => ({ name: f.name, path: d + '/' + f.name, type: f.type })),
+    createFile: async (p, n) => p + '/' + n, createFolder: async (p, n) => p + '/' + n,
+    renameNode: async (o, n) => n, deleteNode: async () => true,
+    readFileContent: async () => 'int main(){}\n', writeFileContent: async () => true,
+    createTerminal: async () => true, writeTerminal() {}, resizeTerminal() {}, onTerminalData() {},
+    runJudge: async () => [
+      { id: 1, verdict: 'AC', actual: '4', diff: '', metrics: { time: 12, memory: 2048, exitCode: 0 } },
+      { id: 2, verdict: 'WA', actual: '5', diff: 'expected 4 got 5', metrics: { time: 9, memory: 2048, exitCode: 0 } },
+    ],
+    fetchContests: async () => ({ active: [], upcoming: [], passed: [] }),
+    fetchContestProblems: async () => ({}), onCompanionProblem() {},
+    getStoreSync: (k) => store.get(k), setStoreSync: (k, v) => store.set(k, v), deleteStoreSync: (k) => store.delete(k),
+    lspStart: async () => ({ ok: false }), lspStop: async () => true, lspRestart: async () => true,
+    onLspMessage: () => {}, onLspStatus: () => {},
+  };
+});
+const page2 = await ctx2.newPage();
+await page2.goto('http://localhost:5199');
+await page2.waitForTimeout(2000);
+await page2.click('text=solve.cpp');
+await page2.waitForTimeout(1000);
+await page2.locator('.nd-item-row').nth(1).click();
+await page2.waitForTimeout(1200);
+await page2.click('.nx-judge-textarea').catch(()=>{});
+await page2.keyboard.type('2');
+await page2.click('.nx-judge-run-btn').catch(async () => { await page2.click('button:has-text("RUN")'); });
+await page2.waitForTimeout(2500);
+await page2.click('.nx-tc-add-btn').catch(()=>{});
+await page2.waitForTimeout(400);
+await page2.click('.nx-judge-run-btn').catch(async () => { await page2.click('button:has-text("RUN")'); });
+await page2.waitForTimeout(2500);
+await page2.locator('.nx-tc-pill').nth(1).click().catch(()=>{});
+await page2.waitForTimeout(400);
+await page2.screenshot({ path: dir + '/p5-light-verdicts.png' });
+boxes['p5'] = {};
+for (const [name, sel] of Object.entries({
+  pill: '.nx-tc-pill.failed.active',
+  pill_name: '.nx-tc-pill.failed.active .nx-tc-pill-name',
+  pill_badge: '.nx-tc-pill.failed.active .nx-tc-verdict-dot',
+  pill_passed: '.nx-tc-pill.passed:not(.active)',
+  pill_passed_badge: '.nx-tc-pill.passed:not(.active) .nx-tc-verdict-dot',
+})) {
+  const el = page2.locator(sel).first();
+  if (await el.count()) boxes['p5'][name] = await el.boundingBox();
+}
+await page2.locator('.nx-tc-pill').nth(0).click().catch(()=>{});
+await page2.waitForTimeout(400);
+await page2.screenshot({ path: dir + '/p6-light-passed-active.png' });
+boxes['p6'] = {};
+for (const [name, sel] of Object.entries({
+  pill: '.nx-tc-pill.passed.active',
+  pill_name: '.nx-tc-pill.passed.active .nx-tc-pill-name',
+  pill_badge: '.nx-tc-pill.passed.active .nx-tc-verdict-dot',
+})) {
+  const el = page2.locator(sel).first();
+  if (await el.count()) boxes['p6'][name] = await el.boundingBox();
+}
 fs.writeFileSync(dir + '/bboxes.json', JSON.stringify(boxes, null, 2));
 await browser.close();
 console.log('done');
