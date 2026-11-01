@@ -68,6 +68,25 @@ await page.locator('.nx-node-row:has-text("main.py")').first().click({ timeout: 
 const reopened = await page.evaluate(() => document.querySelector('.view-lines')?.textContent ?? '');
 console.log('REOPEN_PERSIST', reopened.includes('edit-mark-123') ? 'OK' : 'MISSING');
 
+// --- Phase 2b: find-in-files over the real fs ---
+await page.keyboard.press('Control+Shift+f');
+await page.waitForTimeout(900);
+await page.locator('input.sf-input[placeholder="Find in files…"]').fill('greet');
+await page.waitForTimeout(1800);
+const search = await page.evaluate(() => ({
+  files: [...document.querySelectorAll('.sf-file span')].map((x) => x.textContent),
+  hits: document.querySelectorAll('.sf-hit').length,
+}));
+const searchOk = search.files.includes('main.py') && search.hits >= 2;
+console.log('SEARCH_REAL', searchOk ? 'OK' : 'FAIL ' + JSON.stringify(search));
+if (searchOk) {
+  await page.locator('.sf-hit').first().click();
+  await page.waitForTimeout(1200);
+  const openedTab = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? '');
+  console.log('SEARCH_OPEN_REAL', openedTab === 'main.py' ? 'OK' : 'FAIL tab=' + openedTab);
+}
+await page.screenshot({ path: dir + '/r9-search.png' });
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
 await page.waitForTimeout(3500);
