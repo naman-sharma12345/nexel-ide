@@ -32,6 +32,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
   const settings = useSettingsStore();
   const recent = useWorkspaceStore(st => st.recentWorkspaces);
   const openRecent = useWorkspaceStore(st => st.openRecent);
+  const openFolder = useWorkspaceStore(st => st.openWorkspaceDir);
   const {
     tabs,
     activeTabPath,
@@ -439,6 +440,12 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           <h1 className="nx-welcome-headline">NEXEL IDE</h1>
         </div>
         <p className="nx-welcome-subtitle">A minimal, keyboard-first editor. Open a folder to get started.</p>
+        <div className="nx-welcome-actions">
+          <button className="nx-welcome-open-btn" onClick={() => { void openFolder(); }}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Open Folder
+          </button>
+        </div>
         <div className="nx-keycaps">
           {SHORTCUT_GROUPS[0].items.concat(SHORTCUT_GROUPS[1].items.slice(0, 2)).map((it, i) => (
             <div key={it.label} className="nx-keycap-row" style={{ animationDelay: `${220 + i * 55}ms` }}>
