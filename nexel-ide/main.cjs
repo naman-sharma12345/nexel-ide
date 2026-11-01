@@ -151,8 +151,9 @@ async function createWindow() {
           if (mainWindow) mainWindow.webContents.send('terminal:data', data);
         });
 
+        const spawnedPty = ptyProcess;
         ptyProcess.onExit(() => {
-          ptyProcess = null;
+          if (ptyProcess === spawnedPty) ptyProcess = null;
         });
         return isNativePty;
       } catch (e) {
@@ -176,8 +177,9 @@ async function createWindow() {
         if (mainWindow) mainWindow.webContents.send('terminal:data', data.toString());
       });
 
+      const spawnedProc = ptyProcess;
       ptyProcess.on('close', () => {
-        ptyProcess = null;
+        if (ptyProcess === spawnedProc) ptyProcess = null;
       });
     } catch (err) {
       console.error("Shell process spawn failure:", err);
