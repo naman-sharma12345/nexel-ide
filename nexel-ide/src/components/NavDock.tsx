@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './NavDock.css';
 
-interface NavItem {
+export interface NavItem {
   id: string;
   label: string;
   icon: React.ReactNode;
@@ -11,9 +11,11 @@ interface NavDockProps {
   activeSection: string;
   onSelect: (id: string) => void;
   sidebarCollapsed?: boolean;
+  /** Extra dock entries contributed by enabled plugins. */
+  pluginItems?: NavItem[];
 }
 
-export const NavDock: React.FC<NavDockProps> = ({ activeSection, onSelect, sidebarCollapsed }) => {
+export const NavDock: React.FC<NavDockProps> = ({ activeSection, onSelect, sidebarCollapsed, pluginItems = [] }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isDockHovered, setIsDockHovered] = useState<boolean>(false);
 
@@ -27,26 +29,7 @@ export const NavDock: React.FC<NavDockProps> = ({ activeSection, onSelect, sideb
         </svg>
       ),
     },
-    {
-      id: 'judge',
-      label: 'Judge System',
-      icon: (
-        <svg className="nd-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22V13m0 0l-4 2m4-2l4 2" />
-          <path d="M12 7V2m0 5a3 3 0 1 0 0 6 3 3 0 1 0 0-6z" />
-          <path d="M5 17h14M3 22h18" />
-        </svg>
-      ),
-    },
-    {
-      id: 'contests',
-      label: 'Codeforces Contests',
-      icon: (
-        <svg className="nd-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22h9M3 22h9M12 2v20M17 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" />
-        </svg>
-      ),
-    },
+    ...pluginItems,
   ];
 
   return (
