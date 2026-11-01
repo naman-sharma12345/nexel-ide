@@ -669,6 +669,14 @@ html[data-theme='light'] .nx-tc-pill.active .nx-tc-verdict-dot.passed {
   background: rgba(0, 0, 0, 0.22);
   color: #fdfcf8;
 }
+/* Paper Light: pale mint/pale red verdict text washes out on paper - use deep tones */
+html[data-theme='light'] .nx-judge-textarea.passed-area,
+html[data-theme='light'] .nx-diff-line-row.mismatch .expected-cell,
+html[data-theme='light'] .nx-diff-line-row.mismatch .expected-cell .nx-line-text { color: #166534; }
+html[data-theme='light'] .nx-diff-line-row.mismatch .actual-cell,
+html[data-theme='light'] .nx-diff-line-row.mismatch .actual-cell .nx-line-text { color: #b91c1c; }
+html[data-theme='light'] .nx-diff-column-hdr.green { color: #166534; }
+html[data-theme='light'] .nx-diff-column-hdr.red { color: #b91c1c; }
 .nx-judge-tab-pill { font-family: var(--sans); border-radius: 7px; color: var(--nx-text-faint); }
 .nx-judge-tab-pill.active { background: rgb(var(--nx-ink) / .06); color: var(--nx-text); }
 .nx-judge-textarea {
