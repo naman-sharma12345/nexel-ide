@@ -27,7 +27,11 @@ def dominant(px, q=24.0):
     keys = qb[:,0]*1000000 + qb[:,1]*1000 + qb[:,2]
     vals, counts = np.unique(keys, return_counts=True)
     order = np.argsort(-counts)
-    return [(vals[i], counts[i], np.array([(vals[i]//1000000)*q+q/2, ((vals[i]//1000)%1000)*q+q/2, (vals[i]%1000)*q+q/2])) for i in order]
+    out = []
+    for i in order:
+        mask = keys == vals[i]
+        out.append((vals[i], counts[i], px[mask].mean(axis=0)))
+    return out
 
 def text_bg(textbox, bgbox=None, mode='vs-container'):
     tpx = crop(textbox)
@@ -59,6 +63,20 @@ targets = {
         ('contest date','contest_date','contest_card','vs-container'),
         ('import button','import_btn','import_btn','vs-container')],
  'p0': [('explorer ext','explorer_ext',None,'two-cluster')],
+ 's1': [('ring pct text','ring_txt','ring','vs-container'),
+        ('heading sub','heading_sub','field_input','vs-container'),
+        ('field label','field_label','field_input','vs-container'),
+        ('field input text','field_input','field_input','vs-container'),
+        ('start button','start_btn','start_btn','vs-container')],
+ 's2': [('running pct','ring_txt','ring','vs-container'),
+        ('stop button','stop_btn','stop_btn','vs-container')],
+ 's2b': [],
+ 's4': [('pass ring text','ring_txt','heading_sub','vs-container')],
+ 's3': [('fail chip','fail_chip','fail_chip','vs-container'),
+        ('fail pre','fail_pre','fail_pre','vs-container'),
+        ('fail diff brute','fail_diff_a','fail_diff_a','vs-container'),
+        ('fail diff yours','fail_diff_b','fail_diff_b','vs-container'),
+        ('save button','save_btn','save_btn','vs-container')],
 }
 for name, tkey, bkey, mode in targets.get(shot, []):
     tb = bb.get(tkey); bgbox = bb.get(bkey) if bkey else None
