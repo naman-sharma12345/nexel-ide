@@ -79,25 +79,25 @@
   display: block; pointer-events: auto; z-index: 100;
 }
 .nx-floating-tabbar {
-  width: 100%; max-width: 100%; height: 38px; padding: 0 8px;
+  width: 100%; max-width: 100%; height: 37px; padding: 0 6px;
   border: 0; border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none;
-  background: linear-gradient(180deg, rgb(var(--nx-bg-1)), rgb(var(--nx-bg-0)));
+  background: var(--nx-bg-1);
   box-shadow: inset 0 -1px 0 var(--nx-line);
 }
-.nx-floating-tabbar:hover { border-color: transparent; background: linear-gradient(180deg, rgb(var(--nx-bg-1)), rgb(var(--nx-bg-0))); }
-.nx-tabs-scroll-stack { max-width: none; flex: 1 1 auto; gap: 3px; align-self: stretch; align-items: flex-end; }
+.nx-floating-tabbar:hover { border-color: transparent; background: var(--nx-bg-1); }
+.nx-tabs-scroll-stack { max-width: none; flex: 1 1 auto; gap: 0; align-self: stretch; align-items: stretch; }
 .nx-editor-tab {
-  height: 31px; min-width: 0; max-width: 180px; padding: 0 12px;
-  border-radius: 9px 9px 0 0; border: 1px solid transparent; border-bottom: 0;
+  height: 37px; min-width: 104px; max-width: 184px; padding: 0 12px;
+  border-radius: 0; border: 0; border-right: 1px solid rgb(var(--nx-ink) / .06);
 }
 .nx-editor-tab:hover { background: rgb(var(--nx-ink) / .045); transform: none; }
 .nx-editor-tab.active {
   background: var(--nx-editor-bg);
-  border-color: var(--nx-line-strong);
-  box-shadow: 0 -6px 18px -10px rgb(var(--nx-accent-rgb) / .35);
+  border-color: rgb(var(--nx-ink) / .06);
+  box-shadow: none;
 }
-/* active indicator becomes a top gradient line */
-.nx-editor-tab::after { left: 10%; right: 10%; top: 0; bottom: auto; height: 2px; border-radius: 0 0 3px 3px; }
+/* active indicator: full-width flat top line, no glow */
+.nx-editor-tab::after { left: 0; right: 0; top: 0; bottom: auto; height: 2px; border-radius: 0; box-shadow: none; }
 .nx-tab-title { font-family: var(--sans); font-size: 11.5px; }
 .nx-dirty-indicator-glow { background: var(--nx-warn); box-shadow: 0 0 6px rgb(251 191 36 / .8); width: 5px; height: 5px; }
 .nx-editor-toolbar-actions { margin-left: auto; border-left: 0; padding-left: 4px; align-self: center; }
@@ -124,14 +124,14 @@
 
 /* ---------- Nav dock: glass, visible icons, glowing active state ---------- */
 .nd-dock {
-  background: rgb(var(--nx-surf) / .72);
-  backdrop-filter: blur(20px) saturate(1.3);
-  border: 1px solid var(--nx-line-strong);
-  box-shadow: var(--nx-shadow-2);
+  background: var(--nx-bg-1);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  border: 0; border-right: 1px solid var(--nx-line);
+  box-shadow: none;
 }
 .nd-icon { color: rgb(var(--nx-ink) / .68); transition: color var(--nx-dur-2), filter var(--nx-dur-2); }
 .nd-item-row:hover .nd-icon { color: var(--nx-text); }
-.nd-row-active .nd-icon { color: var(--nx-accent); filter: drop-shadow(0 0 6px rgb(var(--nx-accent-rgb) / .7)); }
+.nd-row-active .nd-icon { color: var(--nx-accent); }
 .nd-active-indicator {
   background: linear-gradient(180deg, var(--nx-accent), var(--nx-accent-2));
   box-shadow: 0 0 10px rgb(var(--nx-accent-rgb) / .8);
@@ -335,3 +335,25 @@ html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .
   .nx-keycaps { grid-template-columns: 1fr; }
   .sb-right .sb-item:not(.sb-judge):not(.sb-lsp):not(.sb-theme) { display: none; }
 }
+
+/* ---------- v4: Activity rail (docked full-height navigation, not a floating capsule) ---------- */
+.nd-wrapper-axis {
+  left: 0; top: 0; transform: none;
+  width: 52px; height: 100%;
+}
+.nd-dock {
+  width: 52px; height: 100%;
+  padding: 10px 0; border-radius: 0;
+  justify-content: flex-start; gap: 4px;
+}
+.nd-dock::before, .nd-dock::after { display: none; }
+.nd-items-stack { justify-content: flex-start; gap: 4px; padding-top: 4px; }
+.nd-item-row:hover { transform: none; }
+.nd-capsule-container { width: 40px; height: 40px; }
+.nd-icon-fluid { border-radius: 10px; }
+.nd-row-hovered .nd-icon-fluid { color: rgb(var(--nx-ink) / .85); background: rgb(var(--nx-ink) / .05); border-color: transparent; }
+.nd-active-indicator { left: 0; width: 2px; background: var(--nx-accent); box-shadow: none; }
+.nd-row-active .nd-active-indicator { height: 22px; }
+.nd-row-active .nd-icon-fluid { color: var(--nx-accent); background: rgb(var(--nx-accent-rgb) / .14); border-color: transparent; }
+.nd-footer-action { margin-top: auto; padding-bottom: 2px; }
+.nd-footer-shuriken, .nd-hardware-pin.bottom-pin { display: none; }
