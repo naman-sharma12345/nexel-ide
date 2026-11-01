@@ -155,6 +155,17 @@ await page.waitForTimeout(600);
 const termAfterClose = await page.evaluate(() => !!document.querySelector('.nx-terminal-panel'));
 report('TERMINAL_HOTKEY_REAL', !termBefore && termAfterOpen && !termAfterClose, JSON.stringify({ termBefore, termAfterOpen, termAfterClose }));
 
+// --- Phase 2f: Ctrl+Tab cycles tabs, Ctrl+Shift+Tab cycles back ---
+const tabCount = await page.evaluate(() => document.querySelectorAll('.nx-editor-tab').length);
+const activeBefore2 = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? '');
+await page.keyboard.press('Control+Tab');
+await page.waitForTimeout(700);
+const activeNext = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? '');
+await page.keyboard.press('Control+Shift+Tab');
+await page.waitForTimeout(700);
+const activeBack = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? '');
+report('TABS_CYCLE_REAL', tabCount >= 2 && activeNext !== activeBefore2 && activeBack === activeBefore2, JSON.stringify({ tabCount, activeBefore2, activeNext, activeBack }));
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
 await page.waitForFunction(() => (document.querySelector('.xterm-rows')?.textContent ?? '').includes('$'), { timeout: 20000 });
@@ -228,7 +239,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
