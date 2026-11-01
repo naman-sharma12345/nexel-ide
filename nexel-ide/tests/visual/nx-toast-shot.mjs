@@ -42,7 +42,16 @@ await page.keyboard.press('Control+s');
 await page.waitForTimeout(900);
 await page.screenshot({ path: dir + '/t1-save-toast.png' });
 const stack = await page.$('.tz-toast');
-if (stack) await stack.screenshot({ path: dir + '/t2-toast-closeup.png' });
-else console.log('NO TOAST');
+if (stack) {
+  await stack.screenshot({ path: dir + '/t2-toast-closeup.png' });
+  const cs = await page.evaluate(() => {
+    const el = document.querySelector('.tz-toast');
+    const c = getComputedStyle(el);
+    return { backdropFilter: c.backdropFilter, background: c.background.slice(0, 90), boxShadow: c.boxShadow.slice(0, 140), borderRadius: c.borderRadius };
+  });
+  console.log('TOAST_PROBE', JSON.stringify(cs));
+  const ok = cs.backdropFilter === 'none' && !/0 0 \d+px 0|rgba\(16, 185, 129/.test(cs.boxShadow);
+  console.log(ok ? 'TOAST_FLAT_OK' : 'TOAST_FLAT_FAIL');
+} else console.log('NO TOAST');
 await browser.close();
 console.log('done');
