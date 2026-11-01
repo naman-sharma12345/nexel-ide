@@ -119,10 +119,6 @@ export const TitleBar: React.FC = () => {
         </div>
       </div>
 
-      <div className="nx-titlebar-center">
-        <span className="nx-window-title">NEXEL IDE — Workspace</span>
-      </div>
-
       <div className="nx-titlebar-right">
         {/* Snippets Toggle Switch */}
         <div className="nx-titlebar-toggle-wrapper" title="Toggle Snippets Autocomplete">
@@ -138,12 +134,16 @@ export const TitleBar: React.FC = () => {
         </div>
 
         {/* Snippets List Button */}
-        <button 
-          className="nx-titlebar-snippets-btn" 
+        <button
+          className="nx-titlebar-snippets-btn"
           onClick={openSnippets}
           title="Show Available Snippets List"
+          aria-label="Snippets list"
         >
-          Snippets List
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
         </button>
 
         <button 
