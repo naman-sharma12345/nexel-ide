@@ -1,4 +1,5 @@
-export interface ShortcutGroup { title: string; items: Array<{ label: string; keys: string[] }>; }
+export interface ShortcutItem { label: string; keys: string[]; cp?: boolean; }
+export interface ShortcutGroup { title: string; items: ShortcutItem[]; }
 
 /** Single source of truth for the cheat-sheet and the welcome screen. */
 export const SHORTCUT_GROUPS: ShortcutGroup[] = [
@@ -7,21 +8,29 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     { label: 'Find in files', keys: ['Ctrl', 'Shift', 'F'] },
     { label: 'Palette', keys: ['Ctrl', 'Shift', 'P'] },
     { label: 'Settings', keys: ['Ctrl', ','] },
-    { label: 'Shortcuts', keys: ['Ctrl', '/'] },
+    { label: 'This sheet (outside editor)', keys: ['Ctrl', '/'] },
   ] },
   { title: 'Edit', items: [
     { label: 'Save file', keys: ['Ctrl', 'S'] },
     { label: 'Close tab', keys: ['Ctrl', 'W'] },
     { label: 'Find in file', keys: ['Ctrl', 'F'] },
-    { label: 'Toggle comment', keys: ['Ctrl', '/'] },
+    { label: 'Toggle comment (in editor)', keys: ['Ctrl', '/'] },
   ] },
   { title: 'Workspace', items: [
     { label: 'Zen mode', keys: ['Ctrl', 'Alt', 'Z'] },
     { label: 'Toggle terminal', keys: ['Ctrl', '`'] },
-    { label: 'Switch theme', keys: ['Ctrl', 'Shift', 'P'] },
-    { label: 'Import problem', keys: ['Companion'] },
+    { label: 'Switch theme via palette', keys: ['Ctrl', 'Shift', 'P'] },
+    { label: 'Import problem (Companion)', keys: ['Companion'], cp: true },
   ] },
 ];
+
+/** Groups visible for the current plugin state: CP-only rows only when the CP plugin is on. */
+export function shortcutGroupsFor(cpOn: boolean): ShortcutGroup[] {
+  if (cpOn) return SHORTCUT_GROUPS;
+  return SHORTCUT_GROUPS
+    .map(g => ({ ...g, items: g.items.filter(it => !it.cp) }))
+    .filter(g => g.items.length > 0);
+}
 
 /** Normalise a KeyboardEvent into the label used by SHORTCUT_GROUPS (for live keycap highlighting). */
 export function keyLabel(e: KeyboardEvent): string {
