@@ -33,9 +33,18 @@ await page.addInitScript(() => {
 await page.goto('http://localhost:5199/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 const rows = page.locator('.nd-item-row');
+await page.click('.nx-node-name:has-text("solve.cpp")').catch(async () => { await page.click('text=solve.cpp'); });
+await page.waitForTimeout(1200);
 await rows.nth(1).click();
 await page.waitForTimeout(1400);
 await page.screenshot({ path: dir + '/p1-judge.png' });
+// type an input and run the judge to capture verdict rendering
+await page.click('.nx-judge-textarea').catch(()=>{});
+await page.keyboard.type('2');
+await page.waitForTimeout(300);
+await page.click('.nx-judge-run-btn').catch(async () => { await page.click('button:has-text("RUN")'); });
+await page.waitForTimeout(2500);
+await page.screenshot({ path: dir + '/p3-judge-verdicts.png' });
 await rows.nth(2).click();
 await page.waitForTimeout(1800);
 await page.screenshot({ path: dir + '/p2-contests.png' });
