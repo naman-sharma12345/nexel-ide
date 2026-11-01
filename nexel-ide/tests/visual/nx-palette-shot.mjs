@@ -24,7 +24,7 @@ await page.addInitScript(() => {
 });
 await page.goto('http://localhost:5199');
 await page.waitForTimeout(2000);
-await page.keyboard.press('Control+k');
+await page.keyboard.press('Control+Shift+P');
 await page.waitForTimeout(700);
 await page.screenshot({ path: dir + '/c1-palette.png' });
 const boxes = {};
@@ -36,9 +36,9 @@ const grab = async (shot, entries) => {
   }
 };
 await grab('c1', {
-  palette: '.nx-cmdk, .nx-palette, [class*="palette"], [role="dialog"]',
-  item: '.nx-cmd-item, [class*="cmd-item"], [class*="palette-item"]',
-  input: 'input',
+  palette: '.cp-box', input: '.cp-input',
+  item: '.cp-item:not(.active)', item_active: '.cp-item.active',
+  item_kbd: '.cp-item kbd', foot: '.cp-foot', foot_kbd: '.cp-foot kbd',
 });
 await page.keyboard.type('theme');
 await page.waitForTimeout(500);
@@ -46,6 +46,14 @@ await page.screenshot({ path: dir + '/c2-palette-typed.png' });
 // settings panel via gear/settings nav item if present
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
+await page.keyboard.press('Control+,');
+await page.waitForTimeout(900);
+await page.screenshot({ path: dir + '/c3-settings.png' });
+await grab('c3', {
+  sp_box: '.sp-box', sp_section: '.sp-body h3',
+  sp_blurb: '.sp-theme small', sp_name: '.sp-theme b, .sp-theme strong',
+  sp_foot: '.sp-foot', sp_foot_kbd: '.sp-foot kbd', sp_reset: '.sp-reset',
+});
 fs.writeFileSync(dir + '/bboxes.json', JSON.stringify(boxes, null, 2));
 await browser.close();
 console.log('done');
