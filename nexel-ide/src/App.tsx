@@ -76,6 +76,7 @@ function App() {
       else if (e.key === 'Escape' && document.documentElement.classList.contains('nx-zen') && !(e.target as HTMLElement)?.closest?.('.monaco-editor')) setZen(false);
       else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); const st = useSettingsStore.getState(); st.openSettings(!st.settingsOpen); }
       else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setPaletteOpen(false); setQuickOpen(o => !o); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === '`') { e.preventDefault(); useUIStore.getState().toggleTerminal(); }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
