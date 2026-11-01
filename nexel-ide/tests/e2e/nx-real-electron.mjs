@@ -102,6 +102,27 @@ const createdDisk = fs.existsSync(ws + '/src/notes.txt') && fs.readFileSync(ws +
 console.log('CREATE_FILE_REAL', createdRow && createdDisk ? 'OK' : 'FAIL row=' + createdRow + ' disk=' + createdDisk);
 await page.screenshot({ path: dir + '/r7-created.png' });
 
+// --- Phase 3d: real rename + delete through the context menu ---
+await page.locator('.nx-node-row:has-text("notes.txt")').first().click({ button: 'right', timeout: 15000 });
+await page.waitForTimeout(600);
+await page.locator('.nx-context-item:has-text("Rename")').first().click({ timeout: 10000 });
+await page.waitForTimeout(600);
+await page.locator('.nx-inline-input-wrapper input').first().fill('todo.txt');
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1200);
+const renamedOk = fs.existsSync(ws + '/src/todo.txt') && !fs.existsSync(ws + '/src/notes.txt');
+const renamedRow = await page.evaluate(() => [...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
+console.log('RENAME_REAL', renamedOk && renamedRow ? 'OK' : 'FAIL disk=' + renamedOk + ' row=' + renamedRow);
+
+page.on('dialog', (d) => d.accept());
+await page.locator('.nx-node-row:has-text("todo.txt")').first().click({ button: 'right', timeout: 15000 });
+await page.waitForTimeout(600);
+await page.locator('.nx-context-item:has-text("Delete")').first().click({ timeout: 10000 });
+await page.waitForTimeout(1200);
+const deletedOk = !fs.existsSync(ws + '/src/todo.txt');
+const deletedRow = await page.evaluate(() => ![...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
+console.log('DELETE_REAL', deletedOk && deletedRow ? 'OK' : 'FAIL disk=' + deletedOk + ' row=' + deletedRow);
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
