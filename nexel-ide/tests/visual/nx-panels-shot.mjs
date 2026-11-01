@@ -162,7 +162,8 @@ for (const [name, sel] of Object.entries({
   if (await el.count()) boxes['p7'][name] = await el.boundingBox();
 }
 await page2.locator('.nx-tc-pill').nth(0).click().catch(()=>{});
-await page2.waitForTimeout(400);
+await page2.locator('.nx-judge-tab-pill:has-text("Actual"), button:has-text("Actual"), .nx-judge-tab:has-text("Actual")').first().click().catch(()=>{});
+await page2.waitForTimeout(500);
 await page2.screenshot({ path: dir + '/p6-light-passed-active.png' });
 boxes['p6'] = {};
 for (const [name, sel] of Object.entries({
