@@ -45,6 +45,7 @@ interface WorkspaceState {
   openWorkspaceDir: () => Promise<void>;
   refreshTree: (forceOpenPaths?: Set<string>) => Promise<void>;
   toggleFolder: (nodePath: string) => void;
+  revealPath: (path: string) => void;
   collapseAllFolders: () => void;
   triggerHeaderNewFile: () => void;
   triggerHeaderNewFolder: () => void;
@@ -224,6 +225,29 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           });
         };
         set({ tree: deepCollapse(tree) });
+      },
+
+      revealPath: (targetPath) => {
+        const { tree } = get();
+        const norm = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '');
+        const target = norm(targetPath || '');
+        if (!target) return;
+        let found: FileNode | null = null;
+        const openAlong = (nodes: FileNode[]): FileNode[] => {
+          return nodes.map((node) => {
+            const nPath = norm(node.path);
+            if (nPath === target) {
+              found = node;
+              return node.type === 'folder' ? { ...node, isOpen: true } : node;
+            }
+            if (node.type === 'folder' && target.startsWith(nPath + '/')) {
+              return { ...node, isOpen: true, children: node.children ? openAlong(node.children) : node.children };
+            }
+            return node;
+          });
+        };
+        const newTree = openAlong(tree);
+        set({ tree: newTree, ...(found ? { lastSelectedNode: found } : {}) });
       },
 
       triggerHeaderNewFile: () => {
