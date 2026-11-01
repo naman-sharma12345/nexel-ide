@@ -194,10 +194,12 @@ button:active:not(:disabled) { transform: scale(0.97); }
 ::view-transition-new(root) { z-index: 2; }
 
 /* Zen mode: chrome fades away, editor stays */
-.nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: opacity .35s ease, transform .35s ease, max-width .35s ease; }
-html.nx-zen .nx-sidebar-container, html.nx-zen .nx-navdock-wrapper-container, html.nx-zen .nx-status-h { opacity: 0; pointer-events: none; }
-html.nx-zen .nx-sidebar-container { max-width: 0; overflow: hidden; }
-@media (prefers-reduced-motion: reduce) { .nx-sidebar-container, .nx-navdock-wrapper-container, .nx-status-h { transition: none; } }
+.nx-sidebar-container, .nx-navdock-wrapper-container, .sb-bar { transition: opacity .35s ease, transform .35s ease, max-width .35s ease; }
+html.nx-zen .nx-sidebar-container, html.nx-zen .nx-navdock-wrapper-container, html.nx-zen .sb-bar { opacity: 0; pointer-events: none; }
+html.nx-zen .nx-sidebar-container { width: 0 !important; min-width: 0 !important; max-width: 0; overflow: hidden; border-right: none; }
+html.nx-zen .nx-navdock-wrapper-container { transform: translateX(-14px); }
+html.nx-zen .sb-bar { transform: translateY(6px); }
+@media (prefers-reduced-motion: reduce) { .nx-sidebar-container, .nx-navdock-wrapper-container, .sb-bar { transition: none; } }
 
 /* Tab entrance: gentle slide + fade */
 @keyframes nx-tab-in { from { opacity: 0; transform: translateY(4px) scale(.97); } to { opacity: 1; transform: none; } }
