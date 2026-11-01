@@ -277,6 +277,7 @@ function App() {
         {/* Main UI Text Editor Core Canvas */}
         <div style={{ 
           flexGrow: 1,
+          minWidth: 0,
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
