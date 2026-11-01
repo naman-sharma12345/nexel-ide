@@ -3,7 +3,7 @@ import { useUIStore } from '../stores/useUIStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { useEditorStore } from '../stores/useEditorStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { getPlugin, pluginEnabled } from '../plugins/registry';
+import { pluginEnabledById } from '../plugins/registry';
 import logoImg from '../assets/logo.png';
 import './TitleBar.css';
 
@@ -14,7 +14,7 @@ export const TitleBar: React.FC = () => {
   const { toggleSidebar, toggleTerminal, setTerminalVisible, openTemplateModal } = useUIStore();
   const { openWorkspaceDir, triggerHeaderNewFile, triggerHeaderNewFolder } = useWorkspaceStore();
   const { enableSnippets, setEnableSnippets, openSnippets } = useEditorStore();
-  const cpOn = useSettingsStore(s => pluginEnabled(getPlugin('competitive-programming')!, s.plugins));
+  const cpOn = useSettingsStore(s => pluginEnabledById('competitive-programming', s.plugins));
 
   // Close menus when clicking outside
   useEffect(() => {
