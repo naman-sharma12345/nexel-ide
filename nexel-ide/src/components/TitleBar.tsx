@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { useEditorStore } from '../stores/useEditorStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { getPlugin, pluginEnabled } from '../plugins/registry';
 import logoImg from '../assets/logo.png';
 import './TitleBar.css';
 
@@ -12,6 +14,7 @@ export const TitleBar: React.FC = () => {
   const { toggleSidebar, toggleTerminal, setTerminalVisible, openTemplateModal } = useUIStore();
   const { openWorkspaceDir, triggerHeaderNewFile, triggerHeaderNewFolder } = useWorkspaceStore();
   const { enableSnippets, setEnableSnippets, openSnippets } = useEditorStore();
+  const cpOn = useSettingsStore(s => pluginEnabled(getPlugin('competitive-programming')!, s.plugins));
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -62,7 +65,7 @@ export const TitleBar: React.FC = () => {
     ],
     Options: [
       { label: 'C++ Template...', action: () => { setActiveMenu(null); openTemplateModal(true); } },
-      { label: 'Snippets Manager...', action: () => { setActiveMenu(null); openSnippets(); } }
+      ...(cpOn ? [{ label: 'Snippets Manager...', action: () => { setActiveMenu(null); openSnippets(); } }] : []),
     ],
     Help: [
       { label: 'About Nexel IDE', action: () => alert('Nexel IDE v1.0.0 - Built with React + TypeScript + Monaco') },
@@ -133,8 +136,8 @@ export const TitleBar: React.FC = () => {
           </div>
         </div>
 
-        {/* Snippets List Button */}
-        <button
+        {/* Snippets List Button (CP plugin content) */}
+        {cpOn && <button
           className="nx-titlebar-snippets-btn"
           onClick={openSnippets}
           title="Show Available Snippets List"
@@ -144,7 +147,7 @@ export const TitleBar: React.FC = () => {
             <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
             <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
           </svg>
-        </button>
+        </button>}
 
         <button 
           className="nx-win-ctrl-btn minimize" 
