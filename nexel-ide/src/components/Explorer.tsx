@@ -501,12 +501,23 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
           }
         }}
       >
-        {tree.length === 0 ? (
+        {!rootPath ? (
           <div className="nx-empty-state">
             <button className="nx-open-prompt-btn" onClick={openWorkspaceDir}>Open Folder</button>
           </div>
         ) : (
           <>
+            {/* Workspace is open but the folder is empty: offer creation entry points
+                and let the root inline form (below) render here too. */}
+            {tree.length === 0 && !(inlineInput.visible && inlineInput.nodePath === rootPath && (inlineInput.mode === 'new-file' || inlineInput.mode === 'new-folder')) && (
+              <div className="nx-empty-state nx-empty-state--ws">
+                <span className="nx-empty-label">This folder is empty</span>
+                <div className="nx-empty-actions">
+                  <button className="nx-empty-action-btn" onClick={triggerHeaderNewFile}>New File</button>
+                  <button className="nx-empty-action-btn" onClick={triggerHeaderNewFolder}>New Folder</button>
+                </div>
+              </div>
+            )}
             {/* Render root level inline creation form */}
             {inlineInput.visible && inlineInput.nodePath === rootPath && (inlineInput.mode === 'new-file' || inlineInput.mode === 'new-folder') && (
               <div style={{ paddingLeft: '18px', margin: '2px 8px' }}>
