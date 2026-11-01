@@ -57,7 +57,8 @@ const disk = fs.readFileSync(ws + '/src/main.py', 'utf8');
 const expected = 'def greet(name):\n    return f"hello, {name}"\n\nif __name__ == "__main__":\n    print(greet("nexel"))\n\nprint(\'edit-mark-123\')';
 console.log('SAVE_DISK', disk === expected ? 'OK' : 'MISMATCH', 'autosave_was', autoSave, disk === expected ? '' : JSON.stringify(disk));
 await page.screenshot({ path: dir + '/r3-saved.png' });
-await app.close();
+
+
 await new Promise(r => setTimeout(r, 1500));
 
 // --- Phase 2: reopen in a fresh process, verify persistence ---
