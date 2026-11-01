@@ -4,7 +4,7 @@ import { getClangd } from '../lib/clangd/session';
 import { useStatusStore } from '../stores/useStatusStore';
 import { useEditorStore } from '../stores/useEditorStore';
 import { useJudgeStore } from '../stores/useJudgeStore';
-import { listPlugins, pluginEnabled } from '../plugins/registry';
+import { pluginEnabledById } from '../plugins/registry';
 import '../plugins/competitive-programming';
 import { useUIStore } from '../stores/useUIStore';
 import { useSettingsStore, } from '../stores/useSettingsStore';
@@ -88,7 +88,7 @@ export const StatusBar = memo(function StatusBar() {
   const activePath = useEditorStore(s => s.activeTabPath);
   const tab = useEditorStore(s => s.tabs.find(t => t.filePath === activePath));
   const pluginPrefs = useSettingsStore(s => s.plugins);
-  const cpOn = listPlugins().some(pl => pl.id === 'competitive-programming' && pluginEnabled(pl, pluginPrefs));
+  const cpOn = pluginEnabledById('competitive-programming', pluginPrefs);
   const cases = useJudgeStore(s => s.testCases);
   const running = useJudgeStore(s => s.isRunning);
   const terminalVisible = useUIStore(s => s.terminalVisible);
