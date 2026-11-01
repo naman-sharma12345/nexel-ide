@@ -45,6 +45,7 @@ export class ClangdSession {
   private disposables: Array<{ dispose(): void }> = [];
   private config: ClangdConfig = { root: null, enabled: true, std: 'c++17', extraFlags: [] };
   private running = false;
+  private startInFlight = false;
   private toastedFallback = false;
   private serverInfo = '';
   private startMeta = '';
@@ -84,10 +85,19 @@ export class ClangdSession {
     if (!changed && (this.running || !this.config.enabled || !this.config.root)) return;
     if (!this.config.enabled) { await this.stop(); this.setStatus('disabled', 'Turned off in Settings'); return; }
     if (!this.config.root) { await this.stop(); this.setStatus('off', 'Open a folder to start clangd'); return; }
+    // Lazy start: clangd only serves C/C++. Until a C/C++ document is actually open,
+    // do not spawn the server or surface missing-binary notices for unrelated files.
+    if (!this.running && this.docs.size === 0) { this.setStatus('off', 'Open a C/C++ file to start clangd'); return; }
     await this.start();
   }
 
   private async start() {
+    if (this.startInFlight) return;
+    this.startInFlight = true;
+    try { await this.startInner(); } finally { this.startInFlight = false; }
+  }
+
+  private async startInner() {
     if (!this.bridge.lspStart) { this.setStatus('fallback', 'Desktop app only. Built-in IntelliSense is active.'); return; }
     this.teardownServerState();
     this.setStatus('starting', 'Starting clangd…');
@@ -211,6 +221,8 @@ export class ClangdSession {
     doc.subs.push(model.onWillDispose(() => this.untrack(key)));
     this.docs.set(key, doc);
     if (this.initialized) this.openDoc(doc);
+    // First C/C++ document: fire the deferred start (configure() holds off until now).
+    if (!this.running && !this.startInFlight && this.config.enabled && this.config.root) void this.configure({});
   }
 
   private openDoc(d: TrackedDoc) {
