@@ -209,6 +209,7 @@ describe('ClangdSession', () => {
 
   it('indexing state from clangd.fileStatus and $/progress', async () => {
     const { M } = fakeMonaco(); const fb = fakeBridge(); const s = new ClangdSession(fb.bridge); s.attachMonaco(M);
+    s.track(makeModel('file:///ws/A.cpp', 'x'));
     await s.configure({ root: '/ws', enabled: true });
     fb.emit({ jsonrpc: '2.0', method: 'textDocument/clangd.fileStatus', params: { uri: 'file:///ws/A.cpp', state: 'parsing includes' } });
     expect(useLspStore.getState().status).toBe('indexing');
@@ -220,11 +221,37 @@ describe('ClangdSession', () => {
     expect(useLspStore.getState()).toMatchObject({ status: 'ready', progress: null });
   });
 
+  it('does not start or warn when no C/C++ document is open (general-purpose workspaces stay quiet)', async () => {
+    const { M } = fakeMonaco(); const fb = fakeBridge({ start: { ok: false, reason: 'clangd-not-found' } });
+    const toasts: string[] = []; const s = new ClangdSession(fb.bridge, (m) => toasts.push(m)); s.attachMonaco(M);
+    await s.configure({ root: '/ws', enabled: true });
+    expect(fb.bridge.lspStart).not.toHaveBeenCalled();
+    expect(useLspStore.getState().status).toBe('off');
+    expect(toasts).toHaveLength(0);
+    // a non-C++ model must not trigger it either
+    s.track(makeModel('file:///ws/main.py', 'print(1)'));
+    await tick(); await tick();
+    expect(fb.bridge.lspStart).not.toHaveBeenCalled();
+  });
+
+  it('starts lazily when the first C/C++ document opens after configure', async () => {
+    const { M } = fakeMonaco(); const fb = fakeBridge(); const s = new ClangdSession(fb.bridge); s.attachMonaco(M);
+    await s.configure({ root: '/ws', enabled: true });
+    expect(fb.bridge.lspStart).not.toHaveBeenCalled();
+    s.track(makeModel('file:///ws/A.cpp', 'int main(){}'));
+    await tick(); await tick(); await tick();
+    expect(fb.bridge.lspStart).toHaveBeenCalledTimes(1);
+    expect(useLspStore.getState().status).toBe('ready');
+  });
+
   it('disabled in settings stops clangd and shows disabled; no bridge means desktop-only fallback', async () => {
     const fb = fakeBridge(); const s = new ClangdSession(fb.bridge); s.attachMonaco(fakeMonaco().M);
+    s.track(makeModel('file:///ws/A.cpp', 'x'));
     await s.configure({ root: '/ws', enabled: true }); await s.configure({ enabled: false });
     expect(fb.bridge.lspStop).toHaveBeenCalled(); expect(useLspStore.getState().status).toBe('disabled');
-    const s2 = new ClangdSession({}); await s2.configure({ root: '/ws', enabled: true });
+    const { M: M2 } = fakeMonaco(); const s2 = new ClangdSession({}); s2.attachMonaco(M2);
+    s2.track(makeModel('file:///ws/A.cpp', 'x'));
+    await s2.configure({ root: '/ws', enabled: true });
     expect(useLspStore.getState().status).toBe('fallback');
   });
 });
