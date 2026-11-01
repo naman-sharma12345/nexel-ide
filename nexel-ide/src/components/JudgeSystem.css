@@ -657,6 +657,11 @@
 }
 .nx-tc-pill.active .nx-tc-pill-name { color: var(--nx-accent); font-weight: 700; }
 .nx-tc-pill.active .nx-tc-pill-del { color: color-mix(in srgb, var(--nx-accent) 70%, transparent); }
+/* Verdict-active pills paint a solid bright chip: use dark ink, not accent-on-accent */
+.nx-tc-pill.passed.active .nx-tc-pill-name,
+.nx-tc-pill.passed.active .nx-tc-pill-del { color: #06110c; }
+.nx-tc-pill.failed.active .nx-tc-pill-name,
+.nx-tc-pill.failed.active .nx-tc-pill-del { color: #3d0a0a; }
 .nx-judge-tab-pill { font-family: var(--sans); border-radius: 7px; color: var(--nx-text-faint); }
 .nx-judge-tab-pill.active { background: rgb(var(--nx-ink) / .06); color: var(--nx-text); }
 .nx-judge-textarea {
