@@ -414,16 +414,16 @@
   color: var(--nx-accent);
 }
 .nx-tc-pill.active .nx-tc-verdict-dot.passed {
-  background: rgba(0, 0, 0, 0.2);
-  color: rgb(var(--nx-ink));
+  background: rgba(255, 255, 255, 0.28);
+  color: #06110c;
 }
 .nx-tc-verdict-dot.failed {
   background: rgba(248, 113, 113, 0.15);
   color: #f87171;
 }
 .nx-tc-pill.active .nx-tc-verdict-dot.failed {
-  background: rgba(0, 0, 0, 0.2);
-  color: rgb(var(--nx-ink));
+  background: rgba(255, 255, 255, 0.28);
+  color: #3d0a0a;
 }
 
 /* Viewport diffing columns */
