@@ -521,6 +521,9 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
                       onFileSelect(tab.filePath);
                     }
                   }}
+                  onAuxClick={(e) => {
+                    if (e.button === 1) { e.preventDefault(); handleCloseTab(tab.filePath); }
+                  }}
                 >
                   <span className="nx-tab-title">{tab.name}</span>
                   {tab.isDirty && <div className="nx-dirty-indicator-glow" />}
