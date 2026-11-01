@@ -1,0 +1,291 @@
+/* ============================================================================
+   Nexel visual overhaul - phase 1: chrome
+   One override layer loaded after every component stylesheet. Token-driven so
+   all 11 themes stay coherent; no hard-coded light/dark assumptions.
+   ============================================================================ */
+
+/* ---------- Title bar ---------- */
+.nx-titlebar-container {
+  height: 40px;
+  min-height: 40px;
+  background: linear-gradient(180deg, rgb(var(--nx-surf) / .96), rgb(var(--nx-bg-1) / .92));
+  backdrop-filter: blur(18px) saturate(1.2);
+  border-bottom: 1px solid var(--nx-line);
+}
+/* accent hairline along the bottom edge, mirroring the status bar */
+.nx-titlebar-container::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .45) 22%, rgb(var(--nx-accent2-rgb) / .35) 55%, transparent 88%);
+  opacity: .4; pointer-events: none;
+}
+.nx-titlebar-left { gap: 14px; padding-left: 14px; }
+.nx-logo-img { width: 19px; height: 19px; filter: drop-shadow(0 0 6px rgb(var(--nx-accent-rgb) / .55)); }
+.nx-brand-text {
+  font-family: var(--heading); font-size: 11px; font-weight: 800; letter-spacing: .22em;
+  background: linear-gradient(90deg, var(--nx-accent), var(--nx-accent-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.nx-menu-bar { gap: 1px; }
+.nx-menu-trigger-btn {
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  color: var(--nx-text-dim); padding: 5px 11px; border-radius: 7px;
+}
+.nx-menu-trigger-btn:hover { color: var(--nx-text); background: rgb(var(--nx-ink) / .06); }
+.nx-menu-trigger-btn.active { color: var(--nx-accent); background: var(--nx-accent-soft); }
+.nx-titlebar-dropdown {
+  top: calc(100% + 6px); min-width: 190px; padding: 5px;
+  background: rgb(var(--nx-surf) / .92); backdrop-filter: blur(22px) saturate(1.3);
+  border: 1px solid var(--nx-line-strong); border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow-2);
+}
+.nx-titlebar-dropdown::before {
+  content: ''; position: absolute; inset: 0 14px auto 14px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--nx-accent-rgb) / .5), transparent);
+}
+.nx-titlebar-dropdown-item {
+  font-family: var(--sans); font-size: 12px; color: var(--nx-text-dim);
+  padding: 7px 12px; margin: 0; border-radius: 7px;
+}
+.nx-titlebar-dropdown-item:hover { background: var(--nx-accent-soft); color: var(--nx-accent); }
+/* the centered "NEXEL IDE - Workspace" duplicate is gone from the DOM; keep this as a guard */
+.nx-titlebar-center, .nx-window-title { display: none; }
+
+/* right cluster: quieter, token-driven */
+.nx-titlebar-toggle-wrapper { gap: 7px; margin-right: 10px; }
+.nx-titlebar-toggle-label { display: none; }
+.nx-titlebar-switch-track { width: 30px; height: 16px; background: rgb(var(--nx-ink) / .08); border: 1px solid var(--nx-line-strong); }
+.nx-titlebar-switch-track.active {
+  background: linear-gradient(90deg, rgb(var(--nx-accent-rgb) / .85), rgb(var(--nx-accent2-rgb) / .85));
+  border-color: transparent;
+  box-shadow: 0 0 10px rgb(var(--nx-accent-rgb) / .45);
+}
+.nx-titlebar-switch-thumb { width: 10px; height: 10px; background: rgb(var(--nx-ink) / .5); top: 2px; left: 2px; }
+.nx-titlebar-switch-track.active .nx-titlebar-switch-thumb { left: 16px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.nx-titlebar-snippets-btn {
+  width: 26px; height: 22px; padding: 0; margin-right: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent; border-radius: 7px;
+  color: var(--nx-text-dim); font-size: 0; /* hide legacy text, icon supplied by TSX */
+}
+.nx-titlebar-snippets-btn svg { width: 14px; height: 14px; }
+.nx-titlebar-snippets-btn:hover { background: rgb(var(--nx-ink) / .06); color: var(--nx-text); border-color: transparent; box-shadow: none; }
+.nx-win-ctrl-btn { width: 44px; height: 40px; color: var(--nx-text-faint); }
+.nx-win-ctrl-btn:hover { background: rgb(var(--nx-ink) / .07); color: var(--nx-text); }
+.nx-win-ctrl-btn.close:hover { background: #e81123 !important; color: #fff !important; }
+
+/* ---------- Editor tab strip: docked, connected, left-aligned ---------- */
+.nx-floating-tabbar-container {
+  position: relative; top: 0; left: 0; right: 0;
+  display: block; pointer-events: auto; z-index: 100;
+}
+.nx-floating-tabbar {
+  width: 100%; max-width: 100%; height: 38px; padding: 0 8px;
+  border: 0; border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none;
+  background: linear-gradient(180deg, rgb(var(--nx-bg-1)), rgb(var(--nx-bg-0)));
+  box-shadow: inset 0 -1px 0 var(--nx-line);
+}
+.nx-floating-tabbar:hover { border-color: transparent; background: linear-gradient(180deg, rgb(var(--nx-bg-1)), rgb(var(--nx-bg-0))); }
+.nx-tabs-scroll-stack { max-width: none; flex: 1 1 auto; gap: 3px; align-self: stretch; align-items: flex-end; }
+.nx-editor-tab {
+  height: 31px; min-width: 0; max-width: 180px; padding: 0 12px;
+  border-radius: 9px 9px 0 0; border: 1px solid transparent; border-bottom: 0;
+}
+.nx-editor-tab:hover { background: rgb(var(--nx-ink) / .045); transform: none; }
+.nx-editor-tab.active {
+  background: var(--nx-editor-bg);
+  border-color: var(--nx-line-strong);
+  box-shadow: 0 -6px 18px -10px rgb(var(--nx-accent-rgb) / .35);
+}
+/* active indicator becomes a top gradient line */
+.nx-editor-tab::after { left: 10%; right: 10%; top: 0; bottom: auto; height: 2px; border-radius: 0 0 3px 3px; }
+.nx-tab-title { font-family: var(--sans); font-size: 11.5px; }
+.nx-dirty-indicator-glow { background: var(--nx-warn); box-shadow: 0 0 6px rgb(251 191 36 / .8); width: 5px; height: 5px; }
+.nx-editor-toolbar-actions { margin-left: auto; border-left: 0; padding-left: 4px; align-self: center; }
+.nx-tab-menu-container { align-self: center; }
+.nx-toolbar-btn { font-family: var(--sans); font-size: 11px; padding: 4px 9px; border-radius: 7px; color: var(--nx-text-dim); }
+.nx-toolbar-btn:hover:not(:disabled) { color: var(--nx-text); background: rgb(var(--nx-ink) / .06); }
+.nx-toolbar-btn.auto-save.active { color: var(--nx-accent); background: var(--nx-accent-soft); border-color: rgb(var(--nx-accent-rgb) / .25); }
+.nx-toolbar-btn.auto-save.active .nx-auto-save-led { background: var(--nx-accent); box-shadow: 0 0 6px rgb(var(--nx-accent-rgb) / .8); }
+.nx-tab-menu-btn { color: var(--nx-text-dim); border-radius: 7px; }
+.nx-tab-dropdown-menu {
+  background: rgb(var(--nx-surf) / .94); backdrop-filter: blur(20px);
+  border: 1px solid var(--nx-line-strong); border-radius: var(--nx-radius); box-shadow: var(--nx-shadow-2);
+}
+.nx-dropdown-item { font-family: var(--sans); font-size: 12px; color: var(--nx-text-dim); border-radius: 7px; }
+.nx-dropdown-item:hover { background: var(--nx-accent-soft); color: var(--nx-accent); }
+.nx-editor-workspace-area { padding-top: 0; }
+
+/* ---------- Breadcrumbs: token-driven (were hard-coded white) ---------- */
+.nx-crumb { color: var(--nx-text-faint); font-family: var(--sans); }
+.nx-crumb:hover { color: var(--nx-text); background: rgb(var(--nx-ink) / .06); }
+.nx-crumb-file { color: rgb(var(--nx-accent-rgb) / .95); }
+.nx-crumb-file:hover { color: var(--nx-accent); background: rgb(var(--nx-accent-rgb) / .1); }
+.nx-crumb-sep { color: var(--nx-text-faint); }
+
+/* ---------- Nav dock: glass, visible icons, glowing active state ---------- */
+.nd-dock {
+  background: rgb(var(--nx-surf) / .72);
+  backdrop-filter: blur(20px) saturate(1.3);
+  border: 1px solid var(--nx-line-strong);
+  box-shadow: var(--nx-shadow-2);
+}
+.nd-icon { color: rgb(var(--nx-ink) / .68); transition: color var(--nx-dur-2), filter var(--nx-dur-2); }
+.nd-item-row:hover .nd-icon { color: var(--nx-text); }
+.nd-row-active .nd-icon { color: var(--nx-accent); filter: drop-shadow(0 0 6px rgb(var(--nx-accent-rgb) / .7)); }
+.nd-active-indicator {
+  background: linear-gradient(180deg, var(--nx-accent), var(--nx-accent-2));
+  box-shadow: 0 0 10px rgb(var(--nx-accent-rgb) / .8);
+}
+.nd-dot { background: var(--nx-accent); box-shadow: 0 0 8px rgb(var(--nx-accent-rgb) / .8); }
+.nd-tooltip {
+  background: rgb(var(--nx-surf) / .92); backdrop-filter: blur(16px);
+  border: 1px solid var(--nx-line-strong); border-radius: 8px; box-shadow: var(--nx-shadow-1);
+}
+.nd-tooltip-text { font-family: var(--sans); color: var(--nx-text); }
+.nd-footer-shuriken { color: rgb(var(--nx-ink) / .55); transition: color var(--nx-dur-2), transform var(--nx-dur-3) var(--nx-ease-spring); }
+.nd-footer-action:hover .nd-footer-shuriken { color: var(--nx-accent); transform: rotate(90deg); }
+
+/* ---------- Explorer ---------- */
+.nx-explorer-title {
+  font-family: var(--sans); font-weight: 700; font-size: 10.5px; letter-spacing: .14em;
+  color: var(--nx-text-dim);
+}
+.nx-explorer-title:hover { color: var(--nx-accent); }
+.nx-search-textbox, .nx-search-input-frame {
+  border-radius: 8px;
+}
+.nx-search-textbox:focus, .nx-search-input-frame:focus-within {
+  border-color: rgb(var(--nx-accent-rgb) / .5);
+  box-shadow: 0 0 0 3px rgb(var(--nx-accent-rgb) / .12);
+}
+.nx-node-row { border-radius: 7px; transition: background-color var(--nx-dur-1); }
+.nx-node-row:hover { background: rgb(var(--nx-ink) / .045); }
+.nx-node-row.nx-row-selected {
+  background: var(--nx-accent-soft);
+  box-shadow: inset 2px 0 0 var(--nx-accent);
+}
+.nx-node-row.nx-row-selected .nx-node-text { color: var(--nx-text); }
+.nx-node-text { font-family: var(--sans); }
+.nx-svg-icon { color: rgb(var(--nx-ink) / .55); }
+.nx-svg-icon.folder { color: rgb(var(--nx-accent2-rgb) / .8); }
+.nx-row-selected .nx-svg-icon { color: var(--nx-accent); }
+
+/* ---------- Terminal ---------- */
+.nx-terminal-panel { border-top: 1px solid var(--nx-line-strong); }
+.nx-terminal-header {
+  background: linear-gradient(180deg, rgb(var(--nx-bg-1)), rgb(var(--nx-bg-0)));
+}
+.nx-term-title { font-family: var(--sans); letter-spacing: .16em; color: var(--nx-text-dim); }
+.nx-term-icon { color: var(--nx-accent); }
+
+/* ---------- Command palette / quick open / search: unify glass ---------- */
+.nx-palette, .nx-quick-open, .nx-command-palette, .nx-search-panel {
+  border-radius: var(--nx-radius-lg);
+}
+
+/* ---------- Phase 2: welcome, shell depth, file-type colour ---------- */
+
+/* Sidebar separation from the code canvas */
+.nx-sidebar-container { border-right: 1px solid var(--nx-line); }
+
+/* Faint accent ambience at the top of the window (kept very subtle) */
+.nx-app-shell, .nx-root-layout, #root > div:first-child { position: relative; }
+.nx-editor-canvas::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 220px; pointer-events: none;
+  background: radial-gradient(60% 100% at 50% 0%, rgb(var(--nx-accent-rgb) / .045), transparent 70%);
+  z-index: 0;
+}
+
+/* Welcome plate: gradient wordmark, stronger logo presence, carded recents */
+.nx-welcome-headline {
+  background: linear-gradient(90deg, var(--nx-accent), var(--nx-accent-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  letter-spacing: .34em; font-weight: 800;
+}
+.nx-welcome-logo { filter: drop-shadow(0 8px 26px rgb(var(--nx-accent-rgb) / .45)); }
+.nx-welcome-subtitle { color: var(--nx-text-dim); }
+.nx-keycaps kbd, .nx-welcome-glass-plate kbd {
+  font-family: var(--sans); font-weight: 600; font-size: 10px;
+  background: rgb(var(--nx-ink) / .05); border: 1px solid var(--nx-line-strong);
+  border-bottom-width: 2px; border-radius: 6px; padding: 3px 7px; color: var(--nx-text);
+  box-shadow: 0 2px 0 rgb(var(--nx-ink) / .04);
+}
+.nx-recent h4 { color: var(--nx-text-faint); letter-spacing: .18em; font-family: var(--sans); }
+.nx-recent button {
+  border: 1px solid var(--nx-line); border-radius: var(--nx-radius);
+  background: rgb(var(--nx-ink) / .025);
+  transition: border-color var(--nx-dur-2), background-color var(--nx-dur-2), transform var(--nx-dur-2) var(--nx-ease-out);
+}
+.nx-recent button:hover {
+  border-color: rgb(var(--nx-accent-rgb) / .4); background: var(--nx-accent-soft);
+  transform: translateY(-1px);
+}
+.nx-recent button b { color: var(--nx-text); font-family: var(--sans); }
+.nx-recent button small { color: var(--nx-text-faint); }
+.nx-recent button:hover b { color: var(--nx-accent); }
+
+/* File-type accent colours in the explorer tree */
+.nx-file-ext { font-family: var(--sans); }
+.nx-node-row[data-ext="cpp"] .nx-svg-icon, .nx-node-row[data-ext="cc"] .nx-svg-icon,
+.nx-node-row[data-ext="cxx"] .nx-svg-icon, .nx-node-row[data-ext="h"] .nx-svg-icon,
+.nx-node-row[data-ext="hpp"] .nx-svg-icon { color: rgb(var(--nx-accent-rgb) / .85); }
+.nx-node-row[data-ext="py"] .nx-svg-icon { color: rgb(var(--nx-accent2-rgb) / .9); }
+.nx-node-row[data-ext="txt"] .nx-svg-icon, .nx-node-row[data-ext="in"] .nx-svg-icon,
+.nx-node-row[data-ext="out"] .nx-svg-icon { color: rgb(var(--nx-ink) / .4); }
+
+/* Explorer header icon buttons */
+.nx-explorer-header button, .nx-header-act-btn {
+  border-radius: 7px; color: var(--nx-text-faint);
+  transition: color var(--nx-dur-2), background-color var(--nx-dur-2);
+}
+.nx-explorer-header button:hover, .nx-header-act-btn:hover { color: var(--nx-text); background: rgb(var(--nx-ink) / .06); }
+
+/* Judge stress toggle: match the switch language */
+.nx-judge-stress-toggle {
+  border: 1px solid var(--nx-line-strong); border-radius: 999px; color: var(--nx-text-faint);
+  font-family: var(--sans); letter-spacing: .1em;
+  transition: color var(--nx-dur-2), border-color var(--nx-dur-2), background-color var(--nx-dur-2), box-shadow var(--nx-dur-2);
+}
+.nx-judge-stress-toggle.on {
+  color: var(--nx-accent); border-color: rgb(var(--nx-accent-rgb) / .45);
+  background: var(--nx-accent-soft); box-shadow: 0 0 12px -2px rgb(var(--nx-accent-rgb) / .5);
+}
+
+/* ---------- Phase 3: readability pass + explorer header + modal buttons ---------- */
+
+/* Stronger inactive/secondary contrast (user feedback: faint text/icons) */
+.nd-icon { color: rgb(var(--nx-ink) / .78); }
+.nx-tab-title { color: rgb(var(--nx-ink) / .62); }
+.nx-node-text { color: rgb(var(--nx-ink) / .78); }
+.nx-menu-trigger-btn { color: rgb(var(--nx-ink) / .62); }
+.nx-crumb { color: rgb(var(--nx-ink) / .5); }
+.nx-win-ctrl-btn { color: rgb(var(--nx-ink) / .55); }
+
+/* Explorer header: title gets the full row, tool belt reveals on hover */
+.nx-explorer-header { position: relative; }
+.nx-explorer-title { overflow: visible; text-overflow: clip; letter-spacing: .1em; }
+.nx-action-bar {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  padding-left: 16px;
+  background: linear-gradient(90deg, transparent, rgb(var(--nx-bg-1) / .95) 30%);
+  opacity: 0; pointer-events: none; transition: opacity var(--nx-dur-2);
+}
+.nx-explorer-header:hover .nx-action-bar, .nx-action-bar:focus-within { opacity: 1; pointer-events: auto; }
+
+/* Template modal: accent primary action, ghost cancel */
+.nx-template-modal-btn.save {
+  background: linear-gradient(90deg, rgb(var(--nx-accent-rgb) / .9), rgb(var(--nx-accent2-rgb) / .9));
+  color: #06110c; border: 0; font-weight: 700;
+  box-shadow: 0 4px 16px -6px rgb(var(--nx-accent-rgb) / .6);
+}
+.nx-template-modal-btn.save:hover { filter: brightness(1.1); color: #06110c; }
+html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .nx-template-modal-btn.save:hover { color: #fff; }
+.nx-template-modal-btn.cancel {
+  background: transparent; border: 1px solid var(--nx-line-strong); color: var(--nx-text-dim);
+}
+.nx-template-modal-btn.cancel:hover { background: rgb(var(--nx-ink) / .06); color: var(--nx-text); }
+.nx-template-textarea {
+  background: rgb(var(--nx-ink) / .03); border: 1px solid var(--nx-line); border-radius: var(--nx-radius);
+  color: var(--nx-text); font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.nx-template-textarea:focus { border-color: rgb(var(--nx-accent-rgb) / .5); box-shadow: 0 0 0 3px rgb(var(--nx-accent-rgb) / .12); outline: none; }
