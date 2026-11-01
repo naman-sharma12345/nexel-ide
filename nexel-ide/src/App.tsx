@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { getClangd } from './lib/clangd/session';
 import { useUIStore } from './stores/useUIStore';
 import { useEditorStore } from './stores/useEditorStore';
@@ -122,7 +122,8 @@ function App() {
   });
   // Plugin activation hooks (e.g. the CP companion listener attaches only while its plugin is on)
   const pluginsAll = useMemo(() => listPlugins(), []);
-  for (const pl of pluginsAll) pl.useActivation?.(enabledIds.has(pl.id));
+  const enabledPluginIds = new Set(enabledPlugins.map(pl => pl.id));
+  for (const pl of pluginsAll) pl.useActivation?.(enabledPluginIds.has(pl.id));
   const paletteCommands = [
     { id: 'ws', label: 'Go to Workspace', run: () => setSection('workspace') },
     { id: 'judge', label: 'Go to Judge', run: () => setSection('judge') },
