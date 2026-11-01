@@ -4,6 +4,8 @@ import { getClangd } from '../lib/clangd/session';
 import { useStatusStore } from '../stores/useStatusStore';
 import { useEditorStore } from '../stores/useEditorStore';
 import { useJudgeStore } from '../stores/useJudgeStore';
+import { listPlugins, pluginEnabled } from '../plugins/registry';
+import '../plugins/competitive-programming';
 import { useUIStore } from '../stores/useUIStore';
 import { useSettingsStore, } from '../stores/useSettingsStore';
 import { getTheme } from '../lib/themes';
@@ -76,6 +78,8 @@ export const StatusBar = memo(function StatusBar() {
   const selected = useStatusStore(s => s.selected);
   const activePath = useEditorStore(s => s.activeTabPath);
   const tab = useEditorStore(s => s.tabs.find(t => t.filePath === activePath));
+  const pluginPrefs = useSettingsStore(s => s.plugins);
+  const cpOn = listPlugins().some(pl => pl.id === 'competitive-programming' && pluginEnabled(pl, pluginPrefs));
   const cases = useJudgeStore(s => s.testCases);
   const running = useJudgeStore(s => s.isRunning);
   const terminalVisible = useUIStore(s => s.terminalVisible);
@@ -91,7 +95,7 @@ export const StatusBar = memo(function StatusBar() {
         {tab && <span className="sb-item sb-file" title={tab.filePath}>{tab.name}{tab.isDirty && <i className="sb-dirty" title="Unsaved changes" />}</span>}
       </div>
       <div className="sb-group sb-right">
-        <button className={`sb-item sb-judge sb-${judge.tone}`} title="Judge status"><i className="sb-pulse" />{judge.text}</button>
+        {cpOn && <button className={`sb-item sb-judge sb-${judge.tone}`} title="Judge status"><i className="sb-pulse" />{judge.text}</button>}
         {tab && <span className="sb-item sb-num">Ln {line}, Col {col}{selected > 0 && <em> ({selected} sel)</em>}</span>}
         <ClangdChip />
         <span className="sb-item">{languageLabel(tab?.name)}</span>
