@@ -284,3 +284,22 @@ html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .
   color: var(--nx-text); font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 .nx-template-textarea:focus { border-color: rgb(var(--nx-accent-rgb) / .5); box-shadow: 0 0 0 3px rgb(var(--nx-accent-rgb) / .12); outline: none; }
+
+/* Welcome card: never clip on narrow windows */
+.nx-editor-welcome-backdrop { padding: 24px; }
+.nx-welcome-glass-plate { width: 100%; max-width: 400px; box-sizing: border-box; }
+.nx-welcome-subtitle { overflow-wrap: break-word; }
+.nx-shortcut-row { flex-wrap: wrap; gap: 4px 8px; }
+@media (max-width: 560px) {
+  .nx-welcome-logo { width: 96px; height: 96px; }
+  .nx-welcome-glass-plate { padding: 20px; }
+  .nx-welcome-headline { letter-spacing: .22em; text-indent: .22em; }
+}
+
+/* Narrow windows: slim the sidebar so the editor column keeps usable space */
+@media (max-width: 760px) {
+  .nx-explorer-wrapper, .nx-sidebar-container { width: 220px !important; min-width: 220px !important; }
+}
+@media (max-width: 520px) {
+  .nx-explorer-wrapper, .nx-sidebar-container { width: 168px !important; min-width: 168px !important; }
+}
