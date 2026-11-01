@@ -99,7 +99,8 @@ targets = {
         ('fail diff yours','fail_diff_b','fail_diff_b','vs-container'),
         ('save button','save_btn','save_btn','vs-container')],
 }
-for name, tkey, bkey, mode in targets.get(shot, []):
+tkey_map = shot if shot in targets else ('p3' if shot.endswith('-passed') else 'p4' if shot.endswith('-failed') else shot)
+for name, tkey, bkey, mode in targets.get(tkey_map, []):
     tb = bb.get(tkey); bgbox = bb.get(bkey) if bkey else None
     if not tb:
         print(f'{shot} {name}: BOX MISSING ({tkey})'); continue
