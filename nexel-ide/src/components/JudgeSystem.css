@@ -639,3 +639,35 @@
 @keyframes nx-zap { 0% { transform:scale(1) rotate(0); } 40% { transform:scale(1.45) rotate(-12deg); } 100% { transform:scale(1) rotate(0); } }
 .nx-judge-header { padding-right: 14px; gap: 8px; }
 .nx-judge-title { white-space: nowrap; letter-spacing: .2em; text-indent: 0; }
+
+/* ============================================================================
+   Visual overhaul (visual-overhaul branch): appended so the lazy chunk still
+   picks these up after nx-polish.css loads. Token-driven, all themes.
+   ============================================================================ */
+/* ---------- Judge panel ---------- */
+.nx-judge-title { font-family: var(--sans); letter-spacing: .16em; }
+.nx-tc-pill {
+  background: rgb(var(--nx-ink) / .04); border: 1px solid var(--nx-line);
+  border-radius: 8px; font-family: var(--sans); color: var(--nx-text-dim);
+}
+.nx-tc-pill:hover { background: rgb(var(--nx-ink) / .07); color: var(--nx-text); }
+.nx-tc-pill.active {
+  background: var(--nx-accent-soft); border-color: rgb(var(--nx-accent-rgb) / .4);
+  color: var(--nx-accent);
+}
+.nx-judge-tab-pill { font-family: var(--sans); border-radius: 7px; color: var(--nx-text-faint); }
+.nx-judge-tab-pill.active { background: rgb(var(--nx-ink) / .06); color: var(--nx-text); }
+.nx-judge-textarea {
+  background: rgb(var(--nx-ink) / .03); border: 1px solid var(--nx-line); border-radius: var(--nx-radius);
+  color: var(--nx-text); font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.nx-judge-textarea:focus { border-color: rgb(var(--nx-accent-rgb) / .5); box-shadow: 0 0 0 3px rgb(var(--nx-accent-rgb) / .12); outline: none; }
+.nx-judge-run-btn {
+  background: linear-gradient(90deg, rgb(var(--nx-accent-rgb) / .9), rgb(var(--nx-accent2-rgb) / .9));
+  color: #06110c; font-family: var(--sans); font-weight: 700; letter-spacing: .08em;
+  border-radius: 9px; box-shadow: 0 4px 16px -6px rgb(var(--nx-accent-rgb) / .6);
+}
+.nx-judge-run-btn:hover:not(:disabled) { background: linear-gradient(90deg, var(--nx-accent), var(--nx-accent-2)); color: #06110c; transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 8px 24px -6px rgb(var(--nx-accent-rgb) / .8); }
+.nx-judge-run-btn:disabled { opacity: .45; }
+html[data-theme='light'] .nx-judge-run-btn:hover:not(:disabled) { color: #fff; }
+html[data-theme='light'] .nx-judge-run-btn { color: #fff; }
