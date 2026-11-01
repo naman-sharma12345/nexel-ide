@@ -290,6 +290,7 @@ html[data-theme='light'] .nx-template-modal-btn.save, html[data-theme='light'] .
 .nx-welcome-glass-plate { width: 100%; max-width: 400px; box-sizing: border-box; margin: auto; flex: none; }
 @media (max-height: 560px) {
   .nx-welcome-logo { width: 72px; height: 72px; }
+  .nx-welcome-headline { position: static; margin-top: 8px; }
   .nx-welcome-orb { display: none; }
   .nx-welcome-subtitle { margin-bottom: 14px; }
 }
