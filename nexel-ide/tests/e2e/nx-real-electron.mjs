@@ -173,6 +173,18 @@ await page.waitForTimeout(700);
 const mcAfter = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 report('TABS_MIDDLECLOSE_REAL', mcBefore.includes('README.md') && !mcAfter.includes('README.md'), JSON.stringify({ mcBefore, mcAfter }));
 
+// --- Phase 2h: breadcrumb click reveals the file in the explorer ---
+// Clicking the 'src' folder crumb must reveal+select that folder in the explorer.
+// (The file crumb can't be used for this assertion: the active file's row is 'active', not 'selected'.)
+await page.locator('.nx-crumbs button.nx-crumb-btn', { hasText: 'src' }).last().click({ timeout: 8000 }).catch((e) => console.log('CRUMB_CLICK_ERR', String(e).slice(0, 200)));
+await page.waitForTimeout(700);
+const crumbReveal = await page.evaluate(() => {
+  const row = document.querySelector('.nx-row-focused');
+  const crumbs = [...document.querySelectorAll('.nx-crumbs button.nx-crumb-btn')].map((b) => b.textContent);
+  return { focused: row ? row.textContent : null, crumbs };
+});
+report('CRUMB_REVEAL_REAL', !!crumbReveal.focused && crumbReveal.focused.includes('src'), JSON.stringify(crumbReveal));
+
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
 await page.waitForFunction(() => (document.querySelector('.xterm-rows')?.textContent ?? '').includes('$'), { timeout: 20000 });
@@ -246,7 +258,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
