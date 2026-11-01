@@ -410,16 +410,16 @@
 }
 
 .nx-file-ext {
-  color: rgb(var(--nx-ink) / 0.18);
+  color: rgb(var(--nx-ink) / 0.42);
   font-size: 11px;
 }
 
 .nx-node-row:hover .nx-file-ext {
-  color: rgb(var(--nx-ink) / 0.35);
+  color: rgb(var(--nx-ink) / 0.6);
 }
 
 .nx-file-ext.active {
-  color: rgb(var(--nx-ink) / 0.5) !important;
+  color: rgb(var(--nx-ink) / 0.75) !important;
 }
 
 /* Hover Quick Actions overlay inside row */
