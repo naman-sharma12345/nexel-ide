@@ -4,6 +4,7 @@ import { registerSignatureHelp } from '../lib/signatureHelp';
 import { toCrumbs } from '../lib/breadcrumbs';
 import { getClangd } from '../lib/clangd/session';
 import { isClangdActive } from '../lib/clangd/state';
+import { registerMenuEditor } from '../lib/editorMenu';
 import { pathToUri } from '../lib/clangd/uri';
 import { useStatusStore } from '../stores/useStatusStore';
 import { collectPluginCompletions } from '../plugins/registry';
@@ -398,6 +399,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
   }, []);
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+    registerMenuEditor(editor);
     // Feed the status bar: cursor + selection length (store skips no-op updates).
     const reportCursor = () => {
       const pos = editor.getPosition(); const sel = editor.getSelection(); const model = editor.getModel();
