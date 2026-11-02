@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Explorer.css';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
+import { ConfirmDialog } from './ConfirmDialog';
 import type { FileNode } from '../stores/useWorkspaceStore';
 
 interface ContextMenuState {
@@ -61,6 +62,9 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
     triggerHeaderNewFolder,
     handleDeleteNode,
     handleInlineSubmit,
+    pendingDelete,
+    confirmDeleteNode,
+    cancelDeleteNode,
   } = useWorkspaceStore();
 
   // Context Menu State
@@ -662,6 +666,18 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
           ) : null}
           <div className="nx-context-item" onClick={() => handleCopyPath(contextMenu.node!)}>Copy Path</div>
         </div>
+      )}
+      {pendingDelete && (
+        <ConfirmDialog
+          title={pendingDelete.isFolder ? 'Delete folder' : 'Delete file'}
+          message={`Permanently delete ${pendingDelete.isFolder ? 'folder' : 'file'} "${pendingDelete.node.name}"${pendingDelete.isFolder ? ' and all of its contents' : ''}?`}
+          detail={pendingDelete.dirtyNames.length
+            ? `Warning: ${pendingDelete.dirtyNames.join(', ')} ${pendingDelete.dirtyNames.length === 1 ? 'has' : 'have'} unsaved changes in an open tab. The unsaved buffer stays open, but the file on disk is permanently removed.`
+            : undefined}
+          discardLabel="Delete"
+          onDiscard={() => void confirmDeleteNode()}
+          onCancel={cancelDeleteNode}
+        />
       )}
     </div>
   );
