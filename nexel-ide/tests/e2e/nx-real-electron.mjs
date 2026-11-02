@@ -24,6 +24,17 @@ console.log('CFG_ISOLATED', cfg, 'persistent config untouched:', fs.existsSync(o
 const results = {};
 function report(name, ok, extra = '') { results[name] = !!ok; console.log(name, ok ? 'OK' : 'FAIL', extra); }
 
+// Bounded cleanup: only Electron processes this suite itself spawned - never global kills.
+import { execSync } from 'node:child_process';
+const spawnedPids = [];
+function cleanupOwned() {
+  for (const pid of spawnedPids) {
+    try { execSync(`pkill -9 -P ${pid} 2>/dev/null`); } catch { /* children already gone */ }
+    try { process.kill(pid, 'SIGKILL'); } catch { /* already exited */ }
+  }
+}
+process.on('exit', cleanupOwned);
+
 let pageErrors = [];
 const BAD_ERROR = /PAGEERROR|Transform failed|Cannot find module|Failed to fetch|Uncaught|ReferenceError|TypeError|SyntaxError/i;
 async function boot(url = 'http://localhost:5199') {
@@ -34,13 +45,15 @@ async function boot(url = 'http://localhost:5199') {
     w.on('pageerror', (e) => pageErrors.push('PAGEERROR@' + ((performance.now() / 1000).toFixed(1)) + 's ' + String(e.stack || e).slice(0, 600)));
   };
   const app = await electron.launch({ args: ['.'], env: { ...process.env, ELECTRON_START_URL: url, XDG_CONFIG_HOME: cfg } });
+  const appPid = app.process()?.pid;
+  if (appPid) spawnedPids.push(appPid);
   app.on('window', wire);
-  await new Promise(r => setTimeout(r, 5000));
+  await new Promise(r => setTimeout(r, 3500));
   let page = null;
   for (const w of app.windows()) { if (!w.url().startsWith('devtools://')) { page = w; break; } }
   if (!page) page = await app.firstWindow();
   wire(page);
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1000);
   return { app, page };
 }
 // Positive proof the renderer came up: absence-style phases are meaningless on a blank page.
@@ -54,7 +67,7 @@ const bootProbe = (pg) => pg.evaluate(() => ({
 let { app, page } = await boot();
 // Gate: positive boot proof + no module/renderer errors before any absence-based assertion runs.
 const ready = await bootProbe(page);
-await page.waitForTimeout(2000);
+await page.waitForTimeout(1200);
 const bootBad = pageErrors.filter((e) => BAD_ERROR.test(e));
 report('BOOT_READY_REAL', ready.explorer && ready.rows > 0 && ready.nav > 0 && bootBad.length === 0, JSON.stringify({ ready, bootBad: bootBad.slice(0, 3) }));
 const cpOff = await page.evaluate(() => ({
@@ -64,7 +77,7 @@ const cpOff = await page.evaluate(() => ({
 }));
 report('CP_OFF_REAL', !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn, JSON.stringify(cpOff));
 // clangd must stay silent for a Python-only session: no missing-binary toast.
-await page.waitForTimeout(6000);
+await page.waitForTimeout(4500);
 const toastPy = await page.evaluate(() => [...document.querySelectorAll('.tz-toast')].map((t) => t.textContent));
 report('CLANGD_QUIET_PYTHON', !toastPy.some((t) => (t ?? '').includes('clangd')), JSON.stringify(toastPy));
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(700);
@@ -107,7 +120,7 @@ report('THEME_PERSIST_REAL', themePersisted === 'midnight', String(themePersiste
 
 // --- Phase 2b: find-in-files over the real fs ---
 await page.keyboard.press('Control+Shift+f');
-await page.waitForTimeout(900);
+await page.waitForTimeout(800);
 await page.locator('input.sf-input[placeholder="Find in files…"]').fill('greet');
 await page.waitForTimeout(1800);
 const search = await page.evaluate(() => ({
@@ -169,7 +182,7 @@ await page.screenshot({ path: dir + '/r11-settings-apply.png' });
 // --- Phase 2e: Ctrl+backquote toggles the terminal (listed binding was dead) ---
 const termBefore = await page.evaluate(() => !!document.querySelector('.nx-terminal-panel'));
 await page.keyboard.press('Control+`');
-await page.waitForTimeout(900);
+await page.waitForTimeout(800);
 const termAfterOpen = await page.evaluate(() => !!document.querySelector('.nx-terminal-panel'));
 await page.keyboard.press('Control+`');
 await page.waitForTimeout(600);
@@ -335,11 +348,11 @@ report('DELETE_REAL', deletedOk && deletedRow, 'disk=' + deletedOk + ' row=' + d
 const tabDlg = (d) => d.accept().catch(() => {});
 page.on('dialog', tabDlg);
 if (!await page.locator('.nx-editor-tab:has-text("main.py")').count()) {
-  await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(900);
+  await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(800);
 }
 await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
 if (!await page.locator('.nx-editor-tab:has-text("README.md")').count()) {
-  await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+  await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(800);
 }
 if (!await page.locator('.nx-editor-tab:has-text("main.cpp")').count()) {
   await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(1200);
@@ -353,8 +366,8 @@ const closeOthers = await page.evaluate(() => ({
 }));
 report('TABS_CLOSE_OTHERS_REAL', closeOthers.tabs.length === 1 && closeOthers.tabs[0] === 'main.py' && closeOthers.footer, JSON.stringify(closeOthers));
 
-await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
-await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(800);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(800);
 await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
 await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Right' }).first().click(); await page.waitForTimeout(800);
@@ -366,8 +379,8 @@ page.off('dialog', tabDlg);
 report('TABS_CLOSE_RIGHT_REAL', closeRight.tabs.length === 1 && closeRight.tabs[0] === 'main.py' && closeRight.footer, JSON.stringify(closeRight));
 
 // --- Phase 3g: Close Tabs to the Right from a MIDDLE tab preserves the left side ---
-await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
-await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(800);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(800);
 await page.locator('.nx-editor-tab:has-text("README.md")').first().click(); await page.waitForTimeout(500);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
 await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Right' }).first().click(); await page.waitForTimeout(800);
@@ -375,7 +388,7 @@ const closeRightMid = await page.evaluate(() => [...document.querySelectorAll('.
 report('TABS_CLOSE_RIGHT_MID_REAL', closeRightMid.length === 2 && closeRightMid[0] === 'main.py' && closeRightMid[1] === 'README.md', JSON.stringify(closeRightMid));
 
 // --- Phase 3g-ii: Close Tabs to the Left from the rightmost tab preserves the right side ---
-await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(800);
 // tabs now [main.py, README.md, main.cpp]; activate main.cpp (rightmost), close left -> [main.cpp]
 const leftDlg = (d) => d.accept().catch(() => {});
 page.on('dialog', leftDlg);
@@ -385,16 +398,16 @@ page.off('dialog', leftDlg);
 const closeLeft = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 report('TABS_CLOSE_LEFT_REAL', closeLeft.length === 1 && closeLeft[0] === 'main.cpp', JSON.stringify(closeLeft));
 // restore main.py + README for subsequent phases
-await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(900);
-await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(800);
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(800);
 
 // --- Phase 3h: bulk close dirty guard - dismiss keeps every tab + content; accept closes only targets ---
 // Fresh renderer state (matches the isolated probe this scenario was validated with).
 await page.reload(); await page.waitForTimeout(4500);
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(600);
 await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(1200);
-await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
-await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(800);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(800);
 await page.locator('.nx-editor-tab:has-text("README.md")').first().click(); await page.waitForTimeout(400);
 await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('R1MARKER'); await page.waitForTimeout(300);
 await page.locator('.nx-editor-tab:has-text("main.cpp")').first().click(); await page.waitForTimeout(400);
@@ -403,7 +416,7 @@ await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await 
 const bulkDismiss = (d) => d.dismiss().catch(() => {});
 page.on('dialog', bulkDismiss);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
-await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(800);
 page.off('dialog', bulkDismiss);
 const cancelTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 let readmeKept = false, cppKept = false;
@@ -420,7 +433,7 @@ await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await 
 const bulkAccept = (d) => d.accept().catch(() => {});
 page.on('dialog', bulkAccept);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
-await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(800);
 page.off('dialog', bulkAccept);
 const acceptTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 report('TABS_BULK_DIRTY_REAL', cancelTabs.length === 3 && readmeKept && cppKept && acceptTabs.length === 1 && acceptTabs[0] === 'main.py', JSON.stringify({ cancelTabs, readmeKept, cppKept, acceptTabs }));
@@ -499,7 +512,7 @@ const kbClosed = await page.evaluate(() => document.querySelectorAll('.nx-tree-s
 await page.keyboard.press('Enter'); await page.waitForTimeout(600);
 const kbReopen = await page.evaluate(() => document.querySelectorAll('.nx-tree-scroll .nx-node-row').length);
 await page.keyboard.press('ArrowDown'); await page.waitForTimeout(300);
-await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 const kbEnter = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null);
 report('EXPLORER_KB_OPEN_REAL', kbClosed === 2 && kbReopen === 4 && kbEnter === 'main.cpp', JSON.stringify({ kbClosed, kbReopen, kbEnter }));
 await page.locator('.nx-explorer-wrapper').screenshot({ path: dir + '/r6-explorer-kb.png' });
@@ -515,7 +528,7 @@ const f2Input = await page.evaluate(() => {
 });
 // rename autofocus selects the basename; typing replaces it and keeps the extension
 await page.keyboard.type('kbf2-renamed'); await page.waitForTimeout(300);
-await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 const f2Done = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbf2-renamed.txt'));
 const f2Disk = fs.existsSync(ws + '/kbf2-renamed.txt') && !fs.existsSync(ws + '/kbf2.txt');
 report('EXPLORER_KB_F2_REAL', f2Input !== null && f2Input.value === 'kbf2.txt' && f2Input.focused && f2Done && f2Disk, JSON.stringify({ f2Input, f2Done, f2Disk }));
@@ -531,7 +544,7 @@ await page.keyboard.press('Delete'); await page.waitForTimeout(600);
 page.off('dialog', delDismiss);
 const afterCancel = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'));
 // 2) dirty: open the file, type to dirty it, reselect its row, Delete -> warning confirm names unsaved changes; dismiss keeps the file
-await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(800);
 await page.locator('.view-lines').first().click(); await page.keyboard.type('dirty'); await page.waitForTimeout(500);
 await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(300);
 let dirtyMsg = '';
@@ -543,19 +556,22 @@ const afterDirtyCancel = await page.evaluate(() => [...document.querySelectorAll
 // 3) accept: file deleted on disk and from the tree; the dirty tab stays open with its buffer
 const delAccept = (d) => d.accept().catch(() => {});
 page.on('dialog', delAccept);
-await page.keyboard.press('Delete'); await page.waitForTimeout(900);
+await page.keyboard.press('Delete'); await page.waitForTimeout(800);
 page.off('dialog', delAccept);
 const delAfterAccept = await page.evaluate(() => ({
   rowGone: ![...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'),
   tabOpen: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some((t) => t.textContent === 'kbdel.txt'),
+  orphanBadge: !!document.querySelector('.nx-tab-orphaned .nx-tab-orphan-badge'),
+  toast: [...document.querySelectorAll('.tz-toast')].some((t) => /kept.*buffer|save to recreate/i.test(t.textContent ?? '')),
 }));
 const diskGone = !fs.existsSync(ws + '/kbdel.txt');
-report('EXPLORER_KB_DELETE_REAL', afterCancel && afterDirtyCancel && delAfterAccept.rowGone && delAfterAccept.tabOpen && diskGone && /unsaved/i.test(dirtyMsg), JSON.stringify({ afterCancel, afterDirtyCancel, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 120) }));
+report('EXPLORER_KB_DELETE_REAL', afterCancel && afterDirtyCancel && delAfterAccept.rowGone && delAfterAccept.tabOpen && delAfterAccept.orphanBadge && delAfterAccept.toast && diskGone && /unsaved/i.test(dirtyMsg), JSON.stringify({ afterCancel, afterDirtyCancel, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 120) }));
 await page.locator('.nx-tab-orphaned').screenshot({ path: dir + '/r7-orphan-tab.png' });
+await page.locator('.tz-toast').last().screenshot({ path: dir + '/r8-orphan-toast.png' });
 
 // --- Phase: orphaned buffer is not silently recreated by auto-save; explicit save recovers ---
 await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(400);
-await page.waitForTimeout(6500); // longer than the 5s auto-save loop
+await page.waitForTimeout(6000); // longer than the 5s auto-save loop
 const notRecreated = !fs.existsSync(ws + '/kbdel.txt');
 const orphanState = await page.evaluate(() => {
   const tab = [...document.querySelectorAll('.nx-editor-tab')].find((t) => t.textContent?.includes('kbdel.txt'));
@@ -563,7 +579,7 @@ const orphanState = await page.evaluate(() => {
 });
 // explicit Ctrl+S is a deliberate recovery: it recreates the file and clears the orphan state
 await page.locator('.nx-editor-tab', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(400);
-await page.keyboard.press('Control+s'); await page.waitForTimeout(900);
+await page.keyboard.press('Control+s'); await page.waitForTimeout(800);
 const recreated = fs.existsSync(ws + '/kbdel.txt');
 const orphanCleared = await page.evaluate(() => {
   const tab = [...document.querySelectorAll('.nx-editor-tab')].find((t) => t.textContent?.includes('kbdel.txt'));
@@ -602,7 +618,7 @@ await app.close();
 
 // --- Negative control: the boot gate must catch a blank renderer (nothing listens on :5999) ---
 const { app: badApp, page: badPage } = await boot('http://127.0.0.1:5999');
-await badPage.waitForTimeout(4000);
+await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
