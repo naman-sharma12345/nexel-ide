@@ -406,7 +406,15 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           }
         } catch (err) {
           console.error("Inline fs write execution failed:", err);
-          alert(`Operation failed. Ensure a valid name is provided.`);
+          const reason = err instanceof Error ? err.message : String(err);
+          const action = inlineInput.mode === 'rename' ? 'rename' : 'create';
+          useStatusStore.getState().pushToast(
+            /\bEEXIST\b/.test(reason)
+              ? `Could not ${action} "${value}": that name already exists. Existing content was not changed.`
+              : `Could not ${action} "${value}"${reason ? `: ${reason}` : '.'}`,
+            'error',
+            6000
+          );
         } finally {
           set((state) => ({ inlineInput: { ...state.inlineInput, visible: false } }));
         }
