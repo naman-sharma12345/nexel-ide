@@ -286,6 +286,42 @@ const deletedOk = !fs.existsSync(ws + '/src/todo.txt');
 const deletedRow = await page.evaluate(() => ![...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
 report('DELETE_REAL', deletedOk && deletedRow, 'disk=' + deletedOk + ' row=' + deletedRow);
 
+// --- Phase 3f: tab menu - Close Other Tabs / Close Tabs to the Right ---
+// Self-stabilizing: activate main.py (opening it if needed), Close Other Tabs leaves only it;
+// reopen two tabs to its right, then Close Tabs to the Right leaves only main.py again.
+const tabDlg = (d) => d.accept().catch(() => {});
+page.on('dialog', tabDlg);
+if (!await page.locator('.nx-editor-tab:has-text("main.py")').count()) {
+  await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(900);
+}
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
+if (!await page.locator('.nx-editor-tab:has-text("README.md")').count()) {
+  await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+}
+if (!await page.locator('.nx-editor-tab:has-text("main.cpp")').count()) {
+  await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(1200);
+}
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(800);
+const closeOthers = await page.evaluate(() => ({
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
+  footer: !!document.querySelector('.nx-editor-footer-metrics'),
+}));
+report('TABS_CLOSE_OTHERS_REAL', closeOthers.tabs.length === 1 && closeOthers.tabs[0] === 'main.py' && closeOthers.footer, JSON.stringify(closeOthers));
+
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Right' }).first().click(); await page.waitForTimeout(800);
+const closeRight = await page.evaluate(() => ({
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
+  footer: !!document.querySelector('.nx-editor-footer-metrics'),
+}));
+page.off('dialog', tabDlg);
+report('TABS_CLOSE_RIGHT_REAL', closeRight.tabs.length === 1 && closeRight.tabs[0] === 'main.py' && closeRight.footer, JSON.stringify(closeRight));
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
@@ -302,7 +338,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
