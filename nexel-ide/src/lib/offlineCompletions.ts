@@ -16,14 +16,14 @@ export function collectOfflineItems(opts: {
   dataset: Record<string, { label: string; insertText?: string; detail?: string; documentation?: string; score?: number }[]>;
   snippets: Record<string, { prefix: string; description?: string; body: string[] | string }>;
   clangdOn: boolean;
-  cpOn: boolean;
+  /** Dataset categories contributed by enabled plugins (e.g. ['cp']). Core categories serve when clangd is off; plugin categories always serve. */
+  pluginCategories?: string[];
   enableSnippets: boolean;
   hasUsingStd: boolean;
 }): OfflineItem[] {
-  const { dataset, snippets, clangdOn, cpOn, enableSnippets, hasUsingStd } = opts;
+  const { dataset, snippets, clangdOn, pluginCategories = [], enableSnippets, hasUsingStd } = opts;
   const out: OfflineItem[] = [];
-  const categories = (clangdOn ? ['cp'] : ['keywords', 'containers', 'algorithms', 'math', 'io', 'cp'])
-    .filter(c => c !== 'cp' || cpOn); // CP aliases/snippets ship with the CP plugin only
+  const categories = (clangdOn ? [] : ['keywords', 'containers', 'algorithms', 'math', 'io']).concat(pluginCategories);
   for (const category of categories) {
     for (const item of dataset[category] ?? []) {
       let label = item.label;
@@ -42,7 +42,7 @@ export function collectOfflineItems(opts: {
       });
     }
   }
-  if (enableSnippets && cpOn) {
+  if (enableSnippets) {
     for (const [key, val] of Object.entries(snippets)) {
       const bodyStr = Array.isArray(val.body) ? val.body.join('\n') : val.body;
       out.push({
