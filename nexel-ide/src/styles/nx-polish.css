@@ -535,3 +535,16 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
 }
+
+/* Orphaned tab: legible deleted-on-disk marker at any tab width */
+.nx-tab-orphan-badge {
+  display: inline-flex;
+  align-items: center;
+  color: #d8a657;
+  margin-left: 2px;
+  flex: none;
+}
+.nx-tab-orphan-badge svg {
+  width: 11px;
+  height: 11px;
+}
