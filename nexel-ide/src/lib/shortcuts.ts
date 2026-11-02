@@ -16,6 +16,9 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     { label: 'Save file', keys: ['Ctrl', 'S'] },
     { label: 'Close tab', keys: ['Ctrl', 'W'] },
     { label: 'Find in file', keys: ['Ctrl', 'F'] },
+    { label: 'Bigger editor font', keys: ['Ctrl', '='] },
+    { label: 'Smaller editor font', keys: ['Ctrl', '-'] },
+    { label: 'Reset editor font', keys: ['Ctrl', '0'] },
     { label: 'Toggle comment (in editor)', keys: ['Ctrl', '/'] },
   ] },
   { title: 'Workspace', items: [
