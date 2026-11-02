@@ -30,6 +30,8 @@ export interface NexelPlugin {
   useActivation?: (enabled: boolean) => void;
   /** Offline completion data contributed while the plugin is enabled. */
   completions?: PluginCompletionContribution;
+  /** Status bar items contributed while the plugin is enabled. */
+  statusItems?: ComponentType[];
 }
 
 /** Completion data a plugin contributes when enabled (merged into the offline C++ provider). */
@@ -53,6 +55,11 @@ export function getPlugin(id: string): NexelPlugin | undefined { return REGISTRY
 /** Whether a persisted plugins map enables this plugin (absent = default). */
 export function pluginEnabled(p: NexelPlugin, prefs: Record<string, boolean>): boolean {
   return p.id in prefs ? !!prefs[p.id] : p.defaultEnabled;
+}
+
+/** Status bar items contributed by all enabled plugins. Core renders these, never a plugin id. */
+export function collectPluginStatusItems(prefs: Record<string, boolean>): ComponentType[] {
+  return listPlugins().filter((p) => pluginEnabled(p, prefs)).flatMap((p) => p.statusItems ?? []);
 }
 
 /** Merged completion contributions from all enabled plugins. Core code asks this, never a plugin id. */
