@@ -473,16 +473,21 @@ const renamedOk = fs.existsSync(ws + '/src/todo.txt') && !fs.existsSync(ws + '/s
 const renamedRow = await page.evaluate(() => [...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
 report('RENAME_REAL', renamedOk && renamedRow, 'disk=' + renamedOk + ' row=' + renamedRow);
 
-const deleteDlg = (d) => d.accept().catch(() => {});
-page.on('dialog', deleteDlg);
 await page.locator('.nx-node-row:has-text("todo.txt")').first().click({ button: 'right', timeout: 15000 });
 await page.waitForTimeout(600);
 await page.locator('.nx-context-item:has-text("Delete")').first().click({ timeout: 10000 });
-await page.waitForTimeout(1200);
-page.off('dialog', deleteDlg);
+await page.waitForTimeout(600);
+const delDlg = await page.evaluate(() => ({ box: !!document.querySelector('.nx-cf-box'), msg: document.querySelector('.nx-cf-msg')?.textContent ?? '' }));
+await page.locator('.nx-cf-cancel').click(); await page.waitForTimeout(400);
+const keptAfterCancel = fs.existsSync(ws + '/src/todo.txt');
+await page.locator('.nx-node-row:has-text("todo.txt")').first().click({ button: 'right', timeout: 15000 });
+await page.waitForTimeout(600);
+await page.locator('.nx-context-item:has-text("Delete")').first().click({ timeout: 10000 });
+await page.waitForTimeout(600);
+await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(1000);
 const deletedOk = !fs.existsSync(ws + '/src/todo.txt');
 const deletedRow = await page.evaluate(() => ![...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
-report('DELETE_REAL', deletedOk && deletedRow, 'disk=' + deletedOk + ' row=' + deletedRow);
+report('DELETE_REAL', delDlg.box && delDlg.msg.includes('todo.txt') && keptAfterCancel && deletedOk && deletedRow, JSON.stringify({ delDlg, keptAfterCancel, deletedOk, deletedRow }));
 
 // --- Phase 3f: tab menu - Close Other Tabs / Close Tabs to the Right ---
 // Self-stabilizing: activate main.py (opening it if needed), Close Other Tabs leaves only it;
@@ -690,27 +695,24 @@ report('EXPLORER_KB_F2_REAL', f2Input !== null && f2Input.value === 'kbf2.txt' &
 fs.writeFileSync(ws + '/kbdel.txt', 'scratch');
 await page.locator('.nx-action-btn[title="Refresh Tree"]').click(); await page.waitForTimeout(800);
 await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(400);
-// 1) cancel: dismissed confirm leaves the file on disk and in the tree
-const delDismiss = (d) => d.dismiss().catch(() => {});
-page.on('dialog', delDismiss);
+// 1) cancel keeps the file in the tree and on disk
 await page.keyboard.press('Delete'); await page.waitForTimeout(600);
-page.off('dialog', delDismiss);
+await page.locator('.nx-cf-cancel').click(); await page.waitForTimeout(400);
 const afterCancel = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'));
-// 2) dirty: open the file, type to dirty it, reselect its row, Delete -> warning confirm names unsaved changes; dismiss keeps the file
+const kbDiskKept = fs.existsSync(ws + '/kbdel.txt');
+// 2) dirty: warning names unsaved changes; cancel keeps the file
 await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(800);
 await page.locator('.view-lines').first().click(); await page.keyboard.type('dirty'); await page.waitForTimeout(500);
 await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(300);
-let dirtyMsg = '';
-const delDirty = (d) => { dirtyMsg = d.message(); d.dismiss().catch(() => {}); };
-page.on('dialog', delDirty);
 await page.keyboard.press('Delete'); await page.waitForTimeout(600);
-page.off('dialog', delDirty);
+const dirtyMsg = await page.evaluate(() => (document.querySelector('.nx-cf-detail')?.textContent ?? '') + '|' + (document.querySelector('.nx-cf-msg')?.textContent ?? ''));
+await page.locator('.nx-cf-cancel').click(); await page.waitForTimeout(400);
 const afterDirtyCancel = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'));
-// 3) accept: file deleted on disk and from the tree; the dirty tab stays open with its buffer
-const delAccept = (d) => d.accept().catch(() => {});
-page.on('dialog', delAccept);
-await page.keyboard.press('Delete'); await page.waitForTimeout(800);
-page.off('dialog', delAccept);
+const diskAfterDirty = fs.existsSync(ws + '/kbdel.txt');
+// 3) Delete button: file deleted on disk and from the tree; the dirty tab stays open with its buffer
+await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(300);
+await page.keyboard.press('Delete'); await page.waitForTimeout(600);
+await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(900);
 const delAfterAccept = await page.evaluate(() => ({
   rowGone: ![...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'),
   tabOpen: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some((t) => t.textContent === 'kbdel.txt'),
@@ -718,7 +720,7 @@ const delAfterAccept = await page.evaluate(() => ({
   toast: [...document.querySelectorAll('.tz-toast')].some((t) => /kept.*buffer|save to recreate/i.test(t.textContent ?? '')),
 }));
 const diskGone = !fs.existsSync(ws + '/kbdel.txt');
-report('EXPLORER_KB_DELETE_REAL', afterCancel && afterDirtyCancel && delAfterAccept.rowGone && delAfterAccept.tabOpen && delAfterAccept.orphanBadge && delAfterAccept.toast && diskGone && /unsaved/i.test(dirtyMsg), JSON.stringify({ afterCancel, afterDirtyCancel, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 120) }));
+report('EXPLORER_KB_DELETE_REAL', afterCancel && kbDiskKept && afterDirtyCancel && diskAfterDirty && /unsaved/i.test(dirtyMsg) && delAfterAccept.rowGone && delAfterAccept.tabOpen && delAfterAccept.orphanBadge && delAfterAccept.toast && diskGone, JSON.stringify({ afterCancel, kbDiskKept, afterDirtyCancel, diskAfterDirty, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 140) }));
 await page.locator('.nx-tab-orphaned').screenshot({ path: dir + '/r7-orphan-tab.png' });
 await page.locator('.tz-toast').last().screenshot({ path: dir + '/r8-orphan-toast.png' });
 
