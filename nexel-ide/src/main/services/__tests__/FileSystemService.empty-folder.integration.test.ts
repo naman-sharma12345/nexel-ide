@@ -50,6 +50,15 @@ describe('FileSystemService against the real filesystem (empty folder flow)', ()
     expect(fresh.map(n => n.name).sort()).toEqual(['solve.cpp', 'stress']);
   });
 
+  it('duplicate New File rejects without changing existing disk content', async () => {
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), 'nx-fs-'));
+    const svc = new FileSystemService();
+    const file = await svc.createFile(dir, 'existing.txt');
+    await fs.writeFile(file, 'keep this content\n');
+    await expect(svc.createFile(dir, 'existing.txt')).rejects.toMatchObject({ code: 'EEXIST' });
+    expect(await fs.readFile(file, 'utf8')).toBe('keep this content\n');
+  });
+
   it('blocks traversal, rejects invalid names, and deleteNode removes entries', async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'nx-fs-'));
     const svc = new FileSystemService();
