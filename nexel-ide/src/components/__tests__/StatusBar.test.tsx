@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { languageLabel, judgeSummary, isClangdRelevant } from '../StatusBar';
+import { languageLabel, isClangdRelevant } from '../StatusBar';
+import { judgeSummary } from '../../plugins/competitive-programming';
 import { useStatusStore } from '../../stores/useStatusStore';
 
 describe('StatusBar helpers', () => {
