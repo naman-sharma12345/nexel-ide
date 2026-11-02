@@ -73,10 +73,11 @@ report('BOOT_READY_REAL', ready.explorer && ready.rows > 0 && ready.nav > 0 && b
 const cpOff = await page.evaluate(() => ({
   judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
-  cpSnippetsBtn: [...document.querySelectorAll('button')].some((b) => (b.title ?? '').includes('CP Snippets')),
   judgeChip: !!document.querySelector('.sb-judge'),
+  snippetsBtn: !!document.querySelector('.nx-titlebar-snippets-btn'),
+  snippetsToggle: !!document.querySelector('.nx-titlebar-toggle-wrapper'),
 }));
-report('CP_OFF_REAL', !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn && !cpOff.judgeChip, JSON.stringify(cpOff));
+report('CP_OFF_REAL', !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.judgeChip && !cpOff.snippetsBtn && !cpOff.snippetsToggle, JSON.stringify(cpOff));
 // clangd must stay silent for a Python-only session: no missing-binary toast.
 await page.waitForTimeout(4500);
 const toastPy = await page.evaluate(() => [...document.querySelectorAll('.tz-toast')].map((t) => t.textContent));
@@ -716,8 +717,10 @@ const cpOn = await page.evaluate(() => ({
   judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
   judgeChip: !!document.querySelector('.sb-judge'),
+  snippetsBtn: !!document.querySelector('.nx-titlebar-snippets-btn'),
+  snippetsToggle: !!document.querySelector('.nx-titlebar-toggle-wrapper'),
 }));
-report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav && cpOn.judgeChip, JSON.stringify(cpOn));
+report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav && cpOn.judgeChip && cpOn.snippetsBtn && cpOn.snippetsToggle, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 
 // --- Phase: CP completion contribution - enabled serves CP items, disabled removes only those ---
