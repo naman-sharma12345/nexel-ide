@@ -3,8 +3,7 @@ import { useLspStore, STATUS_HINT, STATUS_LABEL } from '../lib/clangd/state';
 import { getClangd } from '../lib/clangd/session';
 import { useStatusStore } from '../stores/useStatusStore';
 import { useEditorStore } from '../stores/useEditorStore';
-import { useJudgeStore } from '../stores/useJudgeStore';
-import { pluginEnabledById } from '../plugins/registry';
+import { collectPluginStatusItems } from '../plugins/registry';
 import '../plugins/competitive-programming';
 import { useUIStore } from '../stores/useUIStore';
 import { useSettingsStore, } from '../stores/useSettingsStore';
@@ -25,15 +24,6 @@ export function isClangdRelevant(name?: string): boolean {
   if (!name) return false;
   const ext = name.includes('.') ? name.split('.').pop()!.toLowerCase() : '';
   return CLANGD_EXTS.has(ext);
-}
-
-/** Summarises the judge: a pulsing dot while running, otherwise passed/total of the last run. */
-export function judgeSummary(cases: { verdict?: string }[], running: boolean): { tone: 'run' | 'ok' | 'bad' | 'idle'; text: string } {
-  if (running) return { tone: 'run', text: 'Judging…' };
-  const ran = cases.filter(c => c.verdict && c.verdict !== 'IDLE' && c.verdict !== 'RUNNING');
-  if (!ran.length) return { tone: 'idle', text: 'Judge ready' };
-  const ac = ran.filter(c => c.verdict === 'AC').length;
-  return { tone: ac === ran.length ? 'ok' : 'bad', text: `${ac}/${ran.length} passed` };
 }
 
 /** clangd chip: live state dot + label, tooltip, and a small menu (restart, enable/disable, settings). */
@@ -88,14 +78,11 @@ export const StatusBar = memo(function StatusBar() {
   const activePath = useEditorStore(s => s.activeTabPath);
   const tab = useEditorStore(s => s.tabs.find(t => t.filePath === activePath));
   const pluginPrefs = useSettingsStore(s => s.plugins);
-  const cpOn = pluginEnabledById('competitive-programming', pluginPrefs);
-  const cases = useJudgeStore(s => s.testCases);
-  const running = useJudgeStore(s => s.isRunning);
+  const pluginStatusItems = collectPluginStatusItems(pluginPrefs);
   const terminalVisible = useUIStore(s => s.terminalVisible);
   const toggleTerminal = useUIStore(s => s.toggleTerminal);
   const themeName = getTheme(useSettingsStore(s => s.theme)).name;
   const openSettings = useSettingsStore(s => s.openSettings);
-  const judge = judgeSummary(cases, running);
 
   return (
     <footer className="sb-bar" role="status" aria-label="Status bar">
@@ -104,7 +91,7 @@ export const StatusBar = memo(function StatusBar() {
         {tab && <span className="sb-item sb-file" title={tab.filePath}>{tab.name}{tab.isDirty && <i className="sb-dirty" title="Unsaved changes" />}</span>}
       </div>
       <div className="sb-group sb-right">
-        {cpOn && <button className={`sb-item sb-judge sb-${judge.tone}`} title="Judge status"><i className="sb-pulse" />{judge.text}</button>}
+        {pluginStatusItems.map((Item, i) => <Item key={i} />)}
         {tab && <span className="sb-item sb-num">Ln {line}, Col {col}{selected > 0 && <em> ({selected} sel)</em>}</span>}
         {isClangdRelevant(tab?.name) && <ClangdChip />}
         <span className="sb-item">{languageLabel(tab?.name)}</span>
