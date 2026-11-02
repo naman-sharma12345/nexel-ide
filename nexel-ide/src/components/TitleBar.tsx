@@ -5,10 +5,15 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { collectPluginMenuItems, collectPluginTitlebarItems } from '../plugins/registry';
 import { runEditorMenuCommand } from '../lib/editorMenu';
 import { useStatusStore } from '../stores/useStatusStore';
+import { createPortal } from 'react-dom';
+import { ShortcutsSheet } from './ShortcutsSheet';
 import logoImg from '../assets/logo.png';
 import './TitleBar.css';
 
 export const TitleBar: React.FC = () => {
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const aboutCloseRef = useRef<HTMLButtonElement>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -30,6 +35,17 @@ export const TitleBar: React.FC = () => {
     window.addEventListener('click', handleClickOutside);
   return () => window.removeEventListener('click', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!aboutOpen) return;
+    aboutCloseRef.current?.focus();
+    const handle = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setAboutOpen(false); }
+      else if (e.key === 'Tab') { e.preventDefault(); aboutCloseRef.current?.focus(); }
+    };
+    window.addEventListener('keydown', handle, true);
+    return () => window.removeEventListener('keydown', handle, true);
+  }, [aboutOpen]);
 
   const handleControl = (action: 'minimize' | 'maximize' | 'close') => {
     if (action === 'minimize') window.nexelAPI.minimizeWindow();
@@ -79,7 +95,8 @@ export const TitleBar: React.FC = () => {
       ...pluginOptionItems.map((it) => ({ label: it.label, action: () => { setActiveMenu(null); it.action(); } })),
     ],
     Help: [
-      { label: 'About Nexel IDE', action: () => alert('Nexel IDE v1.0.0 - Built with React + TypeScript + Monaco') },
+      { label: 'About Nexel IDE', action: () => { setActiveMenu(null); setAboutOpen(true); } },
+      { label: 'Keyboard Shortcuts', action: () => { setActiveMenu(null); setShortcutsOpen(true); } },
     ]
   };
 
@@ -98,6 +115,16 @@ export const TitleBar: React.FC = () => {
 
   return (
     <div className="nx-titlebar-container">
+      {shortcutsOpen && createPortal(<ShortcutsSheet onClose={() => setShortcutsOpen(false)} />, document.body)}
+      {aboutOpen && createPortal(<div className="nx-about-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setAboutOpen(false); }}>
+        <section className="nx-about-box" role="dialog" aria-modal="true" aria-labelledby="nx-about-heading">
+          <div className="nx-about-brand"><img src={logoImg} alt="" /><span>NEXEL</span></div>
+          <h1 id="nx-about-heading">A workspace for your code.</h1>
+          <p>Edit, search and build with a focused editor, split views and an integrated terminal.</p>
+          <div className="nx-about-features"><span>Monaco editor</span><span>Local files</span><span>Optional CP tools</span></div>
+          <footer><span>React · TypeScript · Electron</span><button ref={aboutCloseRef} onClick={() => setAboutOpen(false)}>Close</button></footer>
+        </section>
+      </div>, document.body)}
       {/* Draggable drag region */}
       <div className="nx-titlebar-drag-handle" />
 
