@@ -145,6 +145,27 @@ export const Terminal: React.FC<TerminalProps> = ({ visible, onClose, sidebarCol
           <span className="nx-term-title">TERMINAL</span>
         </div>
         <div className="nx-term-header-right">
+          <button
+            className="nx-term-header-btn clear"
+            onClick={() => xtermInstance.current?.clear()}
+            title="Clear Terminal"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18" /><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            </svg>
+          </button>
+          <button
+            className="nx-term-header-btn restart"
+            onClick={() => {
+              xtermInstance.current?.reset();
+              window.nexelAPI.createTerminal();
+            }}
+            title="Restart Shell"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" /><polyline points="21 3 21 9 15 9" />
+            </svg>
+          </button>
           <button className="nx-term-header-btn close" onClick={onClose} title="Close Terminal Panel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
