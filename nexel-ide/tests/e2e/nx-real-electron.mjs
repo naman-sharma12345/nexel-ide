@@ -242,6 +242,24 @@ const termText = await page.evaluate(() => document.querySelector('.xterm-rows')
 report('TERM_PTY', termText.includes('NX42'), JSON.stringify(termText.slice(-120)));
 await page.screenshot({ path: dir + '/r4-terminal.png' });
 
+// --- Phase 3a-ii: terminal Clear and Restart buttons ---
+await page.locator('.xterm-helper-textarea').first().focus().catch(() => {});
+await page.keyboard.type("echo CLR1");
+await page.keyboard.press('Enter');
+await page.waitForTimeout(1500);
+await page.locator('button.nx-term-header-btn.clear').first().click();
+await page.waitForTimeout(500);
+const afterClear = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
+await page.locator('.xterm-helper-textarea').first().focus().catch(() => {});
+await page.locator('button.nx-term-header-btn.restart').first().click();
+await page.waitForTimeout(2500);
+await page.locator('.xterm-helper-textarea').first().focus().catch(() => {});
+await page.keyboard.type("echo RST7");
+await page.keyboard.press('Enter');
+await page.waitForTimeout(2000);
+const afterRestart = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
+report('TERM_PANEL_REAL', !afterClear.includes('CLR1') && afterRestart.includes('RST7'), JSON.stringify({ afterClear: afterClear.slice(-60), afterRestart: afterRestart.slice(-80) }));
+
 // --- Phase 3b: opening a real C++ file still surfaces the missing-clangd notice ---
 await page.locator('.nx-node-row:has-text("main.cpp")').first().click({ timeout: 15000 });
 await page.waitForTimeout(3500);
@@ -440,7 +458,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
