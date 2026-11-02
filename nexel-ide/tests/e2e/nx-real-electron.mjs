@@ -72,6 +72,7 @@ const bootProbe = (pg) => pg.evaluate(() => ({
 // --- Phase 1: open file, edit, save, verify on disk (CP default OFF) ---
 let { app, page } = await boot();
 // Gate: positive boot proof + no module/renderer errors before any absence-based assertion runs.
+await page.locator('.nx-node-row').first().waitFor({ state: 'visible', timeout: 30000 });
 const ready = await bootProbe(page);
 await page.waitForTimeout(1200);
 const bootBad = pageErrors.filter((e) => BAD_ERROR.test(e));
@@ -721,7 +722,43 @@ const delAfterAccept = await page.evaluate(() => ({
 }));
 const diskGone = !fs.existsSync(ws + '/kbdel.txt');
 report('EXPLORER_KB_DELETE_REAL', afterCancel && kbDiskKept && afterDirtyCancel && diskAfterDirty && /unsaved/i.test(dirtyMsg) && delAfterAccept.rowGone && delAfterAccept.tabOpen && delAfterAccept.orphanBadge && delAfterAccept.toast && diskGone, JSON.stringify({ afterCancel, kbDiskKept, afterDirtyCancel, diskAfterDirty, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 140) }));
-await page.locator('.nx-tab-orphaned').screenshot({ path: dir + '/r7-orphan-tab.png' });
+
+// --- Phase: folder delete failure surfaces an error and reconciles tree/tabs with disk ---
+// locked/ is not writable, so the recursive rm aborts on stay.txt; entry processing order is
+// not contractual, so tree/tab accuracy is asserted against actual disk state, not assumed order.
+fs.mkdirSync(ws + '/pf/locked', { recursive: true });
+fs.writeFileSync(ws + '/pf/gone.txt', 'gone sibling\n');
+fs.writeFileSync(ws + '/pf/locked/stay.txt', 'stay\n');
+fs.chmodSync(ws + '/pf/locked', 0o555);
+await page.locator('.nx-action-btn[title="Refresh Tree"]').click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row', { hasText: 'pf' }).first().click(); await page.waitForTimeout(500);
+await page.locator('.nx-node-row', { hasText: 'gone.txt' }).first().dblclick(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row', { hasText: 'locked' }).first().click(); await page.waitForTimeout(500);
+await page.locator('.nx-node-row', { hasText: 'stay.txt' }).first().dblclick(); await page.waitForTimeout(900);
+await page.locator('.view-lines').first().click(); await page.keyboard.type(' dirty'); await page.waitForTimeout(400);
+await page.locator('.nx-node-row', { hasText: 'pf' }).first().click({ button: 'right' }); await page.waitForTimeout(600);
+await page.locator('.nx-context-item:has-text("Delete")').first().click(); await page.waitForTimeout(700);
+const pfMsg = await page.evaluate(() => (document.querySelector('.nx-cf-detail')?.textContent ?? '') + '|' + (document.querySelector('.nx-cf-msg')?.textContent ?? ''));
+await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(1400);
+// refreshTree preserves expanded folders, so descendants remain visible.
+const pfState = await page.evaluate(() => ({
+  errorToast: [...document.querySelectorAll('.tz-toast')].some((t) => /could not delete/i.test(t.textContent ?? '')),
+  stayRow: [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'stay.txt'),
+  goneRow: [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'gone.txt'),
+  tabs: [...document.querySelectorAll('.nx-editor-tab')].map((t) => ({ title: t.querySelector('.nx-tab-title')?.textContent ?? '', orphaned: t.classList.contains('nx-tab-orphaned') })),
+}));
+const pfGoneDisk = fs.existsSync(ws + '/pf/gone.txt');
+const pfStayDisk = fs.existsSync(ws + '/pf/locked/stay.txt');
+fs.chmodSync(ws + '/pf/locked', 0o755);
+const pfGoneTab = pfState.tabs.find((t) => t.title === 'gone.txt');
+const pfStayTab = pfState.tabs.find((t) => t.title === 'stay.txt');
+report('DELETE_FOLDER_PARTIAL_REAL',
+  pfMsg.includes('stay.txt') && /unsaved/i.test(pfMsg) && pfState.errorToast &&
+  !pfGoneDisk && pfStayDisk && pfState.stayRow && !!pfStayTab && pfStayTab.orphaned === false &&
+  !!pfGoneTab && pfGoneTab.orphaned === !pfGoneDisk && pfState.goneRow === pfGoneDisk,
+  JSON.stringify({ pfMsg: pfMsg.slice(0, 140), pfState, pfGoneDisk, pfStayDisk }));
+await page.locator('.nx-editor-tab', { hasText: 'kbdel.txt' }).first().click();
+await page.locator('.nx-tab-orphaned', { hasText: 'kbdel.txt' }).screenshot({ path: dir + '/r7-orphan-tab.png' });
 await page.locator('.tz-toast').last().screenshot({ path: dir + '/r8-orphan-toast.png' });
 
 // --- Phase: editor font zoom keys apply, and are inert when the terminal has focus ---
@@ -931,7 +968,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','DELETE_FOLDER_PARTIAL_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
