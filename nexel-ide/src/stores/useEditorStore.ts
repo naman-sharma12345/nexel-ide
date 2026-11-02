@@ -8,6 +8,9 @@ export interface EditorTab {
   content: string;
   originalContent: string;
   isDirty: boolean;
+  /** Set when the file was deleted on disk while this tab was open: the buffer is
+      retained for recovery, but auto-save must not silently recreate the file. */
+  isOrphaned?: boolean;
 }
 
 interface EditorState {
@@ -38,6 +41,7 @@ interface EditorState {
   closeAllTabs: () => void;
   closeSavedTabs: () => void;
   saveTabSuccess: (filePath: string) => void;
+  markTabsOrphanedForPath: (path: string, isFolder: boolean) => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -245,9 +249,21 @@ export const useEditorStore = create<EditorState>()(
         set({
           tabs: tabs.map((t) =>
             t.filePath === filePath
-              ? { ...t, originalContent: t.content, isDirty: false }
+              ? { ...t, originalContent: t.content, isDirty: false, isOrphaned: false }
               : t
           ),
+        });
+      },
+
+      markTabsOrphanedForPath: (path, isFolder) => {
+        const norm = path.replace(/\\/g, '/');
+        const prefix = norm + '/';
+        set({
+          tabs: get().tabs.map((t) => {
+            const tp = t.filePath.replace(/\\/g, '/');
+            const hit = isFolder ? tp.startsWith(prefix) : tp === norm;
+            return hit && !t.isOrphaned ? { ...t, isOrphaned: true } : t;
+          }),
         });
       }
     }),
