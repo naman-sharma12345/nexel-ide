@@ -39,6 +39,23 @@ function useCompanionImport(enabled: boolean) {
   }, [enabled]);
 }
 
+/** Summarises the judge: a pulsing dot while running, otherwise passed/total of the last run. */
+export function judgeSummary(cases: { verdict?: string }[], running: boolean): { tone: 'run' | 'ok' | 'bad' | 'idle'; text: string } {
+  if (running) return { tone: 'run', text: 'Judging…' };
+  const ran = cases.filter(c => c.verdict && c.verdict !== 'IDLE' && c.verdict !== 'RUNNING');
+  if (!ran.length) return { tone: 'idle', text: 'Judge ready' };
+  const ac = ran.filter(c => c.verdict === 'AC').length;
+  return { tone: ac === ran.length ? 'ok' : 'bad', text: `${ac}/${ran.length} passed` };
+}
+
+/** Status bar chip contributed while the plugin is enabled. */
+function JudgeStatusChip() {
+  const cases = useJudgeStore(s => s.testCases);
+  const running = useJudgeStore(s => s.isRunning);
+  const judge = judgeSummary(cases, running);
+  return <button className={`sb-item sb-judge sb-${judge.tone}`} title="Judge status"><i className="sb-pulse" />{judge.text}</button>;
+}
+
 /**
  * Competitive Programming: judge with sample tests, stress testing, Codeforces contests
  * and Competitive Companion import. Opt-in: Nexel is a general-purpose IDE by default;
@@ -55,6 +72,7 @@ registerPlugin({
   panels: { judge: JudgeSystem, contests: ContestsSystem },
   useActivation: useCompanionImport,
   completions: { dataset: { cp: cpDataset }, snippets },
+  statusItems: [JudgeStatusChip],
   navItems: [
     {
       id: 'judge',
