@@ -569,6 +569,23 @@ report('EXPLORER_KB_DELETE_REAL', afterCancel && afterDirtyCancel && delAfterAcc
 await page.locator('.nx-tab-orphaned').screenshot({ path: dir + '/r7-orphan-tab.png' });
 await page.locator('.tz-toast').last().screenshot({ path: dir + '/r8-orphan-toast.png' });
 
+// --- Phase: editor font zoom keys apply, and are inert when the terminal has focus ---
+const fontProbe = () => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.view-line')).fontSize));
+await page.locator('.view-lines').first().click(); await page.waitForTimeout(300);
+const fontBefore = await fontProbe();
+await page.keyboard.press('Control+='); await page.waitForTimeout(400);
+const fontUp = await fontProbe();
+await page.keyboard.press('Control+-'); await page.keyboard.press('Control+-'); await page.waitForTimeout(400);
+const fontDown = await fontProbe();
+await page.keyboard.press('Control+0'); await page.waitForTimeout(400);
+const fontReset = await fontProbe();
+// terminal context: open the panel if needed, focus the shell, Ctrl+= must not change the editor font
+if (!(await page.$('.xterm'))) { await page.keyboard.press('Control+\`'); await page.waitForTimeout(900); }
+await page.locator('.xterm').first().click(); await page.waitForTimeout(400);
+await page.keyboard.press('Control+='); await page.waitForTimeout(400);
+const fontTermFocus = await fontProbe();
+report('FONT_ZOOM_REAL', fontUp === fontBefore + 1 && fontDown === fontUp - 2 && fontReset === 13 && fontTermFocus === 13, JSON.stringify({ fontBefore, fontUp, fontDown, fontReset, fontTermFocus }));
+
 // --- Phase: orphaned buffer is not silently recreated by auto-save; explicit save recovers ---
 await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(400);
 await page.waitForTimeout(6000); // longer than the 5s auto-save loop
@@ -622,7 +639,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
