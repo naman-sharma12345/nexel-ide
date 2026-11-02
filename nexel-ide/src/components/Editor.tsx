@@ -553,7 +553,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
                   onDragOver={(e) => { if (e.dataTransfer.types.includes('text/nx-tab')) e.preventDefault(); }}
                   onDrop={(e) => { const from = e.dataTransfer.getData('text/nx-tab'); if (from) { e.preventDefault(); useEditorStore.getState().moveTab(from, tab.filePath); } }}
                   className={`nx-editor-tab ${focusedTabPath === tab.filePath ? 'active' : ''} ${focusedTabPath === tab.filePath && acCelebration ? 'ac-celebrate-glow' : ''} ${tab.isOrphaned ? 'nx-tab-orphaned' : ''}`}
-                  title={tab.isOrphaned ? 'Deleted on disk - saving recreates the file' : undefined}
+                  title={tab.isOrphaned ? `${tab.filePath} (deleted on disk - saving recreates the file)` : tab.filePath}
                   onClick={() => {
                     if (isSplit && rightTabPath === tab.filePath) {
                       setFocusedTabPath(tab.filePath);
