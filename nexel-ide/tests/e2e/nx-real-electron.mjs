@@ -14,6 +14,10 @@ fs.writeFileSync(ws + '/src/main.py', 'def greet(name):\n    return f"hello, {na
 fs.writeFileSync(ws + '/src/main.cpp', '#include <iostream>\nint main() { std::cout << "hi\\n"; }\n');
 fs.writeFileSync(ws + '/src/probe-hit1.txt', 'alpha PROBETOKEN one\nPROBETOKEN two\n');
 fs.writeFileSync(ws + '/src/probe-hit2.txt', 'three PROBETOKEN\n');
+fs.writeFileSync(ws + '/src/probe-save.txt', 'save probe\n');
+fs.writeFileSync(ws + '/src/probe-ro.txt', 'readonly probe\n');
+fs.writeFileSync(ws + '/src/probe-p1.txt', 'partial one\n');
+fs.writeFileSync(ws + '/src/probe-p2.txt', 'partial two\n');
 fs.writeFileSync(ws + '/README.md', '# Real harness workspace\nPlain project, CP off by default.\n');
 const cfg = fs.mkdtempSync('/tmp/nxe2e-config-');
 const cfgSub = cfg + '/Nexel IDE';
@@ -189,6 +193,85 @@ report('REPLACE_CONFIRM_REAL', Object.values(rc).every(Boolean), JSON.stringify(
 await page.locator('input.sf-input[placeholder="Find in files…"]').press('Escape');
 await page.waitForTimeout(300);
 
+// --- Phase 2b3: dirty-close dialog - focus safety, save path, write-failure + partial-failure preservation ---
+if (!await page.locator('.nx-node-row:has-text("probe-save.txt")').count()) {
+  await page.locator('.nx-node-row:has-text("src")').first().click(); await page.waitForTimeout(600);
+}
+await page.locator('.nx-node-row:has-text("probe-save.txt")').first().click(); await page.waitForTimeout(1000);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('SAVEMARK'); await page.waitForTimeout(300);
+await page.locator('.nx-editor-tab:has-text("probe-save.txt") .nx-tab-close-btn').first().click(); await page.waitForTimeout(500);
+const svFocus = await page.evaluate(() => ({
+  box: !!document.querySelector('.nx-cf-box'),
+  msg: document.querySelector('.nx-cf-msg')?.textContent ?? '',
+  focused: document.activeElement?.className ?? '',
+  diskUntouched: true,
+}));
+const svDiskEarly = fs.readFileSync(ws + '/src/probe-save.txt', 'utf8');
+await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.waitForTimeout(200);
+const contained = await page.evaluate(() => !!document.querySelector('.nx-cf-box')?.contains(document.activeElement));
+await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+const afterEscDlg = await page.evaluate(() => ({
+  gone: !document.querySelector('.nx-cf-box'),
+  tabOpen: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some(x => x.textContent === 'probe-save.txt'),
+  dirty: !!document.querySelector('.nx-editor-tab .nx-dirty-indicator-glow'),
+}));
+const diskAfterEsc = fs.readFileSync(ws + '/src/probe-save.txt', 'utf8');
+await page.locator('.nx-editor-tab:has-text("probe-save.txt") .nx-tab-close-btn').first().click(); await page.waitForTimeout(500);
+await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+const svDisk = fs.readFileSync(ws + '/src/probe-save.txt', 'utf8');
+const svTabGone = await page.evaluate(() => ![...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some(x => x.textContent === 'probe-save.txt'));
+// write-failure: path replaced by a directory so the write really fails (EISDIR)
+await page.locator('.nx-node-row:has-text("probe-ro.txt")').first().click(); await page.waitForTimeout(1000);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('ROMARK'); await page.waitForTimeout(300);
+fs.unlinkSync(ws + '/src/probe-ro.txt'); fs.mkdirSync(ws + '/src/probe-ro.txt');
+await page.locator('.nx-editor-tab:has-text("probe-ro.txt") .nx-tab-close-btn').first().click(); await page.waitForTimeout(500);
+await page.locator('.nx-cf-save').click(); await page.waitForTimeout(1000);
+const roAfter = await page.evaluate(() => ({
+  err: document.querySelector('.nx-cf-error')?.textContent ?? '',
+  dlgOpen: !!document.querySelector('.nx-cf-box'),
+  tabOpen: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some(x => x.textContent === 'probe-ro.txt'),
+  dirty: !!document.querySelector('.nx-editor-tab .nx-dirty-indicator-glow'),
+  buf: (document.querySelector('.view-lines')?.textContent ?? '').includes('ROMARK'),
+}));
+fs.rmdirSync(ws + '/src/probe-ro.txt'); fs.writeFileSync(ws + '/src/probe-ro.txt', 'readonly probe\n');
+await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+await page.locator('.nx-editor-tab:has-text("probe-ro.txt") .nx-tab-close-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(500);
+// partial failure: two dirty targets, second write fails - first must land on disk, second must survive
+await page.locator('.nx-node-row:has-text("probe-p1.txt")').first().click(); await page.waitForTimeout(1000);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('P1MARK'); await page.waitForTimeout(250);
+await page.locator('.nx-node-row:has-text("probe-p2.txt")').first().click(); await page.waitForTimeout(1000);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('P2MARK'); await page.waitForTimeout(250);
+fs.unlinkSync(ws + '/src/probe-p2.txt'); fs.mkdirSync(ws + '/src/probe-p2.txt');
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close All Tabs' }).first().click(); await page.waitForTimeout(600);
+await page.locator('.nx-cf-save').click(); await page.waitForTimeout(1000);
+const part = await page.evaluate(() => ({
+  dlgOpen: !!document.querySelector('.nx-cf-box'),
+  err: document.querySelector('.nx-cf-error')?.textContent ?? '',
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map(x => x.textContent),
+  dirtyCount: document.querySelectorAll('.nx-editor-tab .nx-dirty-indicator-glow').length,
+}));
+const p1Disk = fs.readFileSync(ws + '/src/probe-p1.txt', 'utf8');
+await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+fs.rmdirSync(ws + '/src/probe-p2.txt'); fs.writeFileSync(ws + '/src/probe-p2.txt', 'partial two\n');
+await page.locator('.nx-editor-tab:has-text("probe-p2.txt") .nx-tab-close-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(500);
+await page.locator('.nx-editor-tab:has-text("probe-p1.txt") .nx-tab-close-btn').first().click(); await page.waitForTimeout(500);
+fs.unlinkSync(ws + '/src/probe-save.txt'); fs.unlinkSync(ws + '/src/probe-ro.txt');
+fs.unlinkSync(ws + '/src/probe-p1.txt'); fs.unlinkSync(ws + '/src/probe-p2.txt');
+const sv = {
+  dlgShown: svFocus.box && svFocus.msg.includes('probe-save.txt'),
+  defaultFocusSave: svFocus.focused.includes('nx-cf-save'),
+  noAccidentalApply: !svDiskEarly.includes('SAVEMARK'),
+  focusContained: contained,
+  escapeCancels: afterEscDlg.gone && afterEscDlg.tabOpen && afterEscDlg.dirty && !diskAfterEsc.includes('SAVEMARK'),
+  enterSaves: svDisk.includes('SAVEMARK') && svTabGone,
+  failKept: roAfter.dlgOpen && roAfter.err.includes('Could not save') && roAfter.err.includes('probe-ro.txt') && roAfter.tabOpen && roAfter.dirty && roAfter.buf,
+  partial: part.dlgOpen && part.err.includes('probe-p2.txt') && p1Disk.includes('P1MARK') && part.tabs.includes('probe-p1.txt') && part.tabs.includes('probe-p2.txt') && part.dirtyCount === 1,
+};
+report('TABS_DIRTY_SAVE_REAL', Object.values(sv).every(Boolean), JSON.stringify(sv));
+
 // --- Phase 2c: quick open (Ctrl+P) over the real file tree ---
 await page.keyboard.press('Escape');
 await page.waitForTimeout(500);
@@ -297,23 +380,30 @@ const closeActive = await page.evaluate(() => ({
 }));
 report('TABS_CLOSE_ACTIVE_REAL', !closeActive.tabs.includes('README.md') && closeActive.footer && closeActive.activeTitle === 'main.py', JSON.stringify(closeActive));
 
-// --- Phase 2k: dismissing the dirty-close confirm keeps tab and content ---
+// --- Phase 2k: dirty-close dialog - cancel keeps tab+buffer+disk; discard closes without writing ---
+const readmeBefore = fs.readFileSync(ws + '/README.md', 'utf8');
 await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(1200);
 await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('dirty-marker');
 await page.waitForTimeout(400);
-await page.once('dialog', (d) => d.dismiss());
 await page.locator('.nx-editor-tab:has-text("README.md") .nx-tab-close-btn').first().click();
-await page.waitForTimeout(700);
+await page.waitForTimeout(600);
+const dirtyDlg = await page.evaluate(() => ({ box: !!document.querySelector('.nx-cf-box'), msg: document.querySelector('.nx-cf-msg')?.textContent ?? '' }));
+await page.screenshot({ path: dir + '/r13-dirty-dialog.png' });
+await page.locator('.nx-cf-cancel').click();
+await page.waitForTimeout(500);
 const dirtyCancel = await page.evaluate(() => ({
   tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
   dirty: !!document.querySelector('.nx-editor-tab .nx-dirty-indicator-glow'),
+  buf: (document.querySelector('.view-lines')?.textContent ?? '').includes('dirty-marker'),
 }));
-// cleanup: accept the confirm and close for real
-await page.once('dialog', (d) => d.accept());
+const diskAfterCancel = fs.readFileSync(ws + '/README.md', 'utf8') === readmeBefore;
 await page.locator('.nx-editor-tab:has-text("README.md") .nx-tab-close-btn').first().click();
-await page.waitForTimeout(700);
-const afterAccept = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
-report('TABS_DIRTY_CANCEL_REAL', dirtyCancel.tabs.includes('README.md') && dirtyCancel.dirty && !afterAccept.includes('README.md'), JSON.stringify({ dirtyCancel, afterAccept }));
+await page.waitForTimeout(500);
+await page.locator('.nx-cf-discard').click();
+await page.waitForTimeout(600);
+const afterDiscard = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+const diskAfterDiscard = fs.readFileSync(ws + '/README.md', 'utf8') === readmeBefore;
+report('TABS_DIRTY_CANCEL_REAL', dirtyDlg.box && dirtyDlg.msg.includes('README.md') && dirtyCancel.tabs.includes('README.md') && dirtyCancel.dirty && dirtyCancel.buf && diskAfterCancel && !afterDiscard.includes('README.md') && diskAfterDiscard, JSON.stringify({ dirtyDlg, dirtyCancel, diskAfterCancel, afterDiscard, diskAfterDiscard }));
 
 // --- Phase 3: real PTY terminal lifecycle ---
 await page.click('.sb-bar >> text=Terminal');
@@ -412,6 +502,7 @@ if (!await page.locator('.nx-editor-tab:has-text("main.cpp")').count()) {
 await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
 await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(800);
+if (await page.locator('.nx-cf-box').count()) { await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(500); }
 const closeOthers = await page.evaluate(() => ({
   tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
   footer: !!document.querySelector('.nx-editor-footer-metrics'),
@@ -423,6 +514,7 @@ await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await p
 await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
 await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Right' }).first().click(); await page.waitForTimeout(800);
+if (await page.locator('.nx-cf-box').count()) { await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(500); }
 const closeRight = await page.evaluate(() => ({
   tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
   footer: !!document.querySelector('.nx-editor-footer-metrics'),
@@ -446,6 +538,7 @@ const leftDlg = (d) => d.accept().catch(() => {});
 page.on('dialog', leftDlg);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
 await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Left' }).first().click(); await page.waitForTimeout(800);
+if (await page.locator('.nx-cf-box').count()) { await page.locator('.nx-cf-discard').click(); await page.waitForTimeout(500); }
 page.off('dialog', leftDlg);
 const closeLeft = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 report('TABS_CLOSE_LEFT_REAL', closeLeft.length === 1 && closeLeft[0] === 'main.cpp', JSON.stringify(closeLeft));
@@ -453,7 +546,7 @@ report('TABS_CLOSE_LEFT_REAL', closeLeft.length === 1 && closeLeft[0] === 'main.
 await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(800);
 await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(800);
 
-// --- Phase 3h: bulk close dirty guard - dismiss keeps every tab + content; accept closes only targets ---
+// --- Phase 3h: bulk close dirty guard - cancel keeps all tabs/buffers/disk; Save all writes only targets; excluded active tab keeps its edit unsaved ---
 // Fresh renderer state (matches the isolated probe this scenario was validated with).
 await page.reload(); await page.waitForTimeout(4500);
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(600);
@@ -465,11 +558,16 @@ await page.locator('.view-lines').first().click(); await page.keyboard.press('Co
 await page.locator('.nx-editor-tab:has-text("main.cpp")').first().click(); await page.waitForTimeout(400);
 await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('C1MARKER'); await page.waitForTimeout(300);
 await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(400);
-const bulkDismiss = (d) => d.dismiss().catch(() => {});
-page.on('dialog', bulkDismiss);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('ACTIVEMARK'); await page.waitForTimeout(300);
+const pyDiskBefore = fs.readFileSync(ws + '/src/main.py', 'utf8');
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
-await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(800);
-page.off('dialog', bulkDismiss);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(600);
+const bulkDlg = await page.evaluate(() => ({
+  box: !!document.querySelector('.nx-cf-box'),
+  msg: document.querySelector('.nx-cf-msg')?.textContent ?? '',
+  detail: document.querySelector('.nx-cf-detail')?.textContent ?? '',
+}));
+await page.locator('.nx-cf-cancel').click(); await page.waitForTimeout(500);
 const cancelTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 let readmeKept = false, cppKept = false;
 if (cancelTabs.includes('README.md')) {
@@ -480,15 +578,18 @@ if (cancelTabs.includes('main.cpp')) {
   await page.locator('.nx-editor-tab:has-text("main.cpp")').first().click(); await page.waitForTimeout(500);
   cppKept = await page.evaluate(() => (document.querySelector('.view-lines')?.textContent ?? '').includes('C1MARKER'));
 }
-// accept: only the two dirty others close; the active main.py survives
+const bulkDiskCancel = !fs.readFileSync(ws + '/README.md', 'utf8').includes('R1MARKER') && !fs.readFileSync(ws + '/src/main.cpp', 'utf8').includes('C1MARKER') && fs.readFileSync(ws + '/src/main.py', 'utf8') === pyDiskBefore;
 await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(400);
-const bulkAccept = (d) => d.accept().catch(() => {});
-page.on('dialog', bulkAccept);
 await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
-await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(800);
-page.off('dialog', bulkAccept);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(600);
+await page.locator('.nx-cf-save').click(); await page.waitForTimeout(1000);
 const acceptTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
-report('TABS_BULK_DIRTY_REAL', cancelTabs.length === 3 && readmeKept && cppKept && acceptTabs.length === 1 && acceptTabs[0] === 'main.py', JSON.stringify({ cancelTabs, readmeKept, cppKept, acceptTabs }));
+const savedDisks = fs.readFileSync(ws + '/README.md', 'utf8').includes('R1MARKER') && fs.readFileSync(ws + '/src/main.cpp', 'utf8').includes('C1MARKER');
+const pyStillDirty = await page.evaluate(() => !!document.querySelector('.nx-editor-tab .nx-dirty-indicator-glow'));
+const pyKept = await page.evaluate(() => (document.querySelector('.view-lines')?.textContent ?? '').includes('ACTIVEMARK'));
+const pyDiskExcluded = !fs.readFileSync(ws + '/src/main.py', 'utf8').includes('ACTIVEMARK');
+await page.keyboard.press('Control+s'); await page.waitForTimeout(600);
+report('TABS_BULK_DIRTY_REAL', bulkDlg.box && bulkDlg.msg.includes('2') && !bulkDlg.detail.includes('main.py') && cancelTabs.length === 3 && readmeKept && cppKept && bulkDiskCancel && acceptTabs.length === 1 && acceptTabs[0] === 'main.py' && savedDisks && pyStillDirty && pyKept && pyDiskExcluded, JSON.stringify({ bulkDlg, cancelTabs, readmeKept, cppKept, bulkDiskCancel, acceptTabs, savedDisks, pyStillDirty, pyKept, pyDiskExcluded }));
 
 // --- Phase 3g: zen mode toggles chrome visibility ---
 await page.keyboard.press('Control+Alt+z'); await page.waitForTimeout(600);
@@ -828,7 +929,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
