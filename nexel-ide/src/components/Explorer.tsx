@@ -22,6 +22,20 @@ export function explorerRowState(activePath: string | null | undefined, selected
   return 'none';
 }
 
+export interface FlatVisibleNode { node: FileNode; parent: FileNode | null; }
+
+/** Visible rows in render order: a folder's children appear only while it is open. */
+export function flattenVisibleNodes(nodes: FileNode[], parent: FileNode | null = null): FlatVisibleNode[] {
+  const out: FlatVisibleNode[] = [];
+  for (const n of nodes) {
+    out.push({ node: n, parent });
+    if (n.type === 'folder' && n.isOpen && n.children) {
+      out.push(...flattenVisibleNodes(n.children, n));
+    }
+  }
+  return out;
+}
+
 export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath }) => {
   const {
     rootPath,
@@ -58,6 +72,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const treeScrollRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   // Load initial workspace tree if rootPath is restored by Zustand
@@ -248,6 +263,53 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
     );
   };
 
+  const scrollRowIntoView = (path: string) => {
+    requestAnimationFrame(() => {
+      treeScrollRef.current?.querySelector(`[data-path="${CSS.escape(path)}"]`)?.scrollIntoView({ block: 'nearest' });
+    });
+  };
+
+  // VS Code-style tree keyboard navigation on the focused tree panel.
+  const handleTreeKeyDown = (e: React.KeyboardEvent) => {
+    if (inlineInput.visible) return;
+    if ((e.target as HTMLElement).tagName === 'INPUT') return;
+    const flat = flattenVisibleNodes(tree);
+    if (!flat.length) return;
+    const idx = flat.findIndex(f => f.node.path === lastSelectedNode?.path);
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      let targetIdx: number;
+      if (idx === -1) targetIdx = e.key === 'ArrowDown' ? 0 : flat.length - 1;
+      else targetIdx = e.key === 'ArrowDown' ? Math.min(idx + 1, flat.length - 1) : Math.max(idx - 1, 0);
+      setLastSelectedNode(flat[targetIdx].node);
+      scrollRowIntoView(flat[targetIdx].node.path);
+    } else if (e.key === 'ArrowRight' && idx >= 0) {
+      e.preventDefault();
+      const { node } = flat[idx];
+      if (node.type === 'folder') {
+        if (!node.isOpen) toggleFolder(node.path);
+        else if (node.children && node.children.length) {
+          setLastSelectedNode(node.children[0]);
+          scrollRowIntoView(node.children[0].path);
+        }
+      }
+    } else if (e.key === 'ArrowLeft' && idx >= 0) {
+      e.preventDefault();
+      const { node, parent } = flat[idx];
+      if (node.type === 'folder' && node.isOpen) toggleFolder(node.path);
+      else if (parent) {
+        setLastSelectedNode(parent);
+        scrollRowIntoView(parent.path);
+      }
+    } else if (e.key === 'Enter' && idx >= 0) {
+      e.preventDefault();
+      const { node } = flat[idx];
+      if (node.type === 'folder') toggleFolder(node.path);
+      else if (onFileSelect) onFileSelect(node.path, true);
+    }
+  };
+
   // Tree recursive rendering
   const renderTree = (nodes: FileNode[], depth = 0) => {
     return nodes.map((node, index) => {
@@ -290,6 +352,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
           ) : (
             <div 
               className={`nx-node-row ${rowState === 'active' ? 'nx-row-selected' : rowState === 'selected' ? 'nx-row-focused' : ''}`}
+              data-path={node.path}
               data-ext={!isFolder && node.name.includes('.') ? node.name.split('.').pop()!.toLowerCase() : undefined}
               style={{ paddingLeft: `${depth * 14 + 18}px` }}
               draggable
@@ -300,6 +363,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
               onContextMenu={(e) => handleContextMenu(e, node)}
               onClick={(e) => {
                 e.stopPropagation();
+                treeScrollRef.current?.focus();
                 setLastSelectedNode(node);
                 if (isFolder) {
                   toggleFolder(node.path);
@@ -309,6 +373,7 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();
+                treeScrollRef.current?.focus();
                 setLastSelectedNode(node);
                 if (!isFolder && onFileSelect) {
                   onFileSelect(node.path, true);
@@ -501,6 +566,9 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
       {/* Main tree list scroll panel */}
       <div 
         className="nx-tree-scroll"
+        ref={treeScrollRef}
+        tabIndex={0}
+        onKeyDown={handleTreeKeyDown}
         onContextMenu={handleEmptyAreaContextMenu}
         onClick={(e) => {
           if (e.target === e.currentTarget) {
