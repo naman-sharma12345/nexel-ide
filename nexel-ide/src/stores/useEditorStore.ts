@@ -41,7 +41,7 @@ interface EditorState {
   closeAllTabs: () => void;
   closeSavedTabs: () => void;
   saveTabSuccess: (filePath: string) => void;
-  markTabsOrphanedForPath: (path: string, isFolder: boolean) => void;
+  markTabsOrphanedForPath: (path: string, isFolder: boolean) => number;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -258,13 +258,16 @@ export const useEditorStore = create<EditorState>()(
       markTabsOrphanedForPath: (path, isFolder) => {
         const norm = path.replace(/\\/g, '/');
         const prefix = norm + '/';
+        let marked = 0;
         set({
           tabs: get().tabs.map((t) => {
             const tp = t.filePath.replace(/\\/g, '/');
             const hit = isFolder ? tp.startsWith(prefix) : tp === norm;
+            if (hit && !t.isOrphaned) marked++;
             return hit && !t.isOrphaned ? { ...t, isOrphaned: true } : t;
           }),
         });
+        return marked;
       }
     }),
     {
