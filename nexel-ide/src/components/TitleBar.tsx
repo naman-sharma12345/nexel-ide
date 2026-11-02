@@ -3,6 +3,8 @@ import { useUIStore } from '../stores/useUIStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { collectPluginMenuItems, collectPluginTitlebarItems } from '../plugins/registry';
+import { runEditorMenuCommand } from '../lib/editorMenu';
+import { useStatusStore } from '../stores/useStatusStore';
 import logoImg from '../assets/logo.png';
 import './TitleBar.css';
 
@@ -40,6 +42,11 @@ export const TitleBar: React.FC = () => {
     openWorkspaceDir();
   };
 
+  const runEdit = (command: string) => {
+    setActiveMenu(null);
+    if (!runEditorMenuCommand(command)) useStatusStore.getState().pushToast('Open a source file to use this command.', 'info');
+  };
+
   const menus = {
     File: [
       { label: 'Open Folder...', action: triggerOpenFolder },
@@ -47,15 +54,15 @@ export const TitleBar: React.FC = () => {
       { label: 'New Folder', action: () => { setActiveMenu(null); triggerHeaderNewFolder(); } },
     ],
     Edit: [
-      { label: 'Undo', action: () => {} },
-      { label: 'Redo', action: () => {} },
+      { label: 'Undo', action: () => runEdit('undo') },
+      { label: 'Redo', action: () => runEdit('redo') },
       { label: 'Cut', action: () => {} },
       { label: 'Copy', action: () => {} },
       { label: 'Paste', action: () => {} },
     ],
     Selection: [
-      { label: 'Select All', action: () => {} },
-      { label: 'Expand Selection', action: () => {} },
+      { label: 'Select All', action: () => runEdit('editor.action.selectAll') },
+      { label: 'Expand Selection', action: () => runEdit('editor.action.smartSelect.expand') },
     ],
     View: [
       { label: 'Toggle Sidebar', action: () => { setActiveMenu(null); toggleSidebar(); } },
