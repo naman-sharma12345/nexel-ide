@@ -844,10 +844,17 @@ const SnippetsViewer: React.FC<SnippetsViewerProps> = ({ snippetsData }) => {
     );
   });
 
-  const handleCopy = (key: string, body: string | string[]) => {
-    navigator.clipboard.writeText(Array.isArray(body) ? body.join('\n') : body);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 1500);
+  const handleCopy = async (key: string, body: string | string[]) => {
+    try {
+      const text = Array.isArray(body) ? body.join('\n') : body;
+      if (window.nexelAPI.writeClipboardText) window.nexelAPI.writeClipboardText(text);
+      else await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {
+      setCopiedKey(null);
+      useStatusStore.getState().pushToast('Could not copy snippet. Clipboard access is unavailable.', 'error');
+    }
   };
 
   return (
