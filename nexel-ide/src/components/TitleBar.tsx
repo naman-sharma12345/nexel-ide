@@ -44,7 +44,7 @@ export const TitleBar: React.FC = () => {
 
   const runEdit = (command: string) => {
     setActiveMenu(null);
-    if (!runEditorMenuCommand(command)) useStatusStore.getState().pushToast('Open a source file to use this command.', 'info');
+    if (!runEditorMenuCommand(command)) useStatusStore.getState().pushToast('Command unavailable. Check that a writable source file is open and clipboard access is available.', 'info');
   };
 
   const menus = {
@@ -56,9 +56,9 @@ export const TitleBar: React.FC = () => {
     Edit: [
       { label: 'Undo', action: () => runEdit('undo') },
       { label: 'Redo', action: () => runEdit('redo') },
-      { label: 'Cut', action: () => {} },
-      { label: 'Copy', action: () => {} },
-      { label: 'Paste', action: () => {} },
+      { label: 'Cut', action: () => runEdit('editor.action.clipboardCutAction') },
+      { label: 'Copy', action: () => runEdit('editor.action.clipboardCopyAction') },
+      { label: 'Paste', action: () => runEdit('editor.action.clipboardPasteAction') },
     ],
     Selection: [
       { label: 'Select All', action: () => runEdit('editor.action.selectAll') },
