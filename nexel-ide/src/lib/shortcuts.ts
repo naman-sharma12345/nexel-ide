@@ -6,6 +6,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   { title: 'Navigate', items: [
     { label: 'Quick open file', keys: ['Ctrl', 'P'] },
     { label: 'Next tab', keys: ['Ctrl', 'Tab'] },
+    { label: 'Split editor right', keys: ['Ctrl', '\\'] },
     { label: 'Find in files', keys: ['Ctrl', 'Shift', 'F'] },
     { label: 'Palette', keys: ['Ctrl', 'Shift', 'P'] },
     { label: 'Settings', keys: ['Ctrl', ','] },
