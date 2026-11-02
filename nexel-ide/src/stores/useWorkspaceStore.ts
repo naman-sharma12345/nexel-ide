@@ -352,7 +352,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
       handleDeleteNode: async (node) => {
-        const { rootPath } = get();
         const isFolder = node.type === 'folder';
         const prefix = node.path.replace(/\\/g, '/') + '/';
         const dirtyOpen = useEditorStore.getState().tabs.filter((t) =>
