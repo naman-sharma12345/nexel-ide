@@ -1,4 +1,4 @@
-import React, { lazy, useEffect } from 'react';
+import { lazy, useEffect } from 'react';
 import cpDataset from './cp-dataset.json';
 import snippets from './snippets.json';
 import { registerPlugin } from '../registry';
