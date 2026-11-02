@@ -12,6 +12,8 @@ export const TitleBar: React.FC = () => {
 
   const { toggleSidebar, toggleTerminal, setTerminalVisible, openTemplateModal } = useUIStore();
   const { openWorkspaceDir, triggerHeaderNewFile, triggerHeaderNewFolder } = useWorkspaceStore();
+  const wordWrap = useSettingsStore(s => s.wordWrap);
+  const minimap = useSettingsStore(s => s.minimap);
   const pluginPrefs = useSettingsStore(s => s.plugins);
   const pluginTitlebarItems = collectPluginTitlebarItems(pluginPrefs);
   const pluginOptionItems = collectPluginMenuItems(pluginPrefs, 'Options');
@@ -57,7 +59,9 @@ export const TitleBar: React.FC = () => {
     ],
     View: [
       { label: 'Toggle Sidebar', action: () => { setActiveMenu(null); toggleSidebar(); } },
-      { label: 'Appearance', action: () => {} },
+      { label: 'Appearance / Settings...', action: () => { setActiveMenu(null); useSettingsStore.getState().openSettings(true); } },
+      { label: `${wordWrap ? '✓ ' : ''}Word Wrap`, action: () => { setActiveMenu(null); useSettingsStore.getState().toggle('wordWrap'); } },
+      { label: `${minimap ? '✓ ' : ''}Minimap`, action: () => { setActiveMenu(null); useSettingsStore.getState().toggle('minimap'); } },
     ],
     Terminal: [
       { label: 'New Terminal', action: () => { setActiveMenu(null); setTerminalVisible(true); } },
