@@ -527,3 +527,11 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
   outline: none;
   box-shadow: inset 0 0 0 1px rgba(122, 162, 247, 0.25);
 }
+
+/* Orphaned tab: file was deleted on disk while the buffer is retained for recovery */
+.nx-editor-tab.nx-tab-orphaned .nx-tab-title {
+  opacity: 0.55;
+  font-style: italic;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
