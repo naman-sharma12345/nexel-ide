@@ -12,6 +12,8 @@ fs.rmSync(ws, { recursive: true, force: true });
 fs.mkdirSync(ws + '/src', { recursive: true });
 fs.writeFileSync(ws + '/src/main.py', 'def greet(name):\n    return f"hello, {name}"\n\nif __name__ == "__main__":\n    print(greet("nexel"))\n');
 fs.writeFileSync(ws + '/src/main.cpp', '#include <iostream>\nint main() { std::cout << "hi\\n"; }\n');
+fs.writeFileSync(ws + '/src/probe-hit1.txt', 'alpha PROBETOKEN one\nPROBETOKEN two\n');
+fs.writeFileSync(ws + '/src/probe-hit2.txt', 'three PROBETOKEN\n');
 fs.writeFileSync(ws + '/README.md', '# Real harness workspace\nPlain project, CP off by default.\n');
 const cfg = fs.mkdtempSync('/tmp/nxe2e-config-');
 const cfgSub = cfg + '/Nexel IDE';
@@ -138,6 +140,54 @@ if (searchOk) {
   report('SEARCH_OPEN_REAL', openedTab === 'main.py', 'tab=' + openedTab);
 }
 await page.screenshot({ path: dir + '/r9-search.png' });
+
+// --- Phase 2b2: replace-all inline confirm, disk-verified ---
+const rcHit1 = ws + '/src/probe-hit1.txt';
+const rcHit2 = ws + '/src/probe-hit2.txt';
+const rcOrig1 = fs.readFileSync(rcHit1, 'utf8');
+const rcOrig2 = fs.readFileSync(rcHit2, 'utf8');
+const rcReadme = fs.readFileSync(ws + '/README.md', 'utf8');
+const rcDisk = () => ({ h1: fs.readFileSync(rcHit1, 'utf8'), h2: fs.readFileSync(rcHit2, 'utf8'), rm: fs.readFileSync(ws + '/README.md', 'utf8') });
+const rcUnchanged = (d) => d.h1 === rcOrig1 && d.h2 === rcOrig2 && d.rm === rcReadme;
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+await page.keyboard.press('Control+Shift+f');
+await page.waitForTimeout(700);
+await page.locator('input.sf-input[placeholder="Find in files…"]').fill('PROBETOKEN');
+await page.waitForTimeout(1500);
+await page.locator('input.sf-input[placeholder="Replace with…"]').fill('REPLACED');
+await page.locator('button.sf-repbtn').click();
+await page.waitForTimeout(400);
+const rcRow = await page.evaluate(() => document.querySelector('.sf-confirm')?.textContent ?? '');
+await page.screenshot({ path: dir + '/r12-replace-confirm.png' });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+const rcAfterEsc = { row: await page.evaluate(() => !!document.querySelector('.sf-confirm')), ...rcDisk() };
+await page.locator('button.sf-repbtn').click();
+await page.waitForTimeout(300);
+await page.locator('button.sf-cf-no').click();
+await page.waitForTimeout(300);
+const rcAfterCancel = { row: await page.evaluate(() => !!document.querySelector('.sf-confirm')), ...rcDisk() };
+await page.locator('button.sf-repbtn').click();
+await page.waitForTimeout(400);
+const rcAfterOpen = rcDisk();
+await page.keyboard.press('Enter');
+await page.waitForTimeout(900);
+const rcAfterEnter = rcDisk();
+const rcExp1 = rcOrig1.split('PROBETOKEN').join('REPLACED');
+const rcExp2 = rcOrig2.split('PROBETOKEN').join('REPLACED');
+const rc = {
+  row: rcRow.includes('3') && rcRow.includes('2'),
+  escapeCancelled: !rcAfterEsc.row && rcUnchanged(rcAfterEsc),
+  cancelCancelled: !rcAfterCancel.row && rcUnchanged(rcAfterCancel),
+  noAccidentalApply: rcUnchanged(rcAfterOpen),
+  enterApplied: rcAfterEnter.h1 === rcExp1 && rcAfterEnter.h2 === rcExp2 && rcAfterEnter.rm === rcReadme,
+};
+fs.unlinkSync(rcHit1);
+fs.unlinkSync(rcHit2);
+report('REPLACE_CONFIRM_REAL', Object.values(rc).every(Boolean), JSON.stringify(rc));
+await page.locator('input.sf-input[placeholder="Find in files…"]').press('Escape');
+await page.waitForTimeout(300);
 
 // --- Phase 2c: quick open (Ctrl+P) over the real file tree ---
 await page.keyboard.press('Escape');
@@ -778,7 +828,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
