@@ -717,6 +717,50 @@ const cpOn = await page.evaluate(() => ({
 }));
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
+
+// --- Phase: CP completion contribution - enabled serves CP items, disabled removes only those ---
+// open main.cpp from the seeded workspace
+await page.keyboard.press('Control+p'); await page.waitForTimeout(500);
+await page.keyboard.type('main.cpp'); await page.waitForTimeout(600);
+await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+await page.locator('.view-lines').first().click(); await page.waitForTimeout(300);
+await page.keyboard.press('Control+End'); await page.waitForTimeout(200);
+await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+// monaco virtualizes the suggest list: scroll it to collect every row's label
+const suggestRows = async () => page.evaluate(async () => {
+  const list = document.querySelector('.suggest-widget .monaco-list');
+  if (!list) return [];
+  const scroller = list.querySelector('.monaco-scrollable-element') || list;
+  const seen = new Set();
+  for (let i = 0; i <= 40; i++) {
+    list.querySelectorAll('.monaco-list-row').forEach((r) => seen.add(r.querySelector('.label-name')?.textContent ?? r.textContent ?? ''));
+    if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2) break;
+    scroller.scrollTop += 200;
+    await new Promise((r) => setTimeout(r, 60));
+  }
+  scroller.scrollTop = 0;
+  return [...seen];
+});
+await page.keyboard.type('ll'); await page.waitForTimeout(800);
+const rowsCpOn = await suggestRows();
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+// disable the plugin through the settings UI
+await page.keyboard.press('Control+,'); await page.waitForTimeout(700);
+await page.locator('button.sp-toggle:has-text("Competitive Programming")').click(); await page.waitForTimeout(400);
+await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+await page.locator('.view-lines').first().click(); await page.waitForTimeout(300);
+await page.keyboard.press('Backspace'); await page.keyboard.press('Backspace'); await page.waitForTimeout(200);
+await page.keyboard.type('ll'); await page.waitForTimeout(800);
+const rowsCpOff = await suggestRows();
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+// general C++ completions must remain with the plugin off
+await page.keyboard.press('Backspace'); await page.keyboard.press('Backspace'); await page.waitForTimeout(200);
+await page.keyboard.type('for'); await page.waitForTimeout(800);
+const rowsCppGeneral = await suggestRows();
+await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+report('CP_COMPLETION_REAL',
+  rowsCpOn.some((t) => /\bll\b/.test(t)) && !rowsCpOff.some((t) => /\bll\b/.test(t)) && rowsCppGeneral.some((t) => /for/.test(t)),
+  JSON.stringify({ onHasCpAlias: rowsCpOn.some((t) => /\bll\b/.test(t)), offHasCpAlias: rowsCpOff.some((t) => /\bll\b/.test(t)), offHasGeneral: rowsCppGeneral.some((t) => /for/.test(t)), onRows: rowsCpOn.slice(0, 12), offRows: rowsCpOff.slice(0, 12), generalRows: rowsCppGeneral.slice(0, 12) }));
 await app.close();
 
 // --- Negative control: the boot gate must catch a blank renderer (nothing listens on :5999) ---
@@ -725,7 +769,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
