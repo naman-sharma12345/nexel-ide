@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { getClangd } from './lib/clangd/session';
 import { useUIStore } from './stores/useUIStore';
 import { useEditorStore } from './stores/useEditorStore';
