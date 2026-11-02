@@ -481,6 +481,81 @@ await page.keyboard.press('ArrowDown'); await page.waitForTimeout(300);
 await page.keyboard.press('Enter'); await page.waitForTimeout(900);
 const kbEnter = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null);
 report('EXPLORER_KB_OPEN_REAL', kbClosed === 2 && kbReopen === 4 && kbEnter === 'main.cpp', JSON.stringify({ kbClosed, kbReopen, kbEnter }));
+await page.screenshot({ path: dir + '/r6-explorer-kb.png' });
+
+// --- Phase: F2 opens inline rename for the selected node and commits on Enter ---
+fs.writeFileSync(ws + '/kbf2.txt', 'rename me');
+await page.locator('.nx-action-btn[title="Refresh Tree"]').click(); await page.waitForTimeout(800);
+await page.locator('.nx-node-row', { hasText: 'kbf2.txt' }).first().click(); await page.waitForTimeout(400);
+await page.keyboard.press('F2'); await page.waitForTimeout(500);
+const f2Input = await page.evaluate(() => {
+  const inp = document.querySelector('.nx-inline-textbox');
+  return inp ? { value: inp.value, focused: document.activeElement === inp } : null;
+});
+// rename autofocus selects the basename; typing replaces it and keeps the extension
+await page.keyboard.type('kbf2-renamed'); await page.waitForTimeout(300);
+await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+const f2Done = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbf2-renamed.txt'));
+const f2Disk = fs.existsSync(ws + '/kbf2-renamed.txt') && !fs.existsSync(ws + '/kbf2.txt');
+report('EXPLORER_KB_F2_REAL', f2Input !== null && f2Input.value === 'kbf2.txt' && f2Input.focused && f2Done && f2Disk, JSON.stringify({ f2Input, f2Done, f2Disk }));
+
+// --- Phase: Delete key on the focused tree honors cancel and dirty-open state ---
+fs.writeFileSync(ws + '/kbdel.txt', 'scratch');
+await page.locator('.nx-action-btn[title="Refresh Tree"]').click(); await page.waitForTimeout(800);
+await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(400);
+// 1) cancel: dismissed confirm leaves the file on disk and in the tree
+const delDismiss = (d) => d.dismiss().catch(() => {});
+page.on('dialog', delDismiss);
+await page.keyboard.press('Delete'); await page.waitForTimeout(600);
+page.off('dialog', delDismiss);
+const afterCancel = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'));
+// 2) dirty: open the file, type to dirty it, reselect its row, Delete -> warning confirm names unsaved changes; dismiss keeps the file
+await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(900);
+await page.locator('.view-lines').first().click(); await page.keyboard.type('dirty'); await page.waitForTimeout(500);
+await page.locator('.nx-node-row', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(300);
+let dirtyMsg = '';
+const delDirty = (d) => { dirtyMsg = d.message(); d.dismiss().catch(() => {}); };
+page.on('dialog', delDirty);
+await page.keyboard.press('Delete'); await page.waitForTimeout(600);
+page.off('dialog', delDirty);
+const afterDirtyCancel = await page.evaluate(() => [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'));
+// 3) accept: file deleted on disk and from the tree; the dirty tab stays open with its buffer
+const delAccept = (d) => d.accept().catch(() => {});
+page.on('dialog', delAccept);
+await page.keyboard.press('Delete'); await page.waitForTimeout(900);
+page.off('dialog', delAccept);
+const delAfterAccept = await page.evaluate(() => ({
+  rowGone: ![...document.querySelectorAll('.nx-tree-scroll .nx-node-row')].some((r) => r.textContent === 'kbdel.txt'),
+  tabOpen: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some((t) => t.textContent === 'kbdel.txt'),
+}));
+const diskGone = !fs.existsSync(ws + '/kbdel.txt');
+report('EXPLORER_KB_DELETE_REAL', afterCancel && afterDirtyCancel && delAfterAccept.rowGone && delAfterAccept.tabOpen && diskGone && /unsaved/i.test(dirtyMsg), JSON.stringify({ afterCancel, afterDirtyCancel, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 120) }));
+
+// --- Phase: orphaned buffer is not silently recreated by auto-save; explicit save recovers ---
+await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(400);
+await page.waitForTimeout(6500); // longer than the 5s auto-save loop
+const notRecreated = !fs.existsSync(ws + '/kbdel.txt');
+const orphanState = await page.evaluate(() => {
+  const tab = [...document.querySelectorAll('.nx-editor-tab')].find((t) => t.textContent?.includes('kbdel.txt'));
+  return { orphanedClass: tab?.classList.contains('nx-tab-orphaned') ?? false, dirtyDot: !!tab?.querySelector('.nx-dirty-indicator-glow') };
+});
+// explicit Ctrl+S is a deliberate recovery: it recreates the file and clears the orphan state
+await page.locator('.nx-editor-tab', { hasText: 'kbdel.txt' }).first().click(); await page.waitForTimeout(400);
+await page.keyboard.press('Control+s'); await page.waitForTimeout(900);
+const recreated = fs.existsSync(ws + '/kbdel.txt');
+const orphanCleared = await page.evaluate(() => {
+  const tab = [...document.querySelectorAll('.nx-editor-tab')].find((t) => t.textContent?.includes('kbdel.txt'));
+  return tab ? !tab.classList.contains('nx-tab-orphaned') : false;
+});
+await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(300);
+fs.unlinkSync(ws + '/kbdel.txt');
+report('ORPHAN_AUTOSAVE_REAL', notRecreated && orphanState.orphanedClass && orphanState.dirtyDot && recreated && orphanCleared, JSON.stringify({ notRecreated, orphanState, recreated, orphanCleared }));
+// cleanup: close the orphaned dirty tab, accepting the dirty-close confirm (buffer is moot, file is gone)
+const orphanDlg = (d) => d.accept().catch(() => {});
+page.on('dialog', orphanDlg);
+await page.locator('.nx-editor-tab', { hasText: 'kbdel.txt' }).locator('.nx-tab-x').click().catch(() => {});
+await page.waitForTimeout(600);
+page.off('dialog', orphanDlg);
 
 await app.close();
 
@@ -498,7 +573,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
