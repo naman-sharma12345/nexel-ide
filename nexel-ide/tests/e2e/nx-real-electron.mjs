@@ -383,6 +383,30 @@ const zenOff = await page.evaluate(() => ({
 }));
 report('ZEN_REAL', zenOn.cls && zenOn.sidebarOpacity === '0' && !zenOff.cls && zenOff.sidebarOpacity === '1', JSON.stringify({ zenOn, zenOff }));
 
+// --- Phase 3i: command palette opens, filters, and executes a command ---
+await page.keyboard.press('Control+Shift+p'); await page.waitForTimeout(700);
+const palOpen = await page.evaluate(() => !!document.querySelector('.cp-box'));
+await page.locator('.cp-input').first().click(); await page.keyboard.type('zen'); await page.waitForTimeout(500);
+const palItems = await page.evaluate(() => [...document.querySelectorAll('.cp-list *')].map((x) => x.textContent).filter(Boolean).slice(0, 8));
+await page.keyboard.press('Enter'); await page.waitForTimeout(700);
+const palAfter = await page.evaluate(() => ({
+  closed: !document.querySelector('.cp-box'),
+  zen: document.documentElement.classList.contains('nx-zen'),
+}));
+await page.keyboard.press('Control+Alt+z'); await page.waitForTimeout(500);
+const zenRestored = await page.evaluate(() => !document.documentElement.classList.contains('nx-zen'));
+report('PALETTE_REAL', palOpen && palItems.some((t) => t.includes('Toggle Zen Mode')) && palAfter.closed && palAfter.zen && zenRestored, JSON.stringify({ palOpen, palItems, palAfter, zenRestored }));
+
+// --- Phase 3j: Ctrl+W closes the active tab and selects the neighbor ---
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(1200);
+await page.keyboard.press('Control+w'); await page.waitForTimeout(800);
+const ctrlW = await page.evaluate(() => ({
+  tabs: [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent),
+  activeTitle: document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null,
+  footer: !!document.querySelector('.nx-editor-footer-metrics'),
+}));
+report('TABS_CTRLW_REAL', !ctrlW.tabs.includes('README.md') && ctrlW.activeTitle === 'main.py' && ctrlW.footer, JSON.stringify(ctrlW));
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
@@ -399,7 +423,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
