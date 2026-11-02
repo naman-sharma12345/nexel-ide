@@ -1,0 +1,1739 @@
+{
+  "ll": {
+    "prefix": "ll",
+    "body": ["using ll = long long;"],
+    "description": "long long alias"
+  },
+  "ull": {
+    "prefix": "ull",
+    "body": ["using ull = unsigned long long;"],
+    "description": "unsigned long long alias"
+  },
+  "ld": {
+    "prefix": "ld",
+    "body": ["using ld = long double;"],
+    "description": "long double alias"
+  },
+  "pii": {
+    "prefix": "pii",
+    "body": ["using pii = pair<int,int>;"],
+    "description": "pair of ints"
+  },
+  "pll": {
+    "prefix": "pll",
+    "body": ["using pll = pair<ll,ll>;"],
+    "description": "pair of long longs"
+  },
+  "vi": {
+    "prefix": "vi",
+    "body": ["using vi = vector<int>;"],
+    "description": "vector of ints"
+  },
+  "vll": {
+    "prefix": "vll",
+    "body": ["using vll = vector<ll>;"],
+    "description": "vector of long longs"
+  },
+  "vpi": {
+    "prefix": "vpi",
+    "body": ["using vpi = vector<pii>;"],
+    "description": "vector of int pairs"
+  },
+  "vpl": {
+    "prefix": "vpl",
+    "body": ["using vpl = vector<pll>;"],
+    "description": "vector of long long pairs"
+  },
+  "vvi": {
+    "prefix": "vvi",
+    "body": ["using vvi = vector<vi>;"],
+    "description": "vector of vector ints"
+  },
+  "vvll": {
+    "prefix": "vvll",
+    "body": ["using vvll = vector<vll>;"],
+    "description": "vector of vector long longs"
+  },
+  "umii": {
+    "prefix": "umii",
+    "body": ["using umii = unordered_map<int,int>;"],
+    "description": "unordered_map int to int"
+  },
+  "usi": {
+    "prefix": "usi",
+    "body": ["using usi = unordered_set<int>;"],
+    "description": "unordered_set of ints"
+  },
+  "mii": {
+    "prefix": "mii",
+    "body": ["using mii = map<int,int>;"],
+    "description": "map int to int"
+  },
+  "si": {
+    "prefix": "si",
+    "body": ["using si = set<int>;"],
+    "description": "set of ints"
+  },
+  "vb": {
+    "prefix": "vb",
+    "body": ["using vb = vector<bool>;"],
+    "description": "vector of bools"
+  },
+  "vc": {
+    "prefix": "vc",
+    "body": ["using vc = vector<char>;"],
+    "description": "vector of chars"
+  },
+  "vs": {
+    "prefix": "vs",
+    "body": ["using vs = vector<string>;"],
+    "description": "vector of strings"
+  },
+  "pqi": {
+    "prefix": "pqi",
+    "body": ["using pqi = priority_queue<int>;"],
+    "description": "max-heap of ints"
+  },
+  "pqpii": {
+    "prefix": "pqpii",
+    "body": ["using pqpii = priority_queue<pii, vector<pii>, greater<pii>>;"],
+    "description": "min-heap of int pairs"
+  },
+  "pb": {
+    "prefix": "pb",
+    "body": ["#define pb push_back"],
+    "description": "push_back macro"
+  },
+  "eb": {
+    "prefix": "eb",
+    "body": ["#define eb emplace_back"],
+    "description": "emplace_back macro"
+  },
+  "mp": {
+    "prefix": "mp",
+    "body": ["#define mp make_pair"],
+    "description": "make_pair macro"
+  },
+  "ff": {
+    "prefix": "ff",
+    "body": ["#define ff first"],
+    "description": "first macro"
+  },
+  "ss": {
+    "prefix": "ss",
+    "body": ["#define ss second"],
+    "description": "second macro"
+  },
+  "all": {
+    "prefix": "all",
+    "body": ["#define all(v) (v).begin(),(v).end()"],
+    "description": "begin to end"
+  },
+  "rall": {
+    "prefix": "rall",
+    "body": ["#define rall(v) (v).rbegin(),(v).rend()"],
+    "description": "rbegin to rend"
+  },
+  "sz": {
+    "prefix": "sz",
+    "body": ["#define sz(v) ((int)(v).size())"],
+    "description": "size as int"
+  },
+  "present": {
+    "prefix": "present",
+    "body": ["#define present(c,x) ((c).find(x) != (c).end())"],
+    "description": "set/map contains check"
+  },
+  "fori": {
+    "prefix": "fori",
+    "body": ["for(int i = 0; i < n; ++i)"],
+    "description": "loop i from 0 to n-1"
+  },
+  "forj": {
+    "prefix": "forj",
+    "body": ["for(int j = 0; j < m; ++j)"],
+    "description": "loop j from 0 to m-1"
+  },
+  "fork": {
+    "prefix": "fork",
+    "body": ["for(int k = 0; k < l; ++k)"],
+    "description": "loop k from 0 to l-1"
+  },
+  "rep": {
+    "prefix": "rep",
+    "body": ["#define rep(i,a,b) for(int i = a; i < (b); ++i)"],
+    "description": "for loop [a,b)"
+  },
+  "per": {
+    "prefix": "per",
+    "body": ["#define per(i,a,b) for(int i = a; i >= (b); --i)"],
+    "description": "reverse for loop [a,b]"
+  },
+  "foreach": {
+    "prefix": "foreach",
+    "body": ["#define foreach(i, c) for(auto &i : c)"],
+    "description": "range-based for with reference"
+  },
+  "rrep": {
+    "prefix": "rrep",
+    "body": ["#define rrep(i,n) for(int i = (n)-1; i >= 0; --i)"],
+    "description": "reverse loop n-1..0"
+  },
+  "array_in": {
+    "prefix": "array_in",
+    "body": ["rep(i,0,n) cin >> a[i];"],
+    "description": "read n elements into array a"
+  },
+  "vector_in": {
+    "prefix": "vector_in",
+    "body": ["for(auto &x : v) cin >> x;"],
+    "description": "read whole vector"
+  },
+  "matrix_in": {
+    "prefix": "matrix_in",
+    "body": ["rep(i,0,n) rep(j,0,m) cin >> mat[i][j];"],
+    "description": "read n x m matrix"
+  },
+  "graph_in": {
+    "prefix": "graph_in",
+    "body": [
+      "rep(i,0,m) {",
+      "  int u, v;",
+      "  cin >> u >> v;",
+      "  --u; --v;",
+      "  adj[u].pb(v);",
+      "  adj[v].pb(u);",
+      "}"
+    ],
+    "description": "read undirected graph edges (1-indexed -> 0-indexed)"
+  },
+  "dir_graph_in": {
+    "prefix": "dir_graph_in",
+    "body": [
+      "rep(i,0,m) {",
+      "  int u, v;",
+      "  cin >> u >> v;",
+      "  --u; --v;",
+      "  adj[u].pb(v);",
+      "}"
+    ],
+    "description": "read directed graph edges (1-indexed -> 0-indexed)"
+  },
+  "wgraph_in": {
+    "prefix": "wgraph_in",
+    "body": [
+      "rep(i,0,m) {",
+      "  int u, v; ll w;",
+      "  cin >> u >> v >> w;",
+      "  --u; --v;",
+      "  adj[u].eb(v,w);",
+      "  adj[v].eb(u,w);",
+      "}"
+    ],
+    "description": "read weighted undirected graph"
+  },
+  "tcs": {
+    "prefix": "tcs",
+    "body": [
+      "int t;",
+      "cin >> t;",
+      "while(t--) {",
+      "  solve();",
+      "}"
+    ],
+    "description": "multiple test cases loop"
+  },
+  "tc_id": {
+    "prefix": "tc_id",
+    "body": [
+      "int t;",
+      "cin >> t;",
+      "for(int tc = 1; tc <= t; ++tc) {",
+      "  // cout << \"Case #\" << tc << \": \";",
+      "  solve();",
+      "}"
+    ],
+    "description": "test cases with case number"
+  },
+  "YESNO": {
+    "prefix": "YESNO",
+    "body": ["cout << (condition ? \"YES\" : \"NO\") << '\\n';"],
+    "description": "print YES/NO"
+  },
+  "YesNo": {
+    "prefix": "YesNo",
+    "body": ["cout << (condition ? \"Yes\" : \"No\") << '\\n';"],
+    "description": "print Yes/No"
+  },
+  "debug_var": {
+    "prefix": "debug_var",
+    "body": ["cerr << \"var: \" << var << endl;"],
+    "description": "debug variable to stderr"
+  },
+  "print_vector": {
+    "prefix": "print_vector",
+    "body": [
+      "for(auto x : v) cout << x << ' ';",
+      "cout << '\\n';"
+    ],
+    "description": "print vector space separated"
+  },
+  "print_matrix": {
+    "prefix": "print_matrix",
+    "body": [
+      "for(auto &row : mat) {",
+      "  for(auto x : row) cout << x << ' ';",
+      "  cout << '\\n';",
+      "}"
+    ],
+    "description": "print 2D matrix"
+  },
+  "fastio": {
+    "prefix": "fastio",
+    "body": [
+      "ios_base::sync_with_stdio(false);",
+      "cin.tie(nullptr);",
+      "cout.tie(nullptr);"
+    ],
+    "description": "fast I/O"
+  },
+  "solve_func": {
+    "prefix": "solve_func",
+    "body": [
+      "void solve() {",
+      "  $0",
+      "}"
+    ],
+    "description": "solve function skeleton"
+  },
+  "main_single": {
+    "prefix": "main_single",
+    "body": [
+      "int main() {",
+      "  fastio;",
+      "  solve();",
+      "  return 0;",
+      "}"
+    ],
+    "description": "main for single test case"
+  },
+  "main_multitest": {
+    "prefix": "main_multitest",
+    "body": [
+      "int main() {",
+      "  fastio;",
+      "  int t;",
+      "  cin >> t;",
+      "  while(t--) solve();",
+      "  return 0;",
+      "}"
+    ],
+    "description": "main with multiple test cases"
+  },
+  "full_template": {
+    "prefix": "full_template",
+    "body": [
+      "#include <bits/stdc++.h>",
+      "using namespace std;",
+      "",
+      "using ll = long long;",
+      "using ld = long double;",
+      "using pii = pair<int,int>;",
+      "using pll = pair<ll,ll>;",
+      "using vi = vector<int>;",
+      "using vll = vector<ll>;",
+      "using vpi = vector<pii>;",
+      "using vpl = vector<pll>;",
+      "",
+      "#define pb push_back",
+      "#define eb emplace_back",
+      "#define ff first",
+      "#define ss second",
+      "#define all(v) (v).begin(),(v).end()",
+      "#define rall(v) (v).rbegin(),(v).rend()",
+      "#define sz(v) ((int)(v).size())",
+      "#define rep(i,a,b) for(int i = a; i < (b); ++i)",
+      "#define per(i,a,b) for(int i = a; i >= (b); --i)",
+      "#define endl '\\n'",
+      "",
+      "const ll MOD = 1e9+7;",
+      "const ll INF = 1e18;",
+      "const double EPS = 1e-9;",
+      "",
+      "#ifdef LOCAL",
+      "#define dbg(x) cerr << #x << \" = \" << x << endl;",
+      "#else",
+      "#define dbg(x)",
+      "#endif",
+      "",
+      "void solve() {",
+      "  $0",
+      "}",
+      "",
+      "int main() {",
+      "  ios_base::sync_with_stdio(false);",
+      "  cin.tie(nullptr);",
+      "  int t;",
+      "  cin >> t;",
+      "  while(t--) solve();",
+      "  return 0;",
+      "}"
+    ],
+    "description": "full competitive programming template"
+  },
+  "debug_template": {
+    "prefix": "debug_template",
+    "body": [
+      "#ifdef LOCAL",
+      "#define dbg(x) cerr << #x << \" = \" << x << endl;",
+      "#define dbgv(v) { cerr << #v << \" = \"; for(auto &x : v) cerr << x << ' '; cerr << endl; }",
+      "#else",
+      "#define dbg(x)",
+      "#define dbgv(v)",
+      "#endif"
+    ],
+    "description": "conditional debug macros"
+  },
+  "dsu": {
+    "prefix": "dsu",
+    "body": [
+      "struct DSU {",
+      "  vi parent, rank;",
+      "  DSU(int n) : parent(n), rank(n,0) {",
+      "    iota(all(parent), 0);",
+      "  }",
+      "  int find(int x) {",
+      "    return parent[x] == x ? x : parent[x] = find(parent[x]);",
+      "  }",
+      "  bool unite(int x, int y) {",
+      "    x = find(x);",
+      "    y = find(y);",
+      "    if(x == y) return false;",
+      "    if(rank[x] < rank[y]) swap(x,y);",
+      "    parent[y] = x;",
+      "    if(rank[x] == rank[y]) ++rank[x];",
+      "    return true;",
+      "  }",
+      "};"
+    ],
+    "description": "Disjoint Set Union (Union-Find)"
+  },
+  "fenwick": {
+    "prefix": "fenwick",
+    "body": [
+      "struct Fenwick {",
+      "  vll bit;",
+      "  Fenwick(int n) : bit(n+1) {}",
+      "  void add(int i, ll val) {",
+      "    for(; i < sz(bit); i += i & -i) bit[i] += val;",
+      "  }",
+      "  ll sum(int i) {",
+      "    ll s = 0;",
+      "    for(; i > 0; i -= i & -i) s += bit[i];",
+      "    return s;",
+      "  }",
+      "  ll query(int l, int r) { return sum(r) - sum(l-1); }",
+      "};"
+    ],
+    "description": "Fenwick Tree (Binary Indexed Tree)"
+  },
+  "segtree": {
+    "prefix": "segtree",
+    "body": [
+      "struct SegTree {",
+      "  int n;",
+      "  vll tree;",
+      "  SegTree(int n) : n(n), tree(2*n) {}",
+      "  void build() {",
+      "    for(int i = n-1; i > 0; --i)",
+      "      tree[i] = tree[i<<1] + tree[i<<1|1];",
+      "  }",
+      "  void update(int p, ll val) {",
+      "    for(tree[p += n] = val; p > 1; p >>= 1)",
+      "      tree[p>>1] = tree[p] + tree[p^1];",
+      "  }",
+      "  ll query(int l, int r) {",
+      "    ll res = 0;",
+      "    for(l += n, r += n+1; l < r; l >>= 1, r >>= 1) {",
+      "      if(l&1) res += tree[l++];",
+      "      if(r&1) res += tree[--r];",
+      "    }",
+      "    return res;",
+      "  }",
+      "};"
+    ],
+    "description": "Segment Tree (point update, range sum)"
+  },
+  "lazy_segtree": {
+    "prefix": "lazy_segtree",
+    "body": [
+      "struct LazySegTree {",
+      "  int n;",
+      "  vll tree, lazy;",
+      "  LazySegTree(int n) : n(n), tree(4*n), lazy(4*n) {}",
+      "  void push(int v, int tl, int tr) {",
+      "    if(lazy[v]) {",
+      "      int tm = (tl+tr)/2;",
+      "      tree[v*2] += lazy[v] * (tm-tl+1);",
+      "      lazy[v*2] += lazy[v];",
+      "      tree[v*2+1] += lazy[v] * (tr-tm);",
+      "      lazy[v*2+1] += lazy[v];",
+      "      lazy[v] = 0;",
+      "    }",
+      "  }",
+      "  void update(int v, int tl, int tr, int l, int r, ll add) {",
+      "    if(l > r) return;",
+      "    if(l == tl && r == tr) {",
+      "      tree[v] += add * (r-l+1);",
+      "      lazy[v] += add;",
+      "      return;",
+      "    }",
+      "    push(v, tl, tr);",
+      "    int tm = (tl+tr)/2;",
+      "    update(v*2, tl, tm, l, min(r,tm), add);",
+      "    update(v*2+1, tm+1, tr, max(l,tm+1), r, add);",
+      "    tree[v] = tree[v*2] + tree[v*2+1];",
+      "  }",
+      "  ll query(int v, int tl, int tr, int l, int r) {",
+      "    if(l > r) return 0;",
+      "    if(l == tl && r == tr) return tree[v];",
+      "    push(v, tl, tr);",
+      "    int tm = (tl+tr)/2;",
+      "    return query(v*2, tl, tm, l, min(r,tm)) +",
+      "           query(v*2+1, tm+1, tr, max(l,tm+1), r);",
+      "  }",
+      "};"
+    ],
+    "description": "Lazy Segment Tree (range add, range sum)"
+  },
+  "sparse_table": {
+    "prefix": "sparse_table",
+    "body": [
+      "struct SparseTable {",
+      "  vvi st;",
+      "  vi log;",
+      "  SparseTable(const vi &a) {",
+      "    int n = sz(a);",
+      "    log.resize(n+1);",
+      "    for(int i=2; i<=n; ++i) log[i] = log[i/2]+1;",
+      "    int K = log[n]+1;",
+      "    st.assign(K, vi(n));",
+      "    st[0] = a;",
+      "    for(int j=1; j<K; ++j) {",
+      "      for(int i=0; i+(1<<j)<=n; ++i) {",
+      "        st[j][i] = min(st[j-1][i], st[j-1][i+(1<<(j-1))]);",
+      "      }",
+      "    }",
+      "  }",
+      "  int query(int l, int r) {",
+      "    int j = log[r-l+1];",
+      "    return min(st[j][l], st[j][r-(1<<j)+1]);",
+      "  }",
+      "};"
+    ],
+    "description": "Sparse Table for RMQ"
+  },
+  "trie": {
+    "prefix": "trie",
+    "body": [
+      "struct TrieNode {",
+      "  int next[26];",
+      "  bool is_end;",
+      "  TrieNode() {",
+      "    memset(next, -1, sizeof(next));",
+      "    is_end = false;",
+      "  }",
+      "};",
+      "struct Trie {",
+      "  vector<TrieNode> nodes;",
+      "  Trie() { nodes.emplace_back(); }",
+      "  void insert(const string &s) {",
+      "    int v = 0;",
+      "    for(char c : s) {",
+      "      int idx = c - 'a';",
+      "      if(nodes[v].next[idx] == -1) {",
+      "        nodes[v].next[idx] = sz(nodes);",
+      "        nodes.emplace_back();",
+      "      }",
+      "      v = nodes[v].next[idx];",
+      "    }",
+      "    nodes[v].is_end = true;",
+      "  }",
+      "  bool search(const string &s) {",
+      "    int v = 0;",
+      "    for(char c : s) {",
+      "      int idx = c - 'a';",
+      "      if(nodes[v].next[idx] == -1) return false;",
+      "      v = nodes[v].next[idx];",
+      "    }",
+      "    return nodes[v].is_end;",
+      "  }",
+      "};"
+    ],
+    "description": "Trie for lowercase strings"
+  },
+  "ordered_set": {
+    "prefix": "ordered_set",
+    "body": [
+      "#include <ext/pb_ds/assoc_container.hpp>",
+      "#include <ext/pb_ds/tree_policy.hpp>",
+      "using namespace __gnu_pbds;",
+      "template<typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;"
+    ],
+    "description": "Ordered set (PBDS)"
+  },
+  "ordered_multiset": {
+    "prefix": "ordered_multiset",
+    "body": [
+      "template<typename T> using ordered_multiset = tree<T, null_type, less_equal<T>, rb_tree_tag, tree_order_statistics_node_update>;"
+    ],
+    "description": "Ordered multiset (PBDS, careful with erase)"
+  },
+  "lca_bl": {
+    "prefix": "lca_bl",
+    "body": [
+      "struct LCA {",
+      "  int n, LOG;",
+      "  vvi up;",
+      "  vi depth;",
+      "  LCA(const vvi &adj, int root) {",
+      "    n = sz(adj);",
+      "    LOG = 32 - __builtin_clz(n);",
+      "    up.assign(LOG, vi(n, -1));",
+      "    depth.resize(n);",
+      "    function<void(int,int)> dfs = [&](int u, int p) {",
+      "      up[0][u] = p;",
+      "      for(int v : adj[u]) if(v != p) {",
+      "        depth[v] = depth[u] + 1;",
+      "        dfs(v, u);",
+      "      }",
+      "    };",
+      "    dfs(root, -1);",
+      "    for(int j=1; j<LOG; ++j)",
+      "      for(int i=0; i<n; ++i)",
+      "        if(up[j-1][i] != -1)",
+      "          up[j][i] = up[j-1][up[j-1][i]];",
+      "  }",
+      "  int lift(int u, int d) {",
+      "    for(int j=0; j<LOG; ++j)",
+      "      if(d>>j & 1) u = up[j][u];",
+      "    return u;",
+      "  }",
+      "  int lca(int u, int v) {",
+      "    if(depth[u] < depth[v]) swap(u,v);",
+      "    u = lift(u, depth[u]-depth[v]);",
+      "    if(u == v) return u;",
+      "    for(int j=LOG-1; j>=0; --j) {",
+      "      if(up[j][u] != up[j][v]) {",
+      "        u = up[j][u];",
+      "        v = up[j][v];",
+      "      }",
+      "    }",
+      "    return up[0][u];",
+      "  }",
+      "};"
+    ],
+    "description": "LCA using binary lifting"
+  },
+  "bfs": {
+    "prefix": "bfs",
+    "body": [
+      "vi dist(n, -1);",
+      "queue<int> q;",
+      "dist[s] = 0;",
+      "q.push(s);",
+      "while(!q.empty()) {",
+      "  int u = q.front(); q.pop();",
+      "  for(int v : adj[u]) {",
+      "    if(dist[v] == -1) {",
+      "      dist[v] = dist[u] + 1;",
+      "      q.push(v);",
+      "    }",
+      "  }",
+      "}"
+    ],
+    "description": "BFS (unweighted shortest distances)"
+  },
+  "dfs": {
+    "prefix": "dfs",
+    "body": [
+      "vb vis(n, false);",
+      "function<void(int)> dfs = [&](int u) {",
+      "  vis[u] = true;",
+      "  for(int v : adj[u]) {",
+      "    if(!vis[v]) dfs(v);",
+      "  }",
+      "};"
+    ],
+    "description": "DFS traversal"
+  },
+  "dijkstra": {
+    "prefix": "dijkstra",
+    "body": [
+      "vll dist(n, INF);",
+      "priority_queue<pll, vector<pll>, greater<pll>> pq;",
+      "dist[s] = 0;",
+      "pq.push({0, s});",
+      "while(!pq.empty()) {",
+      "  auto [d, u] = pq.top(); pq.pop();",
+      "  if(d > dist[u]) continue;",
+      "  for(auto [v, w] : adj[u]) {",
+      "    if(dist[v] > dist[u] + w) {",
+      "      dist[v] = dist[u] + w;",
+      "      pq.push({dist[v], v});",
+      "    }",
+      "  }",
+      "}"
+    ],
+    "description": "Dijkstra's algorithm"
+  },
+  "zero_one_bfs": {
+    "prefix": "zero_one_bfs",
+    "body": [
+      "vll dist(n, INF);",
+      "deque<int> dq;",
+      "dist[s] = 0;",
+      "dq.push_front(s);",
+      "while(!dq.empty()) {",
+      "  int u = dq.front(); dq.pop_front();",
+      "  for(auto [v, w] : adj[u]) {",
+      "    if(dist[v] > dist[u] + w) {",
+      "      dist[v] = dist[u] + w;",
+      "      if(w == 0) dq.push_front(v);",
+      "      else dq.push_back(v);",
+      "    }",
+      "  }",
+      "}"
+    ],
+    "description": "0-1 BFS"
+  },
+  "bellman_ford": {
+    "prefix": "bellman_ford",
+    "body": [
+      "vll dist(n, INF);",
+      "dist[s] = 0;",
+      "for(int i = 0; i < n-1; ++i) {",
+      "  for(auto &e : edges) {",
+      "    auto [u, v, w] = e;",
+      "    if(dist[u] != INF && dist[v] > dist[u] + w)",
+      "      dist[v] = dist[u] + w;",
+      "  }",
+      "}",
+      "// check negative cycles:",
+      "// for(auto &e : edges) if(dist[u]!=INF && dist[v] > dist[u]+w) => cycle"
+    ],
+    "description": "Bellman-Ford algorithm"
+  },
+  "floyd": {
+    "prefix": "floyd",
+    "body": [
+      "for(int k = 0; k < n; ++k)",
+      "  for(int i = 0; i < n; ++i)",
+      "    for(int j = 0; j < n; ++j)",
+      "      d[i][j] = min(d[i][j], d[i][k] + d[k][j]);"
+    ],
+    "description": "Floyd-Warshall APSP"
+  },
+  "toposort": {
+    "prefix": "toposort",
+    "body": [
+      "vi indeg(n);",
+      "for(auto &v : adj) for(int u : v) indeg[u]++;",
+      "queue<int> q;",
+      "for(int i = 0; i < n; ++i) if(indeg[i] == 0) q.push(i);",
+      "vi topo;",
+      "while(!q.empty()) {",
+      "  int u = q.front(); q.pop();",
+      "  topo.pb(u);",
+      "  for(int v : adj[u]) {",
+      "    if(--indeg[v] == 0) q.push(v);",
+      "  }",
+      "}"
+    ],
+    "description": "Topological sort (Kahn's algorithm)"
+  },
+  "kosaraju": {
+    "prefix": "kosaraju",
+    "body": [
+      "int n;",
+      "vvi adj, radj;",
+      "vb vis;",
+      "vi order, comp;",
+      "void dfs1(int u) {",
+      "  vis[u] = true;",
+      "  for(int v : adj[u]) if(!vis[v]) dfs1(v);",
+      "  order.pb(u);",
+      "}",
+      "void dfs2(int u, int c) {",
+      "  comp[u] = c;",
+      "  for(int v : radj[u]) if(comp[v] == -1) dfs2(v, c);",
+      "}",
+      "void kosaraju() {",
+      "  vis.assign(n, false);",
+      "  for(int i=0; i<n; ++i) if(!vis[i]) dfs1(i);",
+      "  reverse(all(order));",
+      "  comp.assign(n, -1);",
+      "  int c = 0;",
+      "  for(int u : order) if(comp[u] == -1) dfs2(u, c++);",
+      "}"
+    ],
+    "description": "Kosaraju's SCC"
+  },
+  "tarjan_scc": {
+    "prefix": "tarjan_scc",
+    "body": [
+      "int n;",
+      "vvi adj;",
+      "vi idx, lowlink, comp;",
+      "stack<int> st;",
+      "vector<bool> onstack;",
+      "int timer = 0, scc_cnt = 0;",
+      "void dfs(int u) {",
+      "  idx[u] = lowlink[u] = timer++;",
+      "  st.push(u);",
+      "  onstack[u] = true;",
+      "  for(int v : adj[u]) {",
+      "    if(idx[v] == -1) {",
+      "      dfs(v);",
+      "      lowlink[u] = min(lowlink[u], lowlink[v]);",
+      "    } else if(onstack[v]) {",
+      "      lowlink[u] = min(lowlink[u], idx[v]);",
+      "    }",
+      "  }",
+      "  if(lowlink[u] == idx[u]) {",
+      "    while(true) {",
+      "      int w = st.top(); st.pop();",
+      "      onstack[w] = false;",
+      "      comp[w] = scc_cnt;",
+      "      if(w == u) break;",
+      "    }",
+      "    ++scc_cnt;",
+      "  }",
+      "}",
+      "void find_scc() {",
+      "  idx.assign(n, -1);",
+      "  lowlink.assign(n, -1);",
+      "  comp.assign(n, -1);",
+      "  onstack.assign(n, false);",
+      "  for(int i=0; i<n; ++i) if(idx[i]==-1) dfs(i);",
+      "}"
+    ],
+    "description": "Tarjan's strongly connected components"
+  },
+  "kruskal": {
+    "prefix": "kruskal",
+    "body": [
+      "struct Edge { int u, v; ll w; };",
+      "vector<Edge> edges;",
+      "sort(all(edges), [](auto &a, auto &b) { return a.w < b.w; });",
+      "DSU dsu(n);",
+      "ll mst_cost = 0;",
+      "for(auto &e : edges) {",
+      "  if(dsu.unite(e.u, e.v)) {",
+      "    mst_cost += e.w;",
+      "  }",
+      "}"
+    ],
+    "description": "Kruskal's MST"
+  },
+  "prim": {
+    "prefix": "prim",
+    "body": [
+      "vll key(n, INF);",
+      "vb inMST(n, false);",
+      "priority_queue<pll, vector<pll>, greater<pll>> pq;",
+      "key[0] = 0;",
+      "pq.push({0, 0});",
+      "while(!pq.empty()) {",
+      "  auto [d, u] = pq.top(); pq.pop();",
+      "  if(inMST[u]) continue;",
+      "  inMST[u] = true;",
+      "  for(auto [v, w] : adj[u]) {",
+      "    if(!inMST[v] && key[v] > w) {",
+      "      key[v] = w;",
+      "      pq.push({key[v], v});",
+      "    }",
+      "  }",
+      "}",
+      "ll mst_cost = accumulate(all(key), 0LL);"
+    ],
+    "description": "Prim's MST"
+  },
+  "euler_tour": {
+    "prefix": "euler_tour",
+    "body": [
+      "int timer = 0;",
+      "vi tin(n), tout(n);",
+      "function<void(int,int)> dfs = [&](int u, int p) {",
+      "  tin[u] = timer++;",
+      "  for(int v : adj[u]) if(v != p) dfs(v, u);",
+      "  tout[u] = timer-1;",
+      "};",
+      "dfs(root, -1);"
+    ],
+    "description": "Euler tour (in/out times for subtree queries)"
+  },
+  "tree_diameter": {
+    "prefix": "tree_diameter",
+    "body": [
+      "auto bfs_far = [&](int s) {",
+      "  vi dist(n, -1);",
+      "  queue<int> q;",
+      "  dist[s] = 0; q.push(s);",
+      "  int far = s;",
+      "  while(!q.empty()) {",
+      "    int u = q.front(); q.pop();",
+      "    for(int v : adj[u]) if(dist[v]==-1) {",
+      "      dist[v] = dist[u]+1;",
+      "      q.push(v);",
+      "      if(dist[v] > dist[far]) far = v;",
+      "    }",
+      "  }",
+      "  return make_pair(far, dist[far]);",
+      "};",
+      "auto [end1, _] = bfs_far(0);",
+      "auto [end2, diam] = bfs_far(end1);"
+    ],
+    "description": "Tree diameter (two BFS)"
+  },
+  "gcd": {
+    "prefix": "gcd",
+    "body": ["#define gcd __gcd"],
+    "description": "GCD macro"
+  },
+  "lcm": {
+    "prefix": "lcm",
+    "body": ["inline ll lcm(ll a, ll b) { return a / gcd(a,b) * b; }"],
+    "description": "LCM function"
+  },
+  "sieve": {
+    "prefix": "sieve",
+    "body": [
+      "const int N = 1e6+5;",
+      "vector<bool> is_prime(N, true);",
+      "is_prime[0] = is_prime[1] = false;",
+      "for(int i=2; i*i < N; ++i) {",
+      "  if(is_prime[i]) {",
+      "    for(int j=i*i; j < N; j+=i) is_prime[j] = false;",
+      "  }",
+      "}"
+    ],
+    "description": "Eratosthenes sieve"
+  },
+  "linear_sieve": {
+    "prefix": "linear_sieve",
+    "body": [
+      "const int N = 1e6+5;",
+      "vi primes;",
+      "vi spf(N);",
+      "for(int i=2; i<N; ++i) {",
+      "  if(spf[i] == 0) {",
+      "    spf[i] = i;",
+      "    primes.pb(i);",
+      "  }",
+      "  for(auto p : primes) {",
+      "    if(p > spf[i] || i*p >= N) break;",
+      "    spf[i*p] = p;",
+      "  }",
+      "}"
+    ],
+    "description": "Linear sieve (SPF array)"
+  },
+  "prime_factorization": {
+    "prefix": "prime_factorization",
+    "body": [
+      "vector<pll> factors;",
+      "while(x > 1) {",
+      "  ll p = spf[x];",
+      "  ll cnt = 0;",
+      "  while(x % p == 0) {",
+      "    x /= p;",
+      "    ++cnt;",
+      "  }",
+      "  factors.eb(p, cnt);",
+      "}"
+    ],
+    "description": "Prime factorization using SPF"
+  },
+  "modpow": {
+    "prefix": "modpow",
+    "body": [
+      "ll modpow(ll a, ll e, ll mod) {",
+      "  ll res = 1;",
+      "  while(e) {",
+      "    if(e & 1) res = res * a % mod;",
+      "    a = a * a % mod;",
+      "    e >>= 1;",
+      "  }",
+      "  return res;",
+      "}"
+    ],
+    "description": "Modular exponentiation"
+  },
+  "modinv": {
+    "prefix": "modinv",
+    "body": ["ll modinv(ll a, ll mod) { return modpow(a, mod-2, mod); }"],
+    "description": "Modular inverse (mod prime)"
+  },
+  "nCr_mod": {
+    "prefix": "nCr_mod",
+    "body": [
+      "struct Combinatorics {",
+      "  vector<ll> fact, invfact;",
+      "  ll mod;",
+      "  Combinatorics(int n, ll mod) : mod(mod) {",
+      "    fact.resize(n+1);",
+      "    invfact.resize(n+1);",
+      "    fact[0] = 1;",
+      "    for(int i=1; i<=n; ++i) fact[i] = fact[i-1] * i % mod;",
+      "    invfact[n] = modinv(fact[n], mod);",
+      "    for(int i=n-1; i>=0; --i) invfact[i] = invfact[i+1] * (i+1) % mod;",
+      "  }",
+      "  ll nCr(int n, int r) {",
+      "    if(r < 0 || r > n) return 0;",
+      "    return fact[n] * invfact[r] % mod * invfact[n-r] % mod;",
+      "  }",
+      "};"
+    ],
+    "description": "Combinations modulo prime"
+  },
+  "euler_totient": {
+    "prefix": "euler_totient",
+    "body": [
+      "ll phi(ll n) {",
+      "  ll res = n;",
+      "  for(ll p=2; p*p <= n; ++p) {",
+      "    if(n % p == 0) {",
+      "      while(n % p == 0) n /= p;",
+      "      res -= res / p;",
+      "    }",
+      "  }",
+      "  if(n > 1) res -= res / n;",
+      "  return res;",
+      "}"
+    ],
+    "description": "Euler's totient function"
+  },
+  "memo_dp": {
+    "prefix": "memo_dp",
+    "body": [
+      "vector<vll> memo(n, vll(m, -1));",
+      "function<ll(int,int)> dp = [&](int i, int j) -> ll {",
+      "  if(i == n) return 0;",
+      "  if(memo[i][j] != -1) return memo[i][j];",
+      "  ll &ans = memo[i][j];",
+      "  ans = 0;",
+      "  // transitions",
+      "  return ans;",
+      "};"
+    ],
+    "description": "Memoization DP template"
+  },
+  "tab_dp": {
+    "prefix": "tab_dp",
+    "body": [
+      "vvi dp(n+1, vi(m+1, 0));",
+      "for(int i = n-1; i >= 0; --i) {",
+      "  for(int j = m-1; j >= 0; --j) {",
+      "    dp[i][j] = max(dp[i+1][j], dp[i][j+1]); // example",
+      "  }",
+      "}"
+    ],
+    "description": "Tabulation DP template"
+  },
+  "digit_dp": {
+    "prefix": "digit_dp",
+    "body": [
+      "string num;",
+      "ll dp[20][2][2];",
+      "ll digit_dp(int pos, bool tight, bool started) {",
+      "  if(pos == sz(num)) return 1;",
+      "  ll &ans = dp[pos][tight][started];",
+      "  if(ans != -1) return ans;",
+      "  ans = 0;",
+      "  int limit = tight ? num[pos]-'0' : 9;",
+      "  for(int d=0; d<=limit; ++d) {",
+      "    ans += digit_dp(pos+1, tight && (d==limit), started || (d!=0));",
+      "  }",
+      "  return ans;",
+      "}"
+    ],
+    "description": "Digit DP skeleton"
+  },
+  "bitmask_dp": {
+    "prefix": "bitmask_dp",
+    "body": [
+      "vi dp(1<<n, INF);",
+      "dp[0] = 0;",
+      "for(int mask = 0; mask < (1<<n); ++mask) {",
+      "  for(int i = 0; i < n; ++i) {",
+      "    if(mask & (1<<i)) {",
+      "      int prev = mask ^ (1<<i);",
+      "      dp[mask] = min(dp[mask], dp[prev] + cost[i][__builtin_popcount(mask)-1]);",
+      "    }",
+      "  }",
+      "}"
+    ],
+    "description": "Bitmask DP (assignment problem style)"
+  },
+  "kmp": {
+    "prefix": "kmp",
+    "body": [
+      "vi prefix_function(const string &s) {",
+      "  int n = sz(s);",
+      "  vi pi(n);",
+      "  for(int i=1; i<n; ++i) {",
+      "    int j = pi[i-1];",
+      "    while(j > 0 && s[i] != s[j]) j = pi[j-1];",
+      "    if(s[i] == s[j]) ++j;",
+      "    pi[i] = j;",
+      "  }",
+      "  return pi;",
+      "}"
+    ],
+    "description": "KMP prefix function"
+  },
+  "z_function": {
+    "prefix": "z_function",
+    "body": [
+      "vi z_function(const string &s) {",
+      "  int n = sz(s);",
+      "  vi z(n);",
+      "  int l = 0, r = 0;",
+      "  for(int i=1; i<n; ++i) {",
+      "    if(i <= r) z[i] = min(r-i+1, z[i-l]);",
+      "    while(i+z[i] < n && s[z[i]] == s[i+z[i]]) ++z[i];",
+      "    if(i+z[i]-1 > r) {",
+      "      l = i;",
+      "      r = i+z[i]-1;",
+      "    }",
+      "  }",
+      "  return z;",
+      "}"
+    ],
+    "description": "Z algorithm"
+  },
+  "rabin_karp": {
+    "prefix": "rabin_karp",
+    "body": [
+      "struct RollingHash {",
+      "  ll mod, p;",
+      "  vector<ll> h, pw;",
+      "  RollingHash(const string &s, ll mod=1e9+7, ll p=31) : mod(mod), p(p) {",
+      "    int n = sz(s);",
+      "    h.resize(n+1);",
+      "    pw.resize(n+1, 1);",
+      "    for(int i=0; i<n; ++i) {",
+      "      h[i+1] = (h[i]*p + s[i]) % mod;",
+      "      pw[i+1] = pw[i]*p % mod;",
+      "    }",
+      "  }",
+      "  ll hash(int l, int r) {",
+      "    return (h[r+1] - h[l]*pw[r-l+1] % mod + mod) % mod;",
+      "  }",
+      "};"
+    ],
+    "description": "Rolling hash (Rabin-Karp)"
+  },
+  "manacher": {
+    "prefix": "manacher",
+    "body": [
+      "pair<vi,vi> manacher(const string &s) {",
+      "  int n = sz(s);",
+      "  vi d1(n), d2(n);",
+      "  for(int i=0, l=0, r=-1; i<n; ++i) {",
+      "    int k = (i>r) ? 1 : min(d1[l+r-i], r-i+1);",
+      "    while(i-k>=0 && i+k<n && s[i-k]==s[i+k]) ++k;",
+      "    d1[i] = k--;",
+      "    if(i+k > r) { l = i-k; r = i+k; }",
+      "  }",
+      "  for(int i=0, l=0, r=-1; i<n; ++i) {",
+      "    int k = (i>r) ? 0 : min(d2[l+r-i+1], r-i+1);",
+      "    while(i-k-1>=0 && i+k<n && s[i-k-1]==s[i+k]) ++k;",
+      "    d2[i] = k--;",
+      "    if(i+k > r) { l = i-k-1; r = i+k; }",
+      "  }",
+      "  return {d1, d2};",
+      "}"
+    ],
+    "description": "Manacher's algorithm (palindromic radii)"
+  },
+  "point": {
+    "prefix": "point",
+    "body": ["struct Point { ll x, y; };"],
+    "description": "2D point"
+  },
+  "dist_sq": {
+    "prefix": "dist_sq",
+    "body": ["ll dist_sq(Point a, Point b) { return (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y); }"],
+    "description": "squared distance"
+  },
+  "cross": {
+    "prefix": "cross",
+    "body": ["ll cross(Point a, Point b, Point c) { return (b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x); }"],
+    "description": "cross product (a->b, a->c)"
+  },
+  "orientation": {
+    "prefix": "orientation",
+    "body": ["int orient(Point a, Point b, Point c) { ll val = cross(a,b,c); if(val==0) return 0; return val>0 ? 1 : 2; } // 1=CCW,2=CW"],
+    "description": "orientation test"
+  },
+  "convex_hull": {
+    "prefix": "convex_hull",
+    "body": [
+      "vector<Point> convex_hull(vector<Point> pts) {",
+      "  sort(all(pts), [](Point a, Point b) { return tie(a.x,a.y) < tie(b.x,b.y); });",
+      "  vector<Point> hull;",
+      "  for(int step=0; step<2; ++step) {",
+      "    auto start = sz(hull);",
+      "    for(auto p : pts) {",
+      "      while(sz(hull)-start >= 2 && cross(hull[sz(hull)-2], hull.back(), p) <= 0)",
+      "        hull.pop_back();",
+      "      hull.pb(p);",
+      "    }",
+      "    hull.pop_back();",
+      "    reverse(all(pts));",
+      "  }",
+      "  return hull;",
+      "}"
+    ],
+    "description": "Convex hull (Monotone chain)"
+  },
+  "mo": {
+    "prefix": "mo",
+    "body": [
+      "struct Mo {",
+      "  int block;",
+      "  struct Query { int l, r, idx; };",
+      "  vector<Query> queries;",
+      "  Mo(int n) { block = sqrt(n); }",
+      "  void add_query(int l, int r, int idx) { queries.pb({l, r, idx}); }",
+      "  void run(vector<ll> &ans) {",
+      "    sort(all(queries), [&](const Query &a, const Query &b) {",
+      "      if(a.l/block != b.l/block) return a.l < b.l;",
+      "      return (a.l/block % 2) ? (a.r > b.r) : (a.r < b.r);",
+      "    });",
+      "    int L = 0, R = -1;",
+      "    // current state",
+      "    for(auto &q : queries) {",
+      "      while(L > q.l) add(--L);",
+      "      while(R < q.r) add(++R);",
+      "      while(L < q.l) remove(L++);",
+      "      while(R > q.r) remove(R--);",
+      "      ans[q.idx] = /* current answer */;",
+      "    }",
+      "  }",
+      "  void add(int pos) { }",
+      "  void remove(int pos) { }",
+      "};"
+    ],
+    "description": "Mo's algorithm skeleton"
+  },
+  "hld": {
+    "prefix": "hld",
+    "body": [
+      "struct HLD {",
+      "  vi parent, depth, heavy, head, pos;",
+      "  int cur_pos;",
+      "  HLD(const vvi &adj, int root) {",
+      "    int n = sz(adj);",
+      "    parent.resize(n);",
+      "    depth.resize(n);",
+      "    heavy.assign(n, -1);",
+      "    head.resize(n);",
+      "    pos.resize(n);",
+      "    cur_pos = 0;",
+      "    function<int(int,int)> dfs = [&](int u, int p) {",
+      "      int sz = 1, max_sz = 0;",
+      "      parent[u] = p;",
+      "      for(int v : adj[u]) if(v != p) {",
+      "        depth[v] = depth[u] + 1;",
+      "        int sub = dfs(v, u);",
+      "        sz += sub;",
+      "        if(sub > max_sz) { max_sz = sub; heavy[u] = v; }",
+      "      }",
+      "      return sz;",
+      "    };",
+      "    dfs(root, -1);",
+      "    function<void(int,int)> decompose = [&](int u, int h) {",
+      "      head[u] = h;",
+      "      pos[u] = cur_pos++;",
+      "      if(heavy[u] != -1) decompose(heavy[u], h);",
+      "      for(int v : adj[u]) if(v != parent[u] && v != heavy[u])",
+      "        decompose(v, v);",
+      "    };",
+      "    decompose(root, root);",
+      "  }",
+      "  // path query stubs",
+      "};"
+    ],
+    "description": "Heavy-Light Decomposition"
+  },
+  "centroid": {
+    "prefix": "centroid",
+    "body": [
+      "struct CentroidDecomp {",
+      "  vvi adj;",
+      "  vb dead;",
+      "  vi sz;",
+      "  CentroidDecomp(const vvi &g) : adj(g), dead(sz(g)), sz(sz(g)) {}",
+      "  int get_size(int u, int p) {",
+      "    sz[u] = 1;",
+      "    for(int v : adj[u]) if(v != p && !dead[v])",
+      "      sz[u] += get_size(v, u);",
+      "    return sz[u];",
+      "  }",
+      "  int get_centroid(int u, int p, int n) {",
+      "    for(int v : adj[u]) if(v != p && !dead[v] && sz[v] > n/2)",
+      "      return get_centroid(v, u, n);",
+      "    return u;",
+      "  }",
+      "  void decompose(int u) {",
+      "    int n = get_size(u, -1);",
+      "    int c = get_centroid(u, -1, n);",
+      "    dead[c] = true;",
+      "    // process centroid c",
+      "    for(int v : adj[c]) if(!dead[v]) decompose(v);",
+      "  }",
+      "};"
+    ],
+    "description": "Centroid decomposition"
+  },
+  "matrix_exp": {
+    "prefix": "matrix_exp",
+    "body": [
+      "struct Matrix {",
+      "  vvll mat;",
+      "  int n;",
+      "  Matrix(int n) : n(n), mat(n, vll(n)) {}",
+      "  Matrix operator*(const Matrix &other) const {",
+      "    Matrix res(n);",
+      "    for(int i=0; i<n; ++i)",
+      "      for(int k=0; k<n; ++k)",
+      "        for(int j=0; j<n; ++j)",
+      "          res.mat[i][j] = (res.mat[i][j] + mat[i][k]*other.mat[k][j]) % MOD;",
+      "    return res;",
+      "  }",
+      "  Matrix power(ll e) const {",
+      "    Matrix res(n), b = *this;",
+      "    for(int i=0; i<n; ++i) res.mat[i][i] = 1;",
+      "    while(e) {",
+      "      if(e&1) res = res * b;",
+      "      b = b * b;",
+      "      e >>= 1;",
+      "    }",
+      "    return res;",
+      "  }",
+      "};"
+    ],
+    "description": "Matrix exponentiation"
+  },
+  "fft": {
+    "prefix": "fft",
+    "body": [
+      "using cd = complex<double>;",
+      "const double PI = acos(-1);",
+      "void fft(vector<cd> &a, bool invert) {",
+      "  int n = sz(a);",
+      "  for(int i=1, j=0; i<n; ++i) {",
+      "    int bit = n>>1;",
+      "    for(; j&bit; bit>>=1) j ^= bit;",
+      "    j ^= bit;",
+      "    if(i < j) swap(a[i], a[j]);",
+      "  }",
+      "  for(int len=2; len<=n; len<<=1) {",
+      "    double ang = 2*PI/len * (invert ? -1 : 1);",
+      "    cd wlen(cos(ang), sin(ang));",
+      "    for(int i=0; i<n; i+=len) {",
+      "      cd w(1);",
+      "      for(int j=0; j<len/2; ++j) {",
+      "        cd u = a[i+j], v = a[i+j+len/2] * w;",
+      "        a[i+j] = u + v;",
+      "        a[i+j+len/2] = u - v;",
+      "        w *= wlen;",
+      "      }",
+      "    }",
+      "  }",
+      "  if(invert) for(auto &x : a) x /= n;",
+      "}"
+    ],
+    "description": "Fast Fourier Transform"
+  },
+  "ntt": {
+    "prefix": "ntt",
+    "body": [
+      "const ll MOD = 998244353, ROOT = 3;",
+      "void ntt(vll &a, bool invert) {",
+      "  int n = sz(a);",
+      "  for(int i=1, j=0; i<n; ++i) {",
+      "    int bit = n>>1;",
+      "    for(; j&bit; bit>>=1) j ^= bit;",
+      "    j ^= bit;",
+      "    if(i < j) swap(a[i], a[j]);",
+      "  }",
+      "  for(int len=2; len<=n; len<<=1) {",
+      "    ll wlen = modpow(ROOT, (MOD-1)/len, MOD);",
+      "    if(invert) wlen = modinv(wlen, MOD);",
+      "    for(int i=0; i<n; i+=len) {",
+      "      ll w = 1;",
+      "      for(int j=0; j<len/2; ++j) {",
+      "        ll u = a[i+j], v = a[i+j+len/2] * w % MOD;",
+      "        a[i+j] = (u+v) % MOD;",
+      "        a[i+j+len/2] = (u-v+MOD) % MOD;",
+      "        w = w * wlen % MOD;",
+      "      }",
+      "    }",
+      "  }",
+      "  if(invert) {",
+      "    ll inv_n = modinv(n, MOD);",
+      "    for(auto &x : a) x = x * inv_n % MOD;",
+      "  }",
+      "}"
+    ],
+    "description": "Number Theoretic Transform"
+  },
+  "dbg_macro": {
+    "prefix": "dbg_macro",
+    "body": ["#define dbg(x) cerr << #x << \" = \" << x << endl;"],
+    "description": "debug single variable"
+  },
+  "debug_print": {
+    "prefix": "debug_print",
+    "body": [
+      "template<typename T> ostream& operator<<(ostream &os, const vector<T> &v) { for(auto &x:v) os << x << ' '; return os; }",
+      "template<typename T1, typename T2> ostream& operator<<(ostream &os, const pair<T1,T2> &p) { return os << '{' << p.ff << ',' << p.ss << '}'; }"
+    ],
+    "description": "print vector and pair with <<"
+  },
+  "endl_replace": {
+    "prefix": "endl_replace",
+    "body": ["#define endl '\\n'"],
+    "description": "fast newline (no flush)"
+  },
+  "INF": {
+    "prefix": "INF",
+    "body": ["const ll INF = 1e18;"],
+    "description": "infinity constant"
+  },
+  "MOD": {
+    "prefix": "MOD",
+    "body": ["const ll MOD = 1e9+7;"],
+    "description": "common modulo (10^9+7)"
+  },
+  "MOD1": {
+    "prefix": "MOD1",
+    "body": ["const ll MOD1 = 998244353;"],
+    "description": "NTT-friendly modulo"
+  },
+  "PI": {
+    "prefix": "PI",
+    "body": ["const double PI = acos(-1.0);"],
+    "description": "pi constant"
+  },
+  "EPS": {
+    "prefix": "EPS",
+    "body": ["const double EPS = 1e-9;"],
+    "description": "epsilon for floating comparisons"
+  },
+  
+  "tiii": {
+    "prefix": "tiii",
+    "body": ["using tiii = tuple<int,int,int>;"],
+    "description": "tuple of three ints"
+  },
+
+  "tlll": {
+    "prefix": "tlll",
+    "body": ["using tlll = tuple<ll,ll,ll>;"],
+    "description": "tuple of three long longs"
+  },
+
+  "vvpi": {
+    "prefix": "vvpi",
+    "body": ["using vvpi = vector<vector<pair<int,int>>>;"],
+    "description": "2D vector of pairs"
+  },
+
+  "minpq": {
+    "prefix": "minpq",
+    "body": ["priority_queue<int, vector<int>, greater<int>> pq;"],
+    "description": "min heap"
+  },
+
+  "maxpq": {
+    "prefix": "maxpq",
+    "body": ["priority_queue<int> pq;"],
+    "description": "max heap"
+  },
+
+  "compress": {
+    "prefix": "compress",
+    "body": [
+      "vector<int> vals = a;",
+      "sort(all(vals));",
+      "vals.erase(unique(all(vals)), vals.end());",
+      "for(auto &x : a) x = lower_bound(all(vals), x) - vals.begin();"
+    ],
+    "description": "coordinate compression"
+  },
+
+  "prefix_sum": {
+    "prefix": "prefix_sum",
+    "body": [
+      "vector<ll> pref(n+1,0);",
+      "for(int i=0;i<n;i++) pref[i+1]=pref[i]+a[i];"
+    ],
+    "description": "prefix sum array"
+  },
+
+  "difference_array": {
+    "prefix": "difference_array",
+    "body": [
+      "vector<ll> diff(n+1,0);",
+      "diff[l]+=val;",
+      "diff[r+1]-=val;"
+    ],
+    "description": "difference array update"
+  },
+
+  "sliding_window": {
+    "prefix": "sliding_window",
+    "body": [
+      "int l=0;",
+      "for(int r=0;r<n;r++){",
+      "  while(/* invalid */){",
+      "    l++;",
+      "  }",
+      "}"
+    ],
+    "description": "sliding window template"
+  },
+
+  "two_pointers": {
+    "prefix": "two_pointers",
+    "body": [
+      "int l=0,r=0;",
+      "while(r<n){",
+      "  while(/* invalid */){",
+      "    l++;",
+      "  }",
+      "  r++;",
+      "}"
+    ],
+    "description": "two pointers template"
+  },
+
+  "binary_search_ans": {
+    "prefix": "binary_search_ans",
+    "body": [
+      "ll l=0,r=1e18,ans=-1;",
+      "while(l<=r){",
+      "  ll mid=l+(r-l)/2;",
+      "  if(check(mid)){",
+      "    ans=mid;",
+      "    r=mid-1;",
+      "  }else l=mid+1;",
+      "}"
+    ],
+    "description": "binary search on answer"
+  },
+
+  "ternary_search": {
+    "prefix": "ternary_search",
+    "body": [
+      "double l=0,r=1e6;",
+      "for(int it=0;it<200;it++){",
+      "  double m1=l+(r-l)/3;",
+      "  double m2=r-(r-l)/3;",
+      "  if(f(m1)<f(m2)) l=m1;",
+      "  else r=m2;",
+      "}"
+    ],
+    "description": "ternary search"
+  },
+
+  "lis": {
+    "prefix": "lis",
+    "body": [
+      "vector<int> dp;",
+      "for(auto x:a){",
+      "  auto it=lower_bound(all(dp),x);",
+      "  if(it==dp.end()) dp.pb(x);",
+      "  else *it=x;",
+      "}",
+      "int len=dp.size();"
+    ],
+    "description": "longest increasing subsequence O(nlogn)"
+  },
+
+  "mex": {
+    "prefix": "mex",
+    "body": [
+      "unordered_set<int> st(all(a));",
+      "int mex=0;",
+      "while(st.count(mex)) mex++;"
+    ],
+    "description": "minimum excluded value"
+  },
+
+  "kadane": {
+    "prefix": "kadane",
+    "body": [
+      "ll best=-INF,cur=0;",
+      "for(auto x:a){",
+      "  cur=max(x,cur+x);",
+      "  best=max(best,cur);",
+      "}"
+    ],
+    "description": "maximum subarray sum"
+  },
+
+  "extgcd": {
+    "prefix": "extgcd",
+    "body": [
+      "ll extgcd(ll a,ll b,ll &x,ll &y){",
+      "  if(b==0){x=1;y=0;return a;}",
+      "  ll x1,y1;",
+      "  ll g=extgcd(b,a%b,x1,y1);",
+      "  x=y1;",
+      "  y=x1-y1*(a/b);",
+      "  return g;",
+      "}"
+    ],
+    "description": "extended euclidean algorithm"
+  },
+
+  "crt": {
+    "prefix": "crt",
+    "body": [
+      "// Chinese Remainder Theorem skeleton"
+    ],
+    "description": "CRT template"
+  },
+
+  "bridge": {
+    "prefix": "bridge",
+    "body": [
+      "vector<pair<int,int>> bridges;",
+      "vector<int> tin(n,-1),low(n,-1);",
+      "int timer=0;"
+    ],
+    "description": "bridge finding skeleton"
+  },
+
+  "articulation": {
+    "prefix": "articulation",
+    "body": [
+      "vector<int> tin(n,-1),low(n,-1);",
+      "vector<bool> isArt(n,false);"
+    ],
+    "description": "articulation points skeleton"
+  },
+
+  "euler_path": {
+    "prefix": "euler_path",
+    "body": [
+      "vector<int> path;",
+      "stack<int> st;",
+      "st.push(start);"
+    ],
+    "description": "hierholzer euler path skeleton"
+  },
+
+  "tree_dp": {
+    "prefix": "tree_dp",
+    "body": [
+      "vector<ll> dp(n);",
+      "function<void(int,int)> dfs=[&](int u,int p){",
+      "  dp[u]=1;",
+      "  for(auto v:adj[u]) if(v!=p){",
+      "    dfs(v,u);",
+      "    dp[u]+=dp[v];",
+      "  }",
+      "};"
+    ],
+    "description": "tree dp skeleton"
+  },
+
+  "reroot_dp": {
+    "prefix": "reroot_dp",
+    "body": [
+      "// rerooting dp skeleton"
+    ],
+    "description": "rerooting DP"
+  },
+
+  "knapsack01": {
+    "prefix": "knapsack01",
+    "body": [
+      "vector<ll> dp(W+1,0);",
+      "for(int i=0;i<n;i++){",
+      "  for(int w=W;w>=wt[i];w--){",
+      "    dp[w]=max(dp[w],dp[w-wt[i]]+val[i]);",
+      "  }",
+      "}"
+    ],
+    "description": "0/1 knapsack"
+  },
+
+  "sos_dp": {
+    "prefix": "sos_dp",
+    "body": [
+      "for(int i=0;i<LOG;i++)",
+      "  for(int mask=0;mask<(1<<LOG);mask++)",
+      "    if(mask&(1<<i))",
+      "      dp[mask]+=dp[mask^(1<<i)];"
+    ],
+    "description": "sum over subsets DP"
+  },
+
+  "interactive": {
+    "prefix": "interactive",
+    "body": [
+      "cout << query << endl;",
+      "cout.flush();"
+    ],
+    "description": "interactive problem output"
+  },
+
+  "stress": {
+    "prefix": "stress",
+    "body": [
+      "while(true){",
+      "  system(\"gen > input.txt\");",
+      "  system(\"brute < input.txt > brute.txt\");",
+      "  system(\"main < input.txt > main.txt\");",
+      "  if(system(\"fc brute.txt main.txt\")) break;",
+      "}"
+    ],
+    "description": "stress testing loop"
+  },
+
+  "chrono_timer": {
+    "prefix": "chrono_timer",
+    "body": [
+      "auto start=chrono::high_resolution_clock::now();",
+      "// code",
+      "auto stop=chrono::high_resolution_clock::now();",
+      "cerr<<chrono::duration_cast<chrono::milliseconds>(stop-start).count()<<\"ms\\n\";"
+    ],
+    "description": "execution timer"
+  },
+
+  "randll": {
+    "prefix": "randll",
+    "body": [
+      "mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());",
+      "ll x=uniform_int_distribution<ll>(l,r)(rng);"
+    ],
+    "description": "random long long"
+  },
+
+  "caseprint": {
+    "prefix": "caseprint",
+    "body": [
+      "cout << \"Case #\" << tc << \": \" << ans << '\\n';"
+    ],
+    "description": "google kickstart style output"
+  }
+}
