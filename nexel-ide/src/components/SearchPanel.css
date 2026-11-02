@@ -35,3 +35,11 @@
 .sf-repbtn{width:auto;padding:0 10px;white-space:nowrap;transition:opacity .2s,transform .15s}
 .sf-repbtn:disabled{opacity:.35;cursor:default}
 .sf-repbtn:not(:disabled):hover{transform:translateY(-1px)}
+
+/* Replace-all inline confirmation */
+.sf-confirm { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--accent) 6%, transparent); font-size: 12px; color: var(--fg); }
+.sf-confirm b { color: var(--accent); }
+.sf-confirm button { margin-left: auto; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--fg); font-size: 12px; cursor: pointer; }
+.sf-confirm .sf-cf-yes { margin-left: auto; background: var(--accent); border-color: var(--accent); color: #fff; }
+.sf-confirm .sf-cf-no { margin-left: 0; }
+.sf-confirm button:hover { filter: brightness(1.12); }
