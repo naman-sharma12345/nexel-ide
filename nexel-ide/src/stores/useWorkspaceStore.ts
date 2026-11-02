@@ -51,6 +51,9 @@ interface WorkspaceState {
   triggerHeaderNewFile: () => void;
   triggerHeaderNewFolder: () => void;
   handleDeleteNode: (node: FileNode) => Promise<void>;
+  pendingDelete: { node: FileNode; isFolder: boolean; dirtyNames: string[] } | null;
+  confirmDeleteNode: () => Promise<void>;
+  cancelDeleteNode: () => void;
   handleInlineSubmit: (value: string) => Promise<string | null>;
 }
 
@@ -297,24 +300,14 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         });
       },
 
-      handleDeleteNode: async (node) => {
+      pendingDelete: null,
+      cancelDeleteNode: () => set({ pendingDelete: null }),
+      confirmDeleteNode: async () => {
+        const pd = get().pendingDelete;
+        if (!pd) return;
+        set({ pendingDelete: null });
+        const { node, isFolder } = pd;
         const { rootPath } = get();
-        const isFolder = node.type === 'folder';
-        const prefix = node.path.replace(/\\/g, '/') + '/';
-        const dirtyOpen = useEditorStore.getState().tabs.filter((t) =>
-          t.isDirty && (isFolder ? t.filePath.replace(/\\/g, '/').startsWith(prefix) : t.filePath === node.path)
-        );
-        let confirmMessage = isFolder
-          ? `Are you absolutely sure you want to permanently delete the folder "${node.name}" and all of its contents?`
-          : `Are you absolutely sure you want to permanently delete the file "${node.name}"?`;
-        if (dirtyOpen.length) {
-          const names = dirtyOpen.map((t) => t.filePath.split('/').pop()).join(', ');
-          confirmMessage += ` Warning: ${names} ${dirtyOpen.length === 1 ? 'has' : 'have'} unsaved changes in an open tab. The unsaved buffer stays open, but the file on disk is permanently removed.`;
-        }
-
-        const confirmDelete = window.confirm(confirmMessage);
-        if (!confirmDelete) return;
-
         try {
           await window.nexelAPI.deleteNode(node.path);
           const orphanedCount = useEditorStore.getState().markTabsOrphanedForPath(node.path, isFolder);
@@ -332,6 +325,15 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         } catch (err) {
           console.error("Deletion failed:", err);
         }
+      },
+      handleDeleteNode: async (node) => {
+        const { rootPath } = get();
+        const isFolder = node.type === 'folder';
+        const prefix = node.path.replace(/\\/g, '/') + '/';
+        const dirtyOpen = useEditorStore.getState().tabs.filter((t) =>
+          t.isDirty && (isFolder ? t.filePath.replace(/\\/g, '/').startsWith(prefix) : t.filePath === node.path)
+        );
+        set({ pendingDelete: { node, isFolder, dirtyNames: dirtyOpen.map((t) => t.filePath.split('/').pop() ?? '') } });
       },
 
       handleInlineSubmit: async (value) => {
