@@ -721,6 +721,10 @@ const cpOn = await page.evaluate(() => ({
   snippetsToggle: !!document.querySelector('.nx-titlebar-toggle-wrapper'),
 }));
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav && cpOn.judgeChip && cpOn.snippetsBtn && cpOn.snippetsToggle, JSON.stringify(cpOn));
+// clean scene for the capture: dismiss any lingering toasts (clangd notice, restored tabs)
+await page.evaluate(() => document.querySelectorAll('.tz-toast').forEach((t) => t.dispatchEvent(new MouseEvent('click', { bubbles: true }))));
+await page.waitForSelector('.tz-toast', { state: 'detached', timeout: 3000 }).catch(() => {});
+await page.waitForTimeout(300);
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 
 // --- Phase: CP completion contribution - enabled serves CP items, disabled removes only those ---
