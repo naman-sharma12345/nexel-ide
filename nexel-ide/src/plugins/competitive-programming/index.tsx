@@ -48,6 +48,41 @@ export function judgeSummary(cases: { verdict?: string }[], running: boolean): {
   return { tone: ac === ran.length ? 'ok' : 'bad', text: `${ac}/${ran.length} passed` };
 }
 
+/** Title bar snippets on/off toggle contributed while the plugin is enabled. */
+function SnippetsToggle() {
+  const enableSnippets = useEditorStore(s => s.enableSnippets);
+  const setEnableSnippets = useEditorStore(s => s.setEnableSnippets);
+  return (
+    <div className="nx-titlebar-toggle-wrapper" title="Toggle Snippets Autocomplete">
+      <span className="nx-titlebar-toggle-label">Snippets</span>
+      <div
+        className={`nx-titlebar-switch-track ${enableSnippets ? 'active' : ''}`}
+        onClick={() => setEnableSnippets(!enableSnippets)}
+      >
+        <div className="nx-titlebar-switch-thumb" />
+      </div>
+    </div>
+  );
+}
+
+/** Title bar button contributed while the plugin is enabled. */
+function SnippetsButton() {
+  const openSnippets = useEditorStore(s => s.openSnippets);
+  return (
+    <button
+      className="nx-titlebar-snippets-btn"
+      onClick={openSnippets}
+      title="Show Available Snippets List"
+      aria-label="Snippets list"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+        <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+      </svg>
+    </button>
+  );
+}
+
 /** Status bar chip contributed while the plugin is enabled. */
 function JudgeStatusChip() {
   const cases = useJudgeStore(s => s.testCases);
@@ -73,6 +108,8 @@ registerPlugin({
   useActivation: useCompanionImport,
   completions: { dataset: { cp: cpDataset }, snippets },
   statusItems: [JudgeStatusChip],
+  titlebarItems: [SnippetsToggle, SnippetsButton],
+  menuItems: { Options: [{ label: 'Snippets Manager...', action: () => useEditorStore.getState().openSnippets() }] },
   navItems: [
     {
       id: 'judge',
