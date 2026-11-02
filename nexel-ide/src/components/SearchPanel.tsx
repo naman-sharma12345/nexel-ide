@@ -14,6 +14,7 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
   const [sel, setSel] = useState(0);
   const [rep, setRep] = useState('');
   const [note, setNote] = useState('');
+  const [confirming, setConfirming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -30,9 +31,8 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
 
   const flat = useMemo(() => (res?.results ?? []).flatMap(f => f.matches.map(m => ({ f, m }))), [res]);
   const go = (i: number) => { const x = flat[i]; if (x) { onClose(); onOpen(x.f.path, x.m.line, x.m.col); } };
-  const replaceAll = async () => {
-    if (!res || !res.total) return;
-    if (!window.confirm(`Replace ${res.total} match(es) in ${res.results.length} file(s)?`)) return;
+  const doReplace = async () => {
+    if (!res || !res.total) { setConfirming(false); return; }
     let n = 0, fc = 0;
     for (const f of res.results) {
       try {
@@ -42,9 +42,11 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
       } catch { /* skip unreadable file */ }
     }
     setNote(`Replaced ${n} in ${fc} file${fc === 1 ? '' : 's'}`);
+    setConfirming(false);
     setRes(null); setQ(q + ' ');
     window.setTimeout(() => setQ(x => x.trimEnd()), 0);
   };
+  const replaceAll = () => { if (res && res.total) setConfirming(true); };
   const flag = (k: keyof SearchOptions, label: string, title: string) => (
     <button type="button" className={'sp2-flag' + (opts[k] ? ' on' : '')} title={title} aria-pressed={!!opts[k]} onClick={() => setOpts(o => ({ ...o, [k]: !o[k] }))}>{label}</button>
   );
@@ -65,9 +67,16 @@ export function SearchPanel({ files, onOpen, onClose }: { files: SearchFile[]; o
         </div>
         <div className="sf-bar sf-rep">
           <span className="sf-glyph" aria-hidden>↳</span>
-          <input className="sf-input" placeholder="Replace with…" value={rep} onChange={e => setRep(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') onClose(); else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void replaceAll(); }} />
-          <button type="button" className="sp2-flag sf-repbtn" disabled={!res || !res.total} title="Replace all (Ctrl+Enter)" onClick={() => void replaceAll()}>Replace all</button>
+          <input className="sf-input" placeholder="Replace with…" value={rep} onChange={e => setRep(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') onClose(); else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) replaceAll(); }} />
+          <button type="button" className="sp2-flag sf-repbtn" disabled={!res || !res.total} title="Replace all (Ctrl+Enter)" onClick={replaceAll}>Replace all</button>
         </div>
+        {confirming && res && (
+          <div className="sf-confirm" role="alertdialog" aria-label="Confirm replace all">
+            <span>Replace <b>{res.total}</b> match{res.total === 1 ? '' : 'es'} in <b>{res.results.length}</b> file{res.results.length === 1 ? '' : 's'}?</span>
+            <button type="button" className="sf-cf-yes" autoFocus onClick={() => void doReplace()} onKeyDown={e => { if (e.key === 'Escape') setConfirming(false); }}>Replace</button>
+            <button type="button" className="sf-cf-no" onClick={() => setConfirming(false)}>Cancel</button>
+          </div>
+        )}
         <div className="sf-list">
           {!q.trim() && <div className="sf-empty">Search across {files.length} file{files.length === 1 ? '' : 's'} in this workspace</div>}
           {q.trim() && res && res.total === 0 && !busy && <div className="sf-empty">No results</div>}
