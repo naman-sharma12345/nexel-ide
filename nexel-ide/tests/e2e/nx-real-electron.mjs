@@ -640,6 +640,38 @@ await page.evaluate(() => document.querySelector('.ss-backdrop')?.dispatchEvent(
 await page.waitForSelector('.ss-backdrop', { state: 'detached', timeout: 3000 }).catch(() => {});
 await page.keyboard.press('Control+`'); await page.waitForTimeout(500); // restore scene: terminal hidden
 
+// --- Phase: settings modal isolation - same keyboard/pointer contract as the shortcut sheet ---
+await page.keyboard.press('Control+`'); await page.waitForTimeout(900); // open terminal
+await page.locator('.xterm').first().click(); await page.waitForTimeout(400);
+const spControl = await page.evaluate(() => document.activeElement?.classList?.contains('xterm-helper-textarea') ?? false);
+const spRowsBefore = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
+const spTermBox = await page.locator('.xterm').first().boundingBox();
+await page.keyboard.press('Control+,'); await page.waitForTimeout(600);
+const spBoxRect = await page.locator('.sp-box').boundingBox();
+let spPt = { x: Math.round(spTermBox.x + spTermBox.width / 2), y: Math.round(spBoxRect.y + spBoxRect.height + 20) };
+const spOutside = (pt) => pt.x < spBoxRect.x || pt.x > spBoxRect.x + spBoxRect.width || pt.y < spBoxRect.y || pt.y > spBoxRect.y + spBoxRect.height;
+if (spPt.y > spTermBox.y + spTermBox.height - 10 || !spOutside(spPt)) spPt = { x: Math.round(spTermBox.x + 15), y: Math.round(spTermBox.y + spTermBox.height - 15) };
+const spIso = await page.evaluate((pt) => {
+  const top = document.elementsFromPoint(pt.x, pt.y)[0];
+  return { topIsBackdrop: top?.classList?.contains('sp-backdrop') ?? false, topClass: String(top?.className ?? '') };
+}, spPt);
+const spHasFocus = await page.evaluate(() => document.activeElement?.classList?.contains('sp-box') ?? false);
+await page.keyboard.press('x'); await page.waitForTimeout(400);
+const spRowsAfter = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
+await page.mouse.click(spPt.x, spPt.y); await page.waitForTimeout(400);
+const spAfterClick = await page.evaluate(() => ({
+  sheetGone: !document.querySelector('.sp-backdrop'),
+  activeIsXterm: document.activeElement?.classList?.contains('xterm-helper-textarea') ?? false,
+}));
+report('SETTINGS_ISOLATION_REAL', spIso.topIsBackdrop && spHasFocus && spRowsAfter === spRowsBefore && spAfterClick.sheetGone && !spAfterClick.activeIsXterm && spControl,
+  JSON.stringify({ spIso, spPt, spBoxRect, spHasFocus, keysLeaked: spRowsAfter !== spRowsBefore, spAfterClick, spControl }));
+// recover the scene regardless of how the click landed
+await page.evaluate(() => { const el = document.activeElement; if (el instanceof HTMLElement) el.blur(); });
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.evaluate(() => document.querySelector('.sp-backdrop')?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
+await page.waitForSelector('.sp-backdrop', { state: 'detached', timeout: 3000 }).catch(() => {});
+await page.keyboard.press('Control+`'); await page.waitForTimeout(500); // terminal hidden again
+
 // --- Phase: orphaned buffer is not silently recreated by auto-save; explicit save recovers ---
 await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(400);
 await page.waitForTimeout(6000); // longer than the 5s auto-save loop
@@ -693,7 +725,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
