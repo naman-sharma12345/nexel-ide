@@ -1,4 +1,6 @@
 import React, { lazy, useEffect } from 'react';
+import cpDataset from './cp-dataset.json';
+import snippets from './snippets.json';
 import { registerPlugin } from '../registry';
 import { useJudgeStore } from '../../stores/useJudgeStore';
 import { useWorkspaceStore, type FileNode } from '../../stores/useWorkspaceStore';
@@ -52,6 +54,7 @@ registerPlugin({
   defaultEnabled: false,
   panels: { judge: JudgeSystem, contests: ContestsSystem },
   useActivation: useCompanionImport,
+  completions: { dataset: { cp: cpDataset }, snippets },
   navItems: [
     {
       id: 'judge',
