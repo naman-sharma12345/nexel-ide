@@ -74,9 +74,11 @@ export const Terminal: React.FC<TerminalProps> = ({ visible, onClose, sidebarCol
       isNative = nativeActive;
     });
 
-    // Listen to data from shell -> write to terminal
-    window.nexelAPI.onTerminalData((data: string) => {
-      term.write(data);
+    // Listen to data from shell -> write to terminal. Guarded: PTY output arriving
+    // after teardown must not write into a disposed xterm (crashes its viewport).
+    let disposed = false;
+    const unsubTerminalData = window.nexelAPI.onTerminalData((data: string) => {
+      if (!disposed) term.write(data);
     });
 
     // Write terminal key inputs -> shell process stdin
@@ -122,11 +124,20 @@ export const Terminal: React.FC<TerminalProps> = ({ visible, onClose, sidebarCol
     }
 
     return () => {
+      disposed = true;
+      if (typeof unsubTerminalData === 'function') unsubTerminalData();
       onDataDisposable.dispose();
-      term.dispose();
-      xtermInstance.current = null;
-      fitAddonInstance.current = null;
       resizeObserver.disconnect();
+      // Drain xterm's write queue before disposing: a viewport refresh queued by an
+      // in-flight write crashes when it lands after the render service is torn down.
+      // The empty-write callback fires only after every prior write is processed.
+      term.write('', () => {
+        term.dispose();
+        if (xtermInstance.current === term) {
+          xtermInstance.current = null;
+          fitAddonInstance.current = null;
+        }
+      });
     };
   }, [visible]);
 
