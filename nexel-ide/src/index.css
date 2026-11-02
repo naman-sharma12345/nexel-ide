@@ -14,6 +14,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--nx-bg-0);
+  font-family: var(--sans);
 }
 
 /* Redesigned full-bleed layout core for an elegant desktop app shell */
