@@ -566,3 +566,8 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 .ss-box:focus {
   outline: none;
 }
+
+/* Settings box is focused on open for keyboard capture; the focus ring is visual noise here. */
+.sp-box:focus {
+  outline: none;
+}
