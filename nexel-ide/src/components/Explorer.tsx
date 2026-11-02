@@ -307,6 +307,12 @@ export const Explorer: React.FC<ExplorerProps> = ({ onFileSelect, activeFilePath
       const { node } = flat[idx];
       if (node.type === 'folder') toggleFolder(node.path);
       else if (onFileSelect) onFileSelect(node.path, true);
+    } else if (e.key === 'F2' && idx >= 0) {
+      e.preventDefault();
+      triggerRename(flat[idx].node);
+    } else if (e.key === 'Delete' && idx >= 0) {
+      e.preventDefault();
+      handleDeleteNode(flat[idx].node);
     }
   };
 
