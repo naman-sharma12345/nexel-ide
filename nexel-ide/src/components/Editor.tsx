@@ -9,6 +9,7 @@ import { useStatusStore } from '../stores/useStatusStore';
 import { collectPluginCompletions } from '../plugins/registry';
 import { collectOfflineItems } from '../lib/offlineCompletions';
 import React, { useState, useEffect, useRef } from 'react';
+import { ConfirmDialog } from './ConfirmDialog';
 import MonacoEditor from '@monaco-editor/react';
 import '../lib/monacoSetup';
 import './Editor.css';
@@ -56,6 +57,8 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
 
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [pendingClose, setPendingClose] = useState<null | { kind: 'one' | 'all' | 'others' | 'right' | 'left'; path?: string; name?: string; targets: string[]; dirtyNames: string[] }>(null);
+  const [closeError, setCloseError] = useState('');
   
   const containerRef = useRef<HTMLDivElement>(null);
   const autoSaveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -111,42 +114,82 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     }
   };
 
-  const handleCloseAllTabs = () => {
-    setShowMenu(false);
-    const hasDirty = tabs.some(t => t.isDirty);
-    if (hasDirty) {
-      const confirmClose = window.confirm("Some tabs have unsaved changes. Close all anyway?");
-      if (!confirmClose) return;
+  type CloseKind = 'one' | 'all' | 'others' | 'right' | 'left';
+  const execClose = (kind: CloseKind, path?: string) => {
+    if (kind === 'one' && path) {
+      closeTab(path);
+      getClangd().closePath(path);
+      const updatedState = useEditorStore.getState();
+      if (updatedState.activeTabPath) {
+        onFileSelect(updatedState.activeTabPath);
+      } else if (onCloseFile) {
+        onCloseFile(path);
+      }
+      return;
     }
-    closeAllTabs();
-    if (onCloseFile) onCloseFile("");
+    if (kind === 'all') {
+      closeAllTabs();
+      if (onCloseFile) onCloseFile("");
+      return;
+    }
+    const idx = tabs.findIndex(t => t.filePath === activeTabPath);
+    const targets = kind === 'others' ? tabs.filter(t => t.filePath !== activeTabPath)
+      : kind === 'right' ? (idx >= 0 ? tabs.slice(idx + 1) : [])
+      : (idx > 0 ? tabs.slice(0, idx) : []);
+    targets.forEach(t => { closeTab(t.filePath); getClangd().closePath(t.filePath); });
   };
 
-  const handleCloseOtherTabs = () => {
-    setShowMenu(false);
-    const others = tabs.filter(t => t.filePath !== activeTabPath);
-    if (!others.length) return;
-    if (others.some(t => t.isDirty) && !window.confirm("Close other tabs? Some have unsaved changes.")) return;
-    others.forEach(t => { closeTab(t.filePath); getClangd().closePath(t.filePath); });
-  };
-
-  const handleCloseTabsToRight = () => {
+  const requestClose = (kind: CloseKind, path?: string) => {
     setShowMenu(false);
     const idx = tabs.findIndex(t => t.filePath === activeTabPath);
-    const right = idx >= 0 ? tabs.slice(idx + 1) : [];
-    if (!right.length) return;
-    if (right.some(t => t.isDirty) && !window.confirm("Close tabs to the right? Some have unsaved changes.")) return;
-    right.forEach(t => { closeTab(t.filePath); getClangd().closePath(t.filePath); });
+    const targets = kind === 'one' ? tabs.filter(t => t.filePath === path)
+      : kind === 'all' ? tabs
+      : kind === 'others' ? tabs.filter(t => t.filePath !== activeTabPath)
+      : kind === 'right' ? (idx >= 0 ? tabs.slice(idx + 1) : [])
+      : (idx > 0 ? tabs.slice(0, idx) : []);
+    if (!targets.length) return;
+    const dirty = targets.filter(t => t.isDirty);
+    if (!dirty.length) { execClose(kind, path); return; }
+    setCloseError('');
+    setPendingClose({ kind, path, name: kind === 'one' ? targets[0].name : undefined, targets: dirty.map(t => t.filePath), dirtyNames: dirty.map(t => t.name) });
   };
 
-  const handleCloseTabsToLeft = () => {
-    setShowMenu(false);
-    const idx = tabs.findIndex(t => t.filePath === activeTabPath);
-    const left = idx > 0 ? tabs.slice(0, idx) : [];
-    if (!left.length) return;
-    if (left.some(t => t.isDirty) && !window.confirm("Close tabs to the left? Some have unsaved changes.")) return;
-    left.forEach(t => { closeTab(t.filePath); getClangd().closePath(t.filePath); });
+  const saveAndClose = async () => {
+    if (!pendingClose) return;
+    for (const p of pendingClose.targets) {
+      const tab = tabs.find(t => t.filePath === p);
+      if (!tab) continue;
+      const contentAtSave = tab.content;
+      try {
+        await window.nexelAPI.writeFileContent(tab.filePath, contentAtSave);
+        // Mark clean only if nothing changed while the async write was in flight.
+        const latest = useEditorStore.getState().tabs.find(t => t.filePath === tab.filePath);
+        if (latest && latest.content === contentAtSave) {
+          useEditorStore.getState().saveTabSuccess(tab.filePath);
+          getClangd().notifySaved(tab.filePath);
+        }
+      } catch { /* stays dirty; reported below */ }
+    }
+    // Attempt every target; close only when none remain dirty (failed writes and
+    // mid-save edits keep their buffer, tab, and disk state untouched).
+    const stillDirty = useEditorStore.getState().tabs.filter(t => pendingClose.targets.includes(t.filePath) && t.isDirty);
+    if (stillDirty.length) {
+      setCloseError(`Could not save ${stillDirty.map(t => t.name).join(', ')}. Your changes are still in the editor.`);
+      setPendingClose({ ...pendingClose, targets: stillDirty.map(t => t.filePath), dirtyNames: stillDirty.map(t => t.name) });
+      return;
+    }
+    const { kind, path } = pendingClose;
+    setPendingClose(null);
+    execClose(kind, path);
   };
+
+  const handleCloseAllTabs = () => requestClose('all');
+
+  const handleCloseOtherTabs = () => requestClose('others');
+
+  const handleCloseTabsToRight = () => requestClose('right');
+
+  const handleCloseTabsToLeft = () => requestClose('left');
 
   const handleCloseSavedTabs = () => {
     setShowMenu(false);
@@ -302,19 +345,10 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
   const handleCloseTab = (path: string) => {
     const tabToClose = tabs.find(t => t.filePath === path);
     if (tabToClose?.isDirty) {
-      const confirmClose = window.confirm(`File "${tabToClose.name}" has unsaved changes. Close anyway?`);
-      if (!confirmClose) return;
+      requestClose('one', path);
+      return;
     }
-
-    closeTab(path);
-    getClangd().closePath(path);
-
-    const updatedState = useEditorStore.getState();
-    if (updatedState.activeTabPath) {
-      onFileSelect(updatedState.activeTabPath);
-    } else if (onCloseFile) {
-      onCloseFile(path);
-    }
+    execClose('one', path);
   };
 
   const getLanguage = (fileName: string) => {
@@ -769,6 +803,21 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
             <span className="nx-footer-metric-pill active">Nexel Engine</span>
           </div>
         </div>
+      )}
+      {pendingClose && (
+        <ConfirmDialog
+          title="Unsaved changes"
+          message={pendingClose.kind === 'one'
+            ? `File "${pendingClose.name}" has unsaved changes.`
+            : `${pendingClose.dirtyNames.length} tab${pendingClose.dirtyNames.length === 1 ? '' : 's'} have unsaved changes.`}
+          detail={pendingClose.kind === 'one' ? undefined : pendingClose.dirtyNames.join(', ')}
+          saveLabel={pendingClose.kind === 'one' ? 'Save' : 'Save all'}
+          discardLabel="Don't save"
+          error={closeError || undefined}
+          onSave={() => void saveAndClose()}
+          onDiscard={() => { const { kind, path } = pendingClose; setPendingClose(null); execClose(kind, path); }}
+          onCancel={() => setPendingClose(null)}
+        />
       )}
     </div>
   );
