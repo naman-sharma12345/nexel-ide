@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useEditorStore } from './useEditorStore';
+import { useStatusStore } from './useStatusStore';
 import { electronStorage } from './electronStorage';
 
 export interface FileNode {
@@ -316,7 +317,14 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
         try {
           await window.nexelAPI.deleteNode(node.path);
-          useEditorStore.getState().markTabsOrphanedForPath(node.path, isFolder);
+          const orphanedCount = useEditorStore.getState().markTabsOrphanedForPath(node.path, isFolder);
+          if (orphanedCount > 0) {
+            useStatusStore.getState().pushToast(
+              `Deleted ${node.name}. ${orphanedCount} open tab${orphanedCount === 1 ? '' : 's'} kept ${orphanedCount === 1 ? 'its' : 'their'} buffer - save to recreate the file.`,
+              'info',
+              6000
+            );
+          }
           set((state) => ({
             pinnedPaths: state.pinnedPaths.filter((p) => p !== node.path),
           }));
