@@ -98,6 +98,19 @@ export const TitleBar: React.FC = () => {
                     e.stopPropagation();
                     setActiveMenu(isOpen ? null : name);
                   }}
+                  aria-haspopup="menu"
+                  aria-expanded={isOpen}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setActiveMenu(name);
+                      const container = e.currentTarget.parentElement;
+                      requestAnimationFrame(() => {
+                        const buttons = container?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+                        if (buttons?.length) buttons[e.key === 'ArrowUp' ? buttons.length - 1 : 0].focus();
+                      });
+                    } else if (e.key === 'Escape') setActiveMenu(null);
+                  }}
                   onMouseEnter={() => {
                     if (activeMenu !== null) setActiveMenu(name);
                   }}
@@ -106,9 +119,23 @@ export const TitleBar: React.FC = () => {
                 </button>
 
                 {isOpen && (
-                  <div className="nx-titlebar-dropdown">
+                  <div className="nx-titlebar-dropdown" role="menu" aria-label={name}
+                    onKeyDown={(e) => {
+                      const buttons = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')];
+                      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+                      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+                        e.preventDefault();
+                        const next = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1
+                          : (index + (e.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+                        buttons[next]?.focus();
+                      } else if (e.key === 'Escape') {
+                        e.preventDefault(); e.stopPropagation(); setActiveMenu(null);
+                        e.currentTarget.parentElement?.querySelector<HTMLButtonElement>('.nx-menu-trigger-btn')?.focus();
+                      } else if (e.key === 'Tab') setActiveMenu(null);
+                    }}>
+
                     {items.map((item, idx) => (
-                      <div
+                      <button type="button" role="menuitem"
                         key={idx}
                         className="nx-titlebar-dropdown-item"
                         onClick={() => {
@@ -116,7 +143,7 @@ export const TitleBar: React.FC = () => {
                         }}
                       >
                         {item.label}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
