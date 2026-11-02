@@ -185,6 +185,19 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         e.preventDefault();
         if (activeTabPath) handleCloseTab(activeTabPath);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
+        e.preventDefault();
+        if (isSplit && rightTabPath) toggleSplitTab(rightTabPath);
+        else if (activeTabPath) toggleSplitTab(activeTabPath);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '1' && isSplit && activeTabPath) {
+        e.preventDefault();
+        setFocusedTabPath(activeTabPath);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '2' && isSplit && rightTabPath) {
+        e.preventDefault();
+        setFocusedTabPath(rightTabPath);
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Tab') {
         e.preventDefault();
         if (tabs.length > 1 && activeTabPath) {
