@@ -451,6 +451,21 @@ const chipHit = cppEvidence.sb.includes('clangd');
 report('CLANGD_NOTICE_CPP', toastHit && chipHit, JSON.stringify(cppEvidence));
 await page.screenshot({ path: dir + '/r6-cpp-notice.png' });
 
+// Keyboard menu: open from trigger, navigate, close back to trigger, activate item.
+await page.locator('.nx-menu-trigger-btn', { hasText: 'View' }).focus();
+await page.keyboard.press('ArrowDown'); await page.waitForTimeout(200);
+const menuFirst = await page.evaluate(() => document.activeElement?.textContent);
+await page.keyboard.press('End');
+const menuLast = await page.evaluate(() => document.activeElement?.textContent);
+await page.keyboard.press('ArrowDown');
+const menuWrapped = await page.evaluate(() => document.activeElement?.textContent);
+await page.keyboard.press('Escape');
+const menuReturned = await page.evaluate(() => document.activeElement?.classList.contains('nx-menu-trigger-btn') && document.activeElement?.textContent === 'View' && !document.querySelector('.nx-titlebar-dropdown'));
+await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
+const menuKeyboardSettings = await page.locator('.sp-backdrop').isVisible();
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+report('MENU_KEYBOARD_REAL', menuFirst === 'Toggle Sidebar' && menuLast?.includes('Minimap') && menuWrapped === menuFirst && menuReturned && menuKeyboardSettings, JSON.stringify({ menuFirst, menuLast, menuWrapped, menuReturned, menuKeyboardSettings }));
+
 // View controls toggle relative to persisted settings, then restore both states.
 await page.locator('.nx-menu-trigger-btn', { hasText: 'View' }).click();
 await page.locator('.nx-titlebar-dropdown-item', { hasText: 'Appearance / Settings...' }).click();
@@ -1006,7 +1021,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','VIEW_MENU_REAL','CREATE_FILE_REAL','CREATE_DUPLICATE_SAFE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','DELETE_FOLDER_PARTIAL_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','MENU_KEYBOARD_REAL','VIEW_MENU_REAL','CREATE_FILE_REAL','CREATE_DUPLICATE_SAFE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','DELETE_FOLDER_PARTIAL_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
