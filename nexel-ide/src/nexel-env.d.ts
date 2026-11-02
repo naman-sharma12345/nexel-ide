@@ -36,7 +36,7 @@ export interface INexelAPI {
   createTerminal: () => Promise<boolean>;
   writeTerminal: (data: string) => void;
   resizeTerminal: (cols: number, rows: number) => void;
-  onTerminalData: (callback: (data: string) => void) => void;
+  onTerminalData: (callback: (data: string) => void) => (() => void) | void;
   runJudge: (
     filePath: string,
     testCases: Array<{ id: number; input: string; expected: string }>,
