@@ -33,9 +33,9 @@ describe('full shell smoke', () => {
 
   it('renders with CP enabled and survives disable/re-enable cycles', async () => {
     const { unmount } = render(<App />);
-    await act(async () => { useSettingsStore.getState().togglePlugin('competitive-programming', true); });
-    await act(async () => { useSettingsStore.getState().togglePlugin('competitive-programming', false); });
-    await act(async () => { useSettingsStore.getState().togglePlugin('competitive-programming', true); });
+    await act(async () => { useSettingsStore.getState().togglePlugin('competitive-programming'); });
+    await act(async () => { useSettingsStore.getState().togglePlugin('competitive-programming'); });
+    await act(async () => { useSettingsStore.getState().togglePlugin('competitive-programming'); });
     expect(document.querySelector('.nx-titlebar-container')).toBeTruthy();
     unmount();
   });
