@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
-import { useEditorStore } from '../stores/useEditorStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { pluginEnabledById } from '../plugins/registry';
+import { collectPluginMenuItems, collectPluginTitlebarItems } from '../plugins/registry';
 import logoImg from '../assets/logo.png';
 import './TitleBar.css';
 
@@ -13,8 +12,9 @@ export const TitleBar: React.FC = () => {
 
   const { toggleSidebar, toggleTerminal, setTerminalVisible, openTemplateModal } = useUIStore();
   const { openWorkspaceDir, triggerHeaderNewFile, triggerHeaderNewFolder } = useWorkspaceStore();
-  const { enableSnippets, setEnableSnippets, openSnippets } = useEditorStore();
-  const cpOn = useSettingsStore(s => pluginEnabledById('competitive-programming', s.plugins));
+  const pluginPrefs = useSettingsStore(s => s.plugins);
+  const pluginTitlebarItems = collectPluginTitlebarItems(pluginPrefs);
+  const pluginOptionItems = collectPluginMenuItems(pluginPrefs, 'Options');
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -65,7 +65,7 @@ export const TitleBar: React.FC = () => {
     ],
     Options: [
       { label: 'C++ Template...', action: () => { setActiveMenu(null); openTemplateModal(true); } },
-      ...(cpOn ? [{ label: 'Snippets Manager...', action: () => { setActiveMenu(null); openSnippets(); } }] : []),
+      ...pluginOptionItems.map((it) => ({ label: it.label, action: () => { setActiveMenu(null); it.action(); } })),
     ],
     Help: [
       { label: 'About Nexel IDE', action: () => alert('Nexel IDE v1.0.0 - Built with React + TypeScript + Monaco') },
@@ -123,31 +123,8 @@ export const TitleBar: React.FC = () => {
       </div>
 
       <div className="nx-titlebar-right">
-        {/* Snippets Toggle Switch */}
-        <div className="nx-titlebar-toggle-wrapper" title="Toggle Snippets Autocomplete">
-          <span className="nx-titlebar-toggle-label">Snippets</span>
-          <div 
-            className={`nx-titlebar-switch-track ${enableSnippets ? 'active' : ''}`}
-            onClick={() => {
-              setEnableSnippets(!enableSnippets);
-            }}
-          >
-            <div className="nx-titlebar-switch-thumb" />
-          </div>
-        </div>
-
-        {/* Snippets List Button (CP plugin content) */}
-        {cpOn && <button
-          className="nx-titlebar-snippets-btn"
-          onClick={openSnippets}
-          title="Show Available Snippets List"
-          aria-label="Snippets list"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
-          </svg>
-        </button>}
+        {/* Plugin-contributed title bar buttons */}
+        {pluginTitlebarItems.map((Item, i) => <Item key={i} />)}
 
         <button 
           className="nx-win-ctrl-btn minimize" 
