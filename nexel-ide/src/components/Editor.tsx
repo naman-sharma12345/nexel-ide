@@ -531,7 +531,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
 
   const renderTabContent = (tab: EditorTab) => {
     if (tab.filePath === 'nexel://snippets') {
-      return <SnippetsViewer snippetsData={snippets} />;
+      return <SnippetsViewer snippetsData={collectPluginCompletions(useSettingsStore.getState().plugins).snippets} />;
     } else if (tab.filePath.startsWith('cf://')) {
       try {
         const parsed = JSON.parse(tab.content);
@@ -828,7 +828,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
 export default Editor;
 
 interface SnippetsViewerProps {
-  snippetsData: Record<string, { prefix: string; description: string; body: string[] }>;
+  snippetsData: Record<string, { prefix: string; description?: string; body: string | string[] }>;
 }
 
 const SnippetsViewer: React.FC<SnippetsViewerProps> = ({ snippetsData }) => {
@@ -844,8 +844,8 @@ const SnippetsViewer: React.FC<SnippetsViewerProps> = ({ snippetsData }) => {
     );
   });
 
-  const handleCopy = (key: string, body: string[]) => {
-    navigator.clipboard.writeText(body.join('\n'));
+  const handleCopy = (key: string, body: string | string[]) => {
+    navigator.clipboard.writeText(Array.isArray(body) ? body.join('\n') : body);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 1500);
   };
@@ -880,7 +880,7 @@ const SnippetsViewer: React.FC<SnippetsViewerProps> = ({ snippetsData }) => {
               </button>
             </div>
             <pre className="nx-snippet-code-block">
-              <code>{value.body.join('\n')}</code>
+              <code>{Array.isArray(value.body) ? value.body.join('\n') : value.body}</code>
             </pre>
           </div>
         ))}
