@@ -65,7 +65,8 @@ export class FileSystemService {
       throw new Error("Security Violation: Path traversal attempt blocked");
     }
 
-    await fs.writeFile(filePath, '', 'utf8');
+    // New File must never truncate an existing file, including a racing create.
+    await fs.writeFile(filePath, '', { encoding: 'utf8', flag: 'wx' });
     return filePath;
   }
 
