@@ -324,6 +324,31 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           if (rootPath) await get().refreshTree();
         } catch (err) {
           console.error("Deletion failed:", err);
+          const msg = err instanceof Error ? err.message : String(err);
+          useStatusStore.getState().pushToast(
+            `Could not delete ${node.name}${msg ? `: ${msg}` : ''}. Some files may remain.`,
+            'error',
+            6000
+          );
+          // A recursive folder delete can partially fail (permissions, I/O):
+          // reconcile tree and open tabs with what actually remains on disk.
+          if (rootPath) await get().refreshTree();
+          const nodePath = node.path.replace(/\\/g, '/');
+          const prefix = nodePath + '/';
+          for (const t of useEditorStore.getState().tabs) {
+            const p = t.filePath.replace(/\\/g, '/');
+            if (!(isFolder ? p.startsWith(prefix) : p === nodePath)) continue;
+            // Tree refresh can fail too. Only a confirmed missing path makes a
+            // tab orphaned; permission and I/O errors do not prove deletion.
+            try {
+              await window.nexelAPI.readFileContent(t.filePath);
+            } catch (readError) {
+              const reason = readError instanceof Error ? readError.message : String(readError);
+              if (/\bENOENT\b|\bENOTDIR\b/.test(reason)) {
+                useEditorStore.getState().markTabsOrphanedForPath(t.filePath, false);
+              }
+            }
+          }
         }
       },
       handleDeleteNode: async (node) => {
