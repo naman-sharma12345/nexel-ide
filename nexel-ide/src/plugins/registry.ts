@@ -32,6 +32,10 @@ export interface NexelPlugin {
   completions?: PluginCompletionContribution;
   /** Status bar items contributed while the plugin is enabled. */
   statusItems?: ComponentType[];
+  /** Title bar buttons contributed while the plugin is enabled. */
+  titlebarItems?: ComponentType[];
+  /** Menu items appended to named menus while the plugin is enabled (menu closes itself on click). */
+  menuItems?: Record<string, { label: string; action: () => void }[]>;
 }
 
 /** Completion data a plugin contributes when enabled (merged into the offline C++ provider). */
@@ -55,6 +59,16 @@ export function getPlugin(id: string): NexelPlugin | undefined { return REGISTRY
 /** Whether a persisted plugins map enables this plugin (absent = default). */
 export function pluginEnabled(p: NexelPlugin, prefs: Record<string, boolean>): boolean {
   return p.id in prefs ? !!prefs[p.id] : p.defaultEnabled;
+}
+
+/** Menu items contributed by all enabled plugins for one menu. Core renders these, never a plugin id. */
+export function collectPluginMenuItems(prefs: Record<string, boolean>, menu: string): { label: string; action: () => void }[] {
+  return listPlugins().filter((p) => pluginEnabled(p, prefs)).flatMap((p) => p.menuItems?.[menu] ?? []);
+}
+
+/** Title bar buttons contributed by all enabled plugins. Core renders these, never a plugin id. */
+export function collectPluginTitlebarItems(prefs: Record<string, boolean>): ComponentType[] {
+  return listPlugins().filter((p) => pluginEnabled(p, prefs)).flatMap((p) => p.titlebarItems ?? []);
 }
 
 /** Status bar items contributed by all enabled plugins. Core renders these, never a plugin id. */
