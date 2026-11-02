@@ -207,6 +207,20 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         e.preventDefault();
         setFocusedTabPath(rightTabPath);
       }
+      // Editor font zoom: only when the key is not aimed at the terminal or a non-editor
+      // input (rename box, search, palette). Monaco's own textarea still counts as editor context.
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')) {
+        const ae = document.activeElement as HTMLElement | null;
+        const inTerminal = !!ae?.closest?.('.xterm');
+        const inOtherEditable = !!ae?.closest?.('input, textarea, [contenteditable="true"]') && !ae?.closest?.('.monaco-editor');
+        if (!inTerminal && !inOtherEditable) {
+          e.preventDefault();
+          const { fontSize, setFontSize } = useSettingsStore.getState();
+          if (e.key === '0') setFontSize(13);
+          else if (e.key === '-') setFontSize(fontSize - 1);
+          else setFontSize(fontSize + 1);
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Tab') {
         e.preventDefault();
         if (tabs.length > 1 && activeTabPath) {
