@@ -121,7 +121,7 @@ await new Promise(r => setTimeout(r, 1500));
 
 // --- Phase 2: reopen in a fresh process, verify persistence ---
 ({ app, page } = await boot());
-await page.waitForTimeout(2500);
+await page.waitForFunction(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].some(t => t.textContent === 'main.py'), null, { timeout: 15000 });
 const restoredTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 report('SESSION_RESTORE_REAL', restoredTabs.includes('main.py'), JSON.stringify(restoredTabs));
 await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(700);
@@ -519,6 +519,20 @@ await page.keyboard.press('Enter');
 const menuKeyboardSettings = await page.locator('.sp-backdrop').isVisible();
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 report('MENU_KEYBOARD_REAL', menuFirst === 'Toggle Sidebar' && menuLast?.includes('Minimap') && menuWrapped === menuFirst && menuReturned && menuKeyboardSettings, JSON.stringify({ menuFirst, menuLast, menuWrapped, menuReturned, menuKeyboardSettings }));
+
+// Horizontal menu navigation crosses and wraps the top menu bar.
+await page.locator('.nx-menu-trigger-btn', { hasText: 'File', exact: true }).focus();
+await page.keyboard.press('ArrowLeft');
+await page.waitForFunction(() => document.querySelector('[role="menu"]')?.getAttribute('aria-label') === 'Help' && document.activeElement?.textContent === 'About Nexel IDE');
+const menuHorizontalWrapped = await page.locator('[role="menu"]').getAttribute('aria-label') === 'Help';
+await page.keyboard.press('ArrowRight');
+await page.waitForFunction(() => document.querySelector('[role="menu"]')?.getAttribute('aria-label') === 'File' && document.activeElement?.textContent === 'Open Folder...');
+await page.keyboard.press('ArrowRight');
+await page.waitForFunction(() => document.querySelector('[role="menu"]')?.getAttribute('aria-label') === 'Edit' && document.activeElement?.textContent === 'Undo');
+const menuHorizontalEdit = await page.locator('[role="menu"]').getAttribute('aria-label') === 'Edit';
+await page.keyboard.press('Escape');
+const menuHorizontalReturn = await page.evaluate(() => document.activeElement?.textContent === 'Edit' && !document.querySelector('[role="menu"]'));
+report('MENU_HORIZONTAL_REAL', menuHorizontalWrapped && menuHorizontalEdit && menuHorizontalReturn, JSON.stringify({ menuHorizontalWrapped, menuHorizontalEdit, menuHorizontalReturn }));
 
 // View controls toggle relative to persisted settings, then restore both states.
 await page.locator('.nx-menu-trigger-btn', { hasText: 'View' }).click();
@@ -1071,6 +1085,14 @@ await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 report('CP_COMPLETION_REAL',
   rowsCpOn.some((t) => /\bll\b/.test(t)) && !rowsCpOff.some((t) => /\bll\b/.test(t)) && rowsCppGeneral.some((t) => /for/.test(t)),
   JSON.stringify({ onHasCpAlias: rowsCpOn.some((t) => /\bll\b/.test(t)), offHasCpAlias: rowsCpOff.some((t) => /\bll\b/.test(t)), offHasGeneral: rowsCppGeneral.some((t) => /for/.test(t)), onRows: rowsCpOn.slice(0, 12), offRows: rowsCpOff.slice(0, 12), generalRows: rowsCppGeneral.slice(0, 12) }));
+// Opening the opt-in snippets library previously reached an undefined symbol.
+await page.keyboard.press('Control+,');
+await page.locator('button.sp-toggle:has-text("Competitive Programming")').click();
+await page.keyboard.press('Escape');
+await page.locator('.nx-titlebar-snippets-btn').click();
+await page.waitForSelector('.nx-snippet-card', { timeout: 15000 });
+const snippetsLibrary = await page.evaluate(() => ({ cards: document.querySelectorAll('.nx-snippet-card').length, code: document.querySelector('.nx-snippet-card code')?.textContent ?? '' }));
+report('CP_SNIPPETS_LIBRARY_REAL', snippetsLibrary.cards > 0 && snippetsLibrary.code.length > 0 && pageErrors.filter(e => BAD_ERROR.test(e)).length === 0, JSON.stringify(snippetsLibrary));
 await app.close();
 
 // --- Negative control: the boot gate must catch a blank renderer (nothing listens on :5999) ---
@@ -1079,7 +1101,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CLIPBOARD_MENU_REAL','EDIT_SELECTION_MENU_REAL','MENU_KEYBOARD_REAL','VIEW_MENU_REAL','CREATE_FILE_REAL','CREATE_DUPLICATE_SAFE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','DELETE_FOLDER_PARTIAL_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','REPLACE_CONFIRM_REAL','TABS_DIRTY_SAVE_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CLIPBOARD_MENU_REAL','EDIT_SELECTION_MENU_REAL','MENU_KEYBOARD_REAL','MENU_HORIZONTAL_REAL','VIEW_MENU_REAL','CREATE_FILE_REAL','CREATE_DUPLICATE_SAFE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','DELETE_FOLDER_PARTIAL_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','SETTINGS_ISOLATION_REAL','CP_ON_REAL','CP_COMPLETION_REAL','CP_SNIPPETS_LIBRARY_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const unexpected = Object.keys(results).filter(n => !EXPECTED.includes(n));
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
