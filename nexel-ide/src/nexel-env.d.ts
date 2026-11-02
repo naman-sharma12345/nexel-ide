@@ -22,6 +22,8 @@ export interface ICategorizedContests {
 }
 
 export interface INexelAPI {
+  readClipboardText?: () => string;
+  writeClipboardText?: (text: string) => void;
   minimizeWindow: () => void;
   maximizeWindow: () => void;
   closeWindow: () => void;
