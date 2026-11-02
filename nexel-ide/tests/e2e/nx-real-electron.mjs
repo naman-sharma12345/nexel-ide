@@ -458,6 +458,30 @@ await page.keyboard.press('Control+\\'); await page.waitForTimeout(800);
 const splitOff = await page.evaluate(() => !document.querySelector('.nx-right-pane-content'));
 report('SPLIT_REAL', splitOn.rightPane && splitOn.rightTitle === 'main.py' && focusLeft === 'README.md' && focusRight === 'main.py' && splitOff, JSON.stringify({ splitOn, focusLeft, focusRight, splitOff }));
 
+// --- Phase: explorer keyboard navigation (arrow keys + Enter) ---
+// Collapse all for a deterministic tree, then click the src folder row: selects it, focuses the tree, expands it.
+await page.locator('.nx-action-btn[title="Collapse All Folders"]').click(); await page.waitForTimeout(600);
+await page.locator('.nx-node-row', { hasText: 'src' }).first().click(); await page.waitForTimeout(500);
+// rows now: [src(open), main.py, main.cpp, README.md]; selection on src. ArrowDown moves to main.py.
+await page.keyboard.press('ArrowDown'); await page.waitForTimeout(300);
+const kbMove = await page.evaluate(() => {
+  const rows = [...document.querySelectorAll('.nx-tree-scroll .nx-node-row')];
+  const sel = rows.findIndex((r) => r.classList.contains('nx-row-focused') || r.classList.contains('nx-row-selected'));
+  const srcIdx = rows.findIndex((r) => r.textContent === 'src');
+  return { sel, srcIdx, count: rows.length, selText: rows[sel]?.textContent ?? null };
+});
+report('EXPLORER_KB_MOVE_REAL', kbMove.srcIdx === 0 && kbMove.sel === 1 && kbMove.count === 4, JSON.stringify(kbMove));
+// ArrowUp back to src, Enter closes the folder; Enter again reopens; ArrowDown to main.py; Enter opens the file tab.
+await page.keyboard.press('ArrowUp'); await page.waitForTimeout(300);
+await page.keyboard.press('Enter'); await page.waitForTimeout(600);
+const kbClosed = await page.evaluate(() => document.querySelectorAll('.nx-tree-scroll .nx-node-row').length);
+await page.keyboard.press('Enter'); await page.waitForTimeout(600);
+const kbReopen = await page.evaluate(() => document.querySelectorAll('.nx-tree-scroll .nx-node-row').length);
+await page.keyboard.press('ArrowDown'); await page.waitForTimeout(300);
+await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+const kbEnter = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null);
+report('EXPLORER_KB_OPEN_REAL', kbClosed === 2 && kbReopen === 4 && kbEnter === 'main.cpp', JSON.stringify({ kbClosed, kbReopen, kbEnter }));
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
@@ -474,7 +498,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
