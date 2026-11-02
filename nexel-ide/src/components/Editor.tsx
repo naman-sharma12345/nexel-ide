@@ -6,7 +6,7 @@ import { getClangd } from '../lib/clangd/session';
 import { isClangdActive } from '../lib/clangd/state';
 import { pathToUri } from '../lib/clangd/uri';
 import { useStatusStore } from '../stores/useStatusStore';
-import { pluginEnabledById } from '../plugins/registry';
+import { collectPluginCompletions } from '../plugins/registry';
 import { collectOfflineItems } from '../lib/offlineCompletions';
 import React, { useState, useEffect, useRef } from 'react';
 import MonacoEditor from '@monaco-editor/react';
@@ -22,7 +22,6 @@ import logoImg from '../assets/logo.png';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { THEMES, monacoThemeName, monacoThemeData } from '../lib/themes';
 import dataset from '../../dataset.json';
-import snippets from '../../snippets.json';
 
 interface EditorProps {
   activeFilePath: string | null;
@@ -400,7 +399,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
         if (/(\.|->|::)\s*$/.test(before)) return { suggestions: [] };
         // With clangd active, it owns keywords/containers/algorithms; Nexel keeps its CP aliases and snippets.
         const clangdOn = isClangdActive();
-        const cpOn = pluginEnabledById('competitive-programming', useSettingsStore.getState().plugins);
+        const contrib = collectPluginCompletions(useSettingsStore.getState().plugins);
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
@@ -417,7 +416,7 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
           if (cat === 'io') return K.Interface;
           return K.Keyword;
         };
-        for (const item of collectOfflineItems({ dataset, snippets, clangdOn, cpOn, enableSnippets, hasUsingStd })) {
+        for (const item of collectOfflineItems({ dataset: { ...dataset, ...contrib.dataset }, snippets: contrib.snippets, clangdOn, pluginCategories: contrib.categories, enableSnippets, hasUsingStd })) {
           // Offline items rank after clangd's semantic results (clangd sortText starts with a digit run like "3f...").
           const sortText = item.isSnippet ? (clangdOn ? '~0001' : '0001') : (clangdOn ? '~' : '') + String(1000 - item.score).padStart(4, '0');
           suggestions.push({
