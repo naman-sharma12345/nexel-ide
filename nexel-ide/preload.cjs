@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, clipboard } = require('electron');
 
 // Expose safe system APIs to the React frontend
 contextBridge.exposeInMainWorld('nexelAPI', {
@@ -6,6 +6,10 @@ contextBridge.exposeInMainWorld('nexelAPI', {
   minimizeWindow: () => ipcRenderer.send('window-control', 'minimize'),
   maximizeWindow: () => ipcRenderer.send('window-control', 'maximize'),
   closeWindow: () => ipcRenderer.send('window-control', 'close'),
+
+  // Text-only clipboard operations for explicit editor menu commands.
+  readClipboardText: () => clipboard.readText(),
+  writeClipboardText: (text) => { if (typeof text !== 'string') throw new TypeError('Clipboard text required'); clipboard.writeText(text); },
 
   // Workspace File System triggers
   openWorkspaceDir: () => ipcRenderer.invoke('fs:open-dir'),
