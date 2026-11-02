@@ -140,6 +140,15 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
     right.forEach(t => { closeTab(t.filePath); getClangd().closePath(t.filePath); });
   };
 
+  const handleCloseTabsToLeft = () => {
+    setShowMenu(false);
+    const idx = tabs.findIndex(t => t.filePath === activeTabPath);
+    const left = idx > 0 ? tabs.slice(0, idx) : [];
+    if (!left.length) return;
+    if (left.some(t => t.isDirty) && !window.confirm("Close tabs to the left? Some have unsaved changes.")) return;
+    left.forEach(t => { closeTab(t.filePath); getClangd().closePath(t.filePath); });
+  };
+
   const handleCloseSavedTabs = () => {
     setShowMenu(false);
     closeSavedTabs();
@@ -606,6 +615,9 @@ export const Editor: React.FC<EditorProps> = ({ activeFilePath, onFileSelect, on
                   </div>
                   <div className="nx-dropdown-item" onClick={handleCloseOtherTabs}>
                     Close Other Tabs
+                  </div>
+                  <div className="nx-dropdown-item" onClick={handleCloseTabsToLeft}>
+                    Close Tabs to the Left
                   </div>
                   <div className="nx-dropdown-item" onClick={handleCloseTabsToRight}>
                     Close Tabs to the Right
