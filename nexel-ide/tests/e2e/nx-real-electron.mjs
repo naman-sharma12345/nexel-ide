@@ -74,8 +74,9 @@ const cpOff = await page.evaluate(() => ({
   judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
   cpSnippetsBtn: [...document.querySelectorAll('button')].some((b) => (b.title ?? '').includes('CP Snippets')),
+  judgeChip: !!document.querySelector('.sb-judge'),
 }));
-report('CP_OFF_REAL', !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn, JSON.stringify(cpOff));
+report('CP_OFF_REAL', !cpOff.judgeNav && !cpOff.contestsNav && !cpOff.cpSnippetsBtn && !cpOff.judgeChip, JSON.stringify(cpOff));
 // clangd must stay silent for a Python-only session: no missing-binary toast.
 await page.waitForTimeout(4500);
 const toastPy = await page.evaluate(() => [...document.querySelectorAll('.tz-toast')].map((t) => t.textContent));
@@ -714,8 +715,9 @@ await page.waitForTimeout(1500);
 const cpOn = await page.evaluate(() => ({
   judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
+  judgeChip: !!document.querySelector('.sb-judge'),
 }));
-report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
+report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav && cpOn.judgeChip, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 
 // --- Phase: CP completion contribution - enabled serves CP items, disabled removes only those ---
