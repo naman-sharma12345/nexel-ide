@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CPP_STDS } from '../stores/useSettingsStore';
 import { partitionFlags } from '../main/services/lsp/lspValidate';
 import { useLspStore, STATUS_LABEL } from '../lib/clangd/state';
@@ -70,6 +70,10 @@ function IntelliSenseSection() {
 export function SettingsPanel() {
   const open = useSettingsStore(s => s.settingsOpen);
   const s = useSettingsStore();
+  const boxRef = useRef<HTMLDivElement>(null);
+  // Hold the keyboard while open: without focus here, keys fall through to whatever had
+  // focus before (e.g. the terminal shell), same gap the shortcut sheet had.
+  useEffect(() => { if (open) boxRef.current?.focus({ preventScroll: true }); }, [open]);
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') useSettingsStore.getState().openSettings(false); };
@@ -79,7 +83,7 @@ export function SettingsPanel() {
   if (!open) return null;
   return (
     <div className="sp-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) s.openSettings(false); }}>
-      <div className="sp-box" role="dialog" aria-label="Settings">
+      <div className="sp-box" role="dialog" aria-label="Settings" tabIndex={-1} ref={boxRef}>
         <header className="sp-head">
           <h2>Settings</h2>
           <button className="sp-x" onClick={() => s.openSettings(false)} aria-label="Close settings">✕</button>
