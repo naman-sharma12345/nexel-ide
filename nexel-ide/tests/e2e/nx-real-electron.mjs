@@ -407,6 +407,23 @@ const ctrlW = await page.evaluate(() => ({
 }));
 report('TABS_CTRLW_REAL', !ctrlW.tabs.includes('README.md') && ctrlW.activeTitle === 'main.py' && ctrlW.footer, JSON.stringify(ctrlW));
 
+// --- Phase 3k: Ctrl+\\ splits, Ctrl+1/Ctrl+2 move pane focus, Ctrl+\\ unsplits ---
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(1000);
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(500);
+await page.keyboard.press('Control+\\'); await page.waitForTimeout(800);
+const splitOn = await page.evaluate(() => ({
+  rightPane: !!document.querySelector('.nx-right-pane-content'),
+  rightTitle: document.querySelector('.nx-right-pane-title')?.textContent ?? null,
+  focused: document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null,
+}));
+await page.keyboard.press('Control+1'); await page.waitForTimeout(500);
+const focusLeft = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null);
+await page.keyboard.press('Control+2'); await page.waitForTimeout(500);
+const focusRight = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null);
+await page.keyboard.press('Control+\\'); await page.waitForTimeout(800);
+const splitOff = await page.evaluate(() => !document.querySelector('.nx-right-pane-content'));
+report('SPLIT_REAL', splitOn.rightPane && splitOn.rightTitle === 'main.py' && focusLeft === 'README.md' && focusRight === 'main.py' && splitOff, JSON.stringify({ splitOn, focusLeft, focusRight, splitOff }));
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
@@ -423,7 +440,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
