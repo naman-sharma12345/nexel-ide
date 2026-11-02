@@ -277,11 +277,13 @@ const renamedOk = fs.existsSync(ws + '/src/todo.txt') && !fs.existsSync(ws + '/s
 const renamedRow = await page.evaluate(() => [...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
 report('RENAME_REAL', renamedOk && renamedRow, 'disk=' + renamedOk + ' row=' + renamedRow);
 
-page.on('dialog', (d) => d.accept());
+const deleteDlg = (d) => d.accept().catch(() => {});
+page.on('dialog', deleteDlg);
 await page.locator('.nx-node-row:has-text("todo.txt")').first().click({ button: 'right', timeout: 15000 });
 await page.waitForTimeout(600);
 await page.locator('.nx-context-item:has-text("Delete")').first().click({ timeout: 10000 });
 await page.waitForTimeout(1200);
+page.off('dialog', deleteDlg);
 const deletedOk = !fs.existsSync(ws + '/src/todo.txt');
 const deletedRow = await page.evaluate(() => ![...document.querySelectorAll('.nx-node-row')].some((r) => r.textContent?.includes('todo.txt')));
 report('DELETE_REAL', deletedOk && deletedRow, 'disk=' + deletedOk + ' row=' + deletedRow);
@@ -322,6 +324,65 @@ const closeRight = await page.evaluate(() => ({
 page.off('dialog', tabDlg);
 report('TABS_CLOSE_RIGHT_REAL', closeRight.tabs.length === 1 && closeRight.tabs[0] === 'main.py' && closeRight.footer, JSON.stringify(closeRight));
 
+// --- Phase 3g: Close Tabs to the Right from a MIDDLE tab preserves the left side ---
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-editor-tab:has-text("README.md")').first().click(); await page.waitForTimeout(500);
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Right' }).first().click(); await page.waitForTimeout(800);
+const closeRightMid = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+report('TABS_CLOSE_RIGHT_MID_REAL', closeRightMid.length === 2 && closeRightMid[0] === 'main.py' && closeRightMid[1] === 'README.md', JSON.stringify(closeRightMid));
+
+// --- Phase 3h: bulk close dirty guard - dismiss keeps every tab + content; accept closes only targets ---
+// Fresh renderer state (matches the isolated probe this scenario was validated with).
+await page.reload(); await page.waitForTimeout(4500);
+await page.locator('.nx-node-row:has-text("src")').first().click({ timeout: 15000 }); await page.waitForTimeout(600);
+await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(1200);
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-editor-tab:has-text("README.md")').first().click(); await page.waitForTimeout(400);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('R1MARKER'); await page.waitForTimeout(300);
+await page.locator('.nx-editor-tab:has-text("main.cpp")').first().click(); await page.waitForTimeout(400);
+await page.locator('.view-lines').first().click(); await page.keyboard.press('Control+End'); await page.keyboard.type('C1MARKER'); await page.waitForTimeout(300);
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(400);
+const bulkDismiss = (d) => d.dismiss().catch(() => {});
+page.on('dialog', bulkDismiss);
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(900);
+page.off('dialog', bulkDismiss);
+const cancelTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+let readmeKept = false, cppKept = false;
+if (cancelTabs.includes('README.md')) {
+  await page.locator('.nx-editor-tab:has-text("README.md")').first().click(); await page.waitForTimeout(500);
+  readmeKept = await page.evaluate(() => (document.querySelector('.view-lines')?.textContent ?? '').includes('R1MARKER'));
+}
+if (cancelTabs.includes('main.cpp')) {
+  await page.locator('.nx-editor-tab:has-text("main.cpp")').first().click(); await page.waitForTimeout(500);
+  cppKept = await page.evaluate(() => (document.querySelector('.view-lines')?.textContent ?? '').includes('C1MARKER'));
+}
+// accept: only the two dirty others close; the active main.py survives
+await page.locator('.nx-editor-tab:has-text("main.py")').first().click(); await page.waitForTimeout(400);
+const bulkAccept = (d) => d.accept().catch(() => {});
+page.on('dialog', bulkAccept);
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Other Tabs' }).first().click(); await page.waitForTimeout(900);
+page.off('dialog', bulkAccept);
+const acceptTabs = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+report('TABS_BULK_DIRTY_REAL', cancelTabs.length === 3 && readmeKept && cppKept && acceptTabs.length === 1 && acceptTabs[0] === 'main.py', JSON.stringify({ cancelTabs, readmeKept, cppKept, acceptTabs }));
+
+// --- Phase 3g: zen mode toggles chrome visibility ---
+await page.keyboard.press('Control+Alt+z'); await page.waitForTimeout(600);
+const zenOn = await page.evaluate(() => ({
+  cls: document.documentElement.classList.contains('nx-zen'),
+  sidebarOpacity: getComputedStyle(document.querySelector('.nx-sidebar-container')).opacity,
+}));
+await page.keyboard.press('Control+Alt+z'); await page.waitForTimeout(600);
+const zenOff = await page.evaluate(() => ({
+  cls: document.documentElement.classList.contains('nx-zen'),
+  sidebarOpacity: getComputedStyle(document.querySelector('.nx-sidebar-container')).opacity,
+}));
+report('ZEN_REAL', zenOn.cls && zenOn.sidebarOpacity === '0' && !zenOff.cls && zenOff.sidebarOpacity === '1', JSON.stringify({ zenOn, zenOff }));
+
 await app.close();
 
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
@@ -338,7 +399,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
