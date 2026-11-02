@@ -561,3 +561,8 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
 .tz-stack {
   z-index: 120000 !important;
 }
+
+/* The sheet box is focused on mount for keyboard capture; the focus ring is visual noise here. */
+.ss-box:focus {
+  outline: none;
+}
