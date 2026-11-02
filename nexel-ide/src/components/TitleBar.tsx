@@ -28,7 +28,7 @@ export const TitleBar: React.FC = () => {
       }
     };
     window.addEventListener('click', handleClickOutside);
-    return () => window.removeEventListener('click', handleClickOutside);
+  return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
   const handleControl = (action: 'minimize' | 'maximize' | 'close') => {
@@ -83,6 +83,19 @@ export const TitleBar: React.FC = () => {
     ]
   };
 
+    const switchMenu = (name: string, step: number, focusItem: boolean) => {
+    const names = Object.keys(menus);
+    const nextName = names[(names.indexOf(name) + step + names.length) % names.length];
+    setActiveMenu(nextName);
+    requestAnimationFrame(() => {
+      const triggers = [...(menuRef.current?.querySelectorAll<HTMLButtonElement>('.nx-menu-trigger-btn') ?? [])];
+      const trigger = triggers.find(t => t.textContent === nextName);
+      if (focusItem) trigger?.parentElement?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+      else trigger?.focus();
+    });
+  };
+
+
   return (
     <div className="nx-titlebar-container">
       {/* Draggable drag region */}
@@ -116,6 +129,8 @@ export const TitleBar: React.FC = () => {
                         const buttons = container?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
                         if (buttons?.length) buttons[e.key === 'ArrowUp' ? buttons.length - 1 : 0].focus();
                       });
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                      e.preventDefault(); switchMenu(name, e.key === 'ArrowRight' ? 1 : -1, true);
                     } else if (e.key === 'Escape') setActiveMenu(null);
                   }}
                   onMouseEnter={() => {
@@ -135,6 +150,8 @@ export const TitleBar: React.FC = () => {
                         const next = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1
                           : (index + (e.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
                         buttons[next]?.focus();
+                      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                        e.preventDefault(); switchMenu(name, e.key === 'ArrowRight' ? 1 : -1, true);
                       } else if (e.key === 'Escape') {
                         e.preventDefault(); e.stopPropagation(); setActiveMenu(null);
                         e.currentTarget.parentElement?.querySelector<HTMLButtonElement>('.nx-menu-trigger-btn')?.focus();
