@@ -240,6 +240,8 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(2500);
 const termText = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
 report('TERM_PTY', termText.includes('NX42'), JSON.stringify(termText.slice(-120)));
+await page.keyboard.type('export PS1="user@nexel:~$ "'); await page.keyboard.press('Enter'); await page.waitForTimeout(600);
+await page.keyboard.type('clear'); await page.keyboard.press('Enter'); await page.waitForTimeout(800);
 await page.screenshot({ path: dir + '/r4-terminal.png' });
 
 // --- Phase 3a-ii: terminal Clear and Restart buttons ---
@@ -351,6 +353,20 @@ await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Right' }).
 const closeRightMid = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
 report('TABS_CLOSE_RIGHT_MID_REAL', closeRightMid.length === 2 && closeRightMid[0] === 'main.py' && closeRightMid[1] === 'README.md', JSON.stringify(closeRightMid));
 
+// --- Phase 3g-ii: Close Tabs to the Left from the rightmost tab preserves the right side ---
+await page.locator('.nx-node-row:has-text("main.cpp")').first().click(); await page.waitForTimeout(900);
+// tabs now [main.py, README.md, main.cpp]; activate main.cpp (rightmost), close left -> [main.cpp]
+const leftDlg = (d) => d.accept().catch(() => {});
+page.on('dialog', leftDlg);
+await page.locator('.nx-tab-menu-btn').first().click(); await page.waitForTimeout(400);
+await page.locator('.nx-dropdown-item', { hasText: 'Close Tabs to the Left' }).first().click(); await page.waitForTimeout(800);
+page.off('dialog', leftDlg);
+const closeLeft = await page.evaluate(() => [...document.querySelectorAll('.nx-editor-tab .nx-tab-title')].map((x) => x.textContent));
+report('TABS_CLOSE_LEFT_REAL', closeLeft.length === 1 && closeLeft[0] === 'main.cpp', JSON.stringify(closeLeft));
+// restore main.py + README for subsequent phases
+await page.locator('.nx-node-row:has-text("main.py")').first().click(); await page.waitForTimeout(900);
+await page.locator('.nx-node-row:has-text("README.md")').first().click(); await page.waitForTimeout(900);
+
 // --- Phase 3h: bulk close dirty guard - dismiss keeps every tab + content; accept closes only targets ---
 // Fresh renderer state (matches the isolated probe this scenario was validated with).
 await page.reload(); await page.waitForTimeout(4500);
@@ -458,7 +474,7 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','CP_ON_REAL'];
+const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','CP_ON_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
