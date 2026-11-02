@@ -24,18 +24,39 @@ console.log('CFG_ISOLATED', cfg, 'persistent config untouched:', fs.existsSync(o
 const results = {};
 function report(name, ok, extra = '') { results[name] = !!ok; console.log(name, ok ? 'OK' : 'FAIL', extra); }
 
-async function boot() {
-  const app = await electron.launch({ args: ['.'], env: { ...process.env, ELECTRON_START_URL: 'http://localhost:5199', XDG_CONFIG_HOME: cfg } });
+let pageErrors = [];
+const BAD_ERROR = /PAGEERROR|Transform failed|Cannot find module|Failed to fetch|Uncaught|ReferenceError|TypeError|SyntaxError/i;
+async function boot(url = 'http://localhost:5199') {
+  pageErrors = [];
+  const wire = (w) => {
+    if (w.url().startsWith('devtools://')) return;
+    w.on('console', (m) => { if (m.type() === 'error') pageErrors.push(m.text().slice(0, 200)); });
+    w.on('pageerror', (e) => pageErrors.push('PAGEERROR@' + ((performance.now() / 1000).toFixed(1)) + 's ' + String(e.stack || e).slice(0, 600)));
+  };
+  const app = await electron.launch({ args: ['.'], env: { ...process.env, ELECTRON_START_URL: url, XDG_CONFIG_HOME: cfg } });
+  app.on('window', wire);
   await new Promise(r => setTimeout(r, 5000));
   let page = null;
   for (const w of app.windows()) { if (!w.url().startsWith('devtools://')) { page = w; break; } }
   if (!page) page = await app.firstWindow();
+  wire(page);
   await page.waitForTimeout(1500);
   return { app, page };
 }
+// Positive proof the renderer came up: absence-style phases are meaningless on a blank page.
+const bootProbe = (pg) => pg.evaluate(() => ({
+  explorer: !!document.querySelector('.nx-explorer-wrapper'),
+  rows: document.querySelectorAll('.nx-node-row').length,
+  nav: document.querySelectorAll('.nd-item-row').length,
+}));
 
 // --- Phase 1: open file, edit, save, verify on disk (CP default OFF) ---
 let { app, page } = await boot();
+// Gate: positive boot proof + no module/renderer errors before any absence-based assertion runs.
+const ready = await bootProbe(page);
+await page.waitForTimeout(2000);
+const bootBad = pageErrors.filter((e) => BAD_ERROR.test(e));
+report('BOOT_READY_REAL', ready.explorer && ready.rows > 0 && ready.nav > 0 && bootBad.length === 0, JSON.stringify({ ready, bootBad: bootBad.slice(0, 3) }));
 const cpOff = await page.evaluate(() => ({
   judgeNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Judge')),
   contestsNav: [...document.querySelectorAll('.nd-item-row')].some((r) => r.textContent?.includes('Contests')),
@@ -481,7 +502,7 @@ await page.keyboard.press('ArrowDown'); await page.waitForTimeout(300);
 await page.keyboard.press('Enter'); await page.waitForTimeout(900);
 const kbEnter = await page.evaluate(() => document.querySelector('.nx-editor-tab.active .nx-tab-title')?.textContent ?? null);
 report('EXPLORER_KB_OPEN_REAL', kbClosed === 2 && kbReopen === 4 && kbEnter === 'main.cpp', JSON.stringify({ kbClosed, kbReopen, kbEnter }));
-await page.screenshot({ path: dir + '/r6-explorer-kb.png' });
+await page.locator('.nx-explorer-wrapper').screenshot({ path: dir + '/r6-explorer-kb.png' });
 
 // --- Phase: F2 opens inline rename for the selected node and commits on Enter ---
 fs.writeFileSync(ws + '/kbf2.txt', 'rename me');
@@ -530,6 +551,7 @@ const delAfterAccept = await page.evaluate(() => ({
 }));
 const diskGone = !fs.existsSync(ws + '/kbdel.txt');
 report('EXPLORER_KB_DELETE_REAL', afterCancel && afterDirtyCancel && delAfterAccept.rowGone && delAfterAccept.tabOpen && diskGone && /unsaved/i.test(dirtyMsg), JSON.stringify({ afterCancel, afterDirtyCancel, delAfterAccept, diskGone, dirtyMsg: dirtyMsg.slice(0, 120) }));
+await page.locator('.nx-tab-orphaned').screenshot({ path: dir + '/r7-orphan-tab.png' });
 
 // --- Phase: orphaned buffer is not silently recreated by auto-save; explicit save recovers ---
 await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(400);
@@ -559,6 +581,10 @@ page.off('dialog', orphanDlg);
 
 await app.close();
 
+// Late renderer errors across every main-session phase (lazy chunks, runtime throws) must not exist.
+const lateBad = pageErrors.filter((e) => BAD_ERROR.test(e));
+report('RENDERER_CLEAN_REAL', lateBad.length === 0, JSON.stringify(lateBad.slice(0, 3)));
+
 // --- Phase 4: CP explicitly enabled -> surfaces appear ---
 fs.writeFileSync(cfgSub + '/config.json', JSON.stringify({
   'nexel-workspace-store': JSON.stringify({ state: { recentWorkspaces: [], pinnedPaths: [], rootPath: ws, rootName: 'REALWS', activeDir: ws, searchQuery: '', isRegex: false, isMatchCase: false }, version: 0 }),
@@ -573,7 +599,14 @@ const cpOn = await page.evaluate(() => ({
 report('CP_ON_REAL', cpOn.judgeNav && cpOn.contestsNav, JSON.stringify(cpOn));
 await page.screenshot({ path: dir + '/r5-cp-on.png' });
 await app.close();
-const EXPECTED = ['CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','CP_ON_REAL'];
+
+// --- Negative control: the boot gate must catch a blank renderer (nothing listens on :5999) ---
+const { app: badApp, page: badPage } = await boot('http://127.0.0.1:5999');
+await badPage.waitForTimeout(4000);
+const badReady = await bootProbe(badPage);
+report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
+await badApp.close();
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
