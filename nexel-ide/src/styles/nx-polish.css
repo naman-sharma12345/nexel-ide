@@ -548,3 +548,16 @@ html[data-theme='light'] .nx-welcome-subtitle { color: rgb(var(--nx-ink) / .68);
   width: 11px;
   height: 11px;
 }
+
+/* Modal layering: overlays must win over app chrome. Backdrops were at ~1100 while the
+   dock/terminal sit at 9999 and the titlebar at 99999, so modals rendered under them and
+   chrome stayed clickable through the dim. Toasts stay above modals for background ops. */
+.ss-backdrop,
+.sp-backdrop,
+.sf-backdrop,
+.cp-backdrop {
+  z-index: 110000 !important;
+}
+.tz-stack {
+  z-index: 120000 !important;
+}
