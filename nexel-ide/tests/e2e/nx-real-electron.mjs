@@ -586,6 +586,60 @@ await page.keyboard.press('Control+='); await page.waitForTimeout(400);
 const fontTermFocus = await fontProbe();
 report('FONT_ZOOM_REAL', fontUp === fontBefore + 1 && fontDown === fontUp - 2 && fontReset === 13 && fontTermFocus === 13, JSON.stringify({ fontBefore, fontUp, fontDown, fontReset, fontTermFocus }));
 
+// --- Capture: zoomed editor surface + the shortcut sheet rows listing the zoom bindings ---
+// clean scene: hide the terminal panel and wait out any lingering toast before shooting
+if (await page.$('.xterm')) { await page.keyboard.press('Control+`'); await page.waitForTimeout(500); }
+try { await page.waitForSelector('.tz-toast', { state: 'detached', timeout: 8000 }); } catch {}
+await page.locator('.view-lines').first().click(); await page.waitForTimeout(300);
+await page.keyboard.press('Control+='); await page.keyboard.press('Control+='); await page.keyboard.press('Control+='); await page.waitForTimeout(500);
+await page.locator('.nx-editor-canvas').screenshot({ path: dir + '/r9-font-zoom.png' });
+await page.keyboard.press('Control+0'); await page.waitForTimeout(300);
+// blur the editor so Ctrl+/ reaches the window handler and opens the sheet
+await page.evaluate(() => { const el = document.activeElement; if (el instanceof HTMLElement) el.blur(); }); await page.waitForTimeout(200);
+await page.keyboard.press('Control+/'); await page.waitForTimeout(600);
+const sheetRows = await page.evaluate(() => [...document.querySelectorAll('.ss-box div, .ss-box span')].filter((el) => el.children.length === 0 && /editor font/i.test(el.textContent ?? '')).map((el) => el.textContent));
+await page.locator('.ss-box').screenshot({ path: dir + '/r10-shortcuts.png' });
+// xterm consumes Escape for the shell, so move focus into the sheet first, then Escape closes it
+await page.locator('.ss-head').first().click(); await page.waitForTimeout(200);
+await page.keyboard.press('Escape');
+try { await page.waitForSelector('.ss-backdrop', { state: 'detached', timeout: 3000 }); }
+catch { throw new Error('shortcut sheet did not close after Escape'); }
+report('FONT_ZOOM_SHEET_REAL', sheetRows.length === 3, JSON.stringify(sheetRows));
+
+// --- Phase: modal isolation - with the sheet open, chrome under it takes no pointer, focus or keys ---
+await page.keyboard.press('Control+`'); await page.waitForTimeout(900); // open terminal
+await page.locator('.xterm').first().click(); await page.waitForTimeout(400);
+const refocusControl = await page.evaluate(() => document.activeElement?.classList?.contains('xterm-helper-textarea') ?? false);
+const rowsBefore = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
+const termBox = await page.locator('.xterm').first().boundingBox();
+await page.keyboard.press('Control+/'); await page.waitForTimeout(600);
+// a point over the terminal, right of the dock and left of the centered sheet box
+const boxRect = await page.locator('.ss-box').boundingBox();
+// pick a point over the terminal that the centered sheet box does not cover: below the box if it fits, else bottom-left corner
+let isoPt = { x: Math.round(termBox.x + termBox.width / 2), y: Math.round(boxRect.y + boxRect.height + 20) };
+const outside = (pt) => pt.x < boxRect.x || pt.x > boxRect.x + boxRect.width || pt.y < boxRect.y || pt.y > boxRect.y + boxRect.height;
+if (isoPt.y > termBox.y + termBox.height - 10 || !outside(isoPt)) isoPt = { x: Math.round(termBox.x + 15), y: Math.round(termBox.y + termBox.height - 15) };
+const iso = await page.evaluate((pt) => {
+  const top = document.elementsFromPoint(pt.x, pt.y)[0];
+  return { topIsBackdrop: top?.classList?.contains('ss-backdrop') ?? false, topClass: String(top?.className ?? '') };
+}, isoPt);
+const sheetHasFocus = await page.evaluate(() => document.activeElement?.classList?.contains('ss-box') ?? false);
+await page.keyboard.press('x'); await page.waitForTimeout(400);
+const rowsAfterKeys = await page.evaluate(() => document.querySelector('.xterm-rows')?.textContent ?? '');
+await page.mouse.click(isoPt.x, isoPt.y); await page.waitForTimeout(400);
+const afterClick = await page.evaluate(() => ({
+  sheetGone: !document.querySelector('.ss-backdrop'),
+  activeIsXterm: document.activeElement?.classList?.contains('xterm-helper-textarea') ?? false,
+}));
+report('MODAL_ISOLATION_REAL', iso.topIsBackdrop && sheetHasFocus && rowsAfterKeys === rowsBefore && afterClick.sheetGone && !afterClick.activeIsXterm && refocusControl,
+  JSON.stringify({ iso, isoPt, termBox, sheetHasFocus, keysLeaked: rowsAfterKeys !== rowsBefore, afterClick, refocusControl }));
+// recover the scene regardless of how the click landed
+await page.evaluate(() => { const el = document.activeElement; if (el instanceof HTMLElement) el.blur(); });
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.evaluate(() => document.querySelector('.ss-backdrop')?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
+await page.waitForSelector('.ss-backdrop', { state: 'detached', timeout: 3000 }).catch(() => {});
+await page.keyboard.press('Control+`'); await page.waitForTimeout(500); // restore scene: terminal hidden
+
 // --- Phase: orphaned buffer is not silently recreated by auto-save; explicit save recovers ---
 await page.locator('.nx-toolbar-btn.auto-save').click(); await page.waitForTimeout(400);
 await page.waitForTimeout(6000); // longer than the 5s auto-save loop
@@ -639,7 +693,7 @@ await badPage.waitForTimeout(2500);
 const badReady = await bootProbe(badPage);
 report('BOOT_GATE_NEGATIVE_REAL', !badReady.explorer && badReady.rows === 0 && badReady.nav === 0, JSON.stringify(badReady));
 await badApp.close();
-const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
+const EXPECTED = ['BOOT_READY_REAL','CP_OFF_REAL','CLANGD_QUIET_PYTHON','SAVE_DISK','THEME_SWITCH_REAL','SESSION_RESTORE_REAL','REOPEN_PERSIST','THEME_PERSIST_REAL','SEARCH_REAL','SEARCH_OPEN_REAL','QUICKOPEN_REAL','SETTINGS_APPLY_REAL','TERMINAL_HOTKEY_REAL','TABS_CYCLE_REAL','TABS_MIDDLECLOSE_REAL','CRUMB_REVEAL_REAL','TABS_CLOSE_INACTIVE_REAL','TABS_CLOSE_ACTIVE_REAL','TABS_DIRTY_CANCEL_REAL','TERM_PTY','TERM_PANEL_REAL','CLANGD_NOTICE_CPP','CREATE_FILE_REAL','RENAME_REAL','DELETE_REAL','TABS_CLOSE_OTHERS_REAL','TABS_CLOSE_RIGHT_REAL','TABS_CLOSE_RIGHT_MID_REAL','TABS_CLOSE_LEFT_REAL','TABS_BULK_DIRTY_REAL','ZEN_REAL','PALETTE_REAL','TABS_CTRLW_REAL','SPLIT_REAL','RENDERER_CLEAN_REAL','EXPLORER_KB_MOVE_REAL','EXPLORER_KB_OPEN_REAL','EXPLORER_KB_F2_REAL','EXPLORER_KB_DELETE_REAL','ORPHAN_AUTOSAVE_REAL','FONT_ZOOM_REAL','FONT_ZOOM_SHEET_REAL','MODAL_ISOLATION_REAL','CP_ON_REAL','BOOT_GATE_NEGATIVE_REAL'];
 const missing = EXPECTED.filter((n) => !(n in results));
 const failed = EXPECTED.filter((n) => results[n] === false);
 console.log('SUMMARY', JSON.stringify({ ok: EXPECTED.length - missing.length - failed.length, total: EXPECTED.length, missing, failed }));
