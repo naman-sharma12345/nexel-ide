@@ -32,7 +32,9 @@ contextBridge.exposeInMainWorld('nexelAPI', {
   onTerminalData: (callback) => {
     // Clear previous listeners to avoid double listener leaks
     ipcRenderer.removeAllListeners('terminal:data');
-    ipcRenderer.on('terminal:data', (event, data) => callback(data));
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on('terminal:data', listener);
+    return () => ipcRenderer.removeListener('terminal:data', listener);
   },
 
   // Competitive Programming Judge Integration
