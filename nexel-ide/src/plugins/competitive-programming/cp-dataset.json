@@ -1,0 +1,203 @@
+[
+  {
+    "label": "vec",
+    "insertText": "vector",
+    "detail": "Alias",
+    "documentation": "Short for std::vector.",
+    "score": 90
+  },
+  {
+    "label": "pq",
+    "insertText": "priority_queue",
+    "detail": "Alias",
+    "documentation": "Short for std::priority_queue.",
+    "score": 80
+  },
+  {
+    "label": "umap",
+    "insertText": "unordered_map",
+    "detail": "Alias",
+    "documentation": "Short for std::unordered_map.",
+    "score": 70
+  },
+  {
+    "label": "uset",
+    "insertText": "unordered_set",
+    "detail": "Alias",
+    "documentation": "Short for std::unordered_set.",
+    "score": 70
+  },
+  {
+    "label": "ll",
+    "insertText": "long long",
+    "detail": "Alias",
+    "documentation": "Short for long long type.",
+    "score": 100
+  },
+  {
+    "label": "pii",
+    "insertText": "pair<int,int>",
+    "detail": "Alias",
+    "documentation": "Pair of ints.",
+    "score": 85
+  },
+  {
+    "label": "vll",
+    "insertText": "vector<long long>",
+    "detail": "Alias",
+    "documentation": "Vector of long longs.",
+    "score": 85
+  },
+  {
+    "label": "FenwickTree",
+    "detail": "Data structure",
+    "documentation": "Fenwick tree (Binary Indexed Tree) for prefix sums and point updates.",
+    "score": 70
+  },
+  {
+    "label": "BIT",
+    "insertText": "FenwickTree",
+    "detail": "Alias",
+    "documentation": "Short for FenwickTree.",
+    "score": 70
+  },
+  {
+    "label": "SegmentTree",
+    "detail": "Data structure",
+    "documentation": "Segment tree for range queries and updates.",
+    "score": 80
+  },
+  {
+    "label": "LazySegmentTree",
+    "detail": "Data structure",
+    "documentation": "Segment tree with lazy propagation.",
+    "score": 60
+  },
+  {
+    "label": "UnionFind",
+    "detail": "Data structure",
+    "documentation": "Disjoint-set/union-find structure.",
+    "score": 70
+  },
+  {
+    "label": "DSU",
+    "insertText": "UnionFind",
+    "detail": "Alias",
+    "documentation": "Short for UnionFind.",
+    "score": 70
+  },
+  {
+    "label": "SparseTable",
+    "detail": "Data structure",
+    "documentation": "Supports O(1) range minimum queries for idempotent operations.",
+    "score": 50
+  },
+  {
+    "label": "BFS",
+    "detail": "Graph algorithm",
+    "documentation": "Breadth-first search for shortest paths in unweighted graphs.",
+    "score": 60
+  },
+  {
+    "label": "DFS",
+    "detail": "Graph algorithm",
+    "documentation": "Depth-first search for traversal and connectivity.",
+    "score": 60
+  },
+  {
+    "label": "Dijkstra",
+    "detail": "Graph algorithm",
+    "documentation": "Single-source shortest paths with non-negative weights.",
+    "score": 70
+  },
+  {
+    "label": "BellmanFord",
+    "detail": "Graph algorithm",
+    "documentation": "Single-source shortest paths, works with negative edges.",
+    "score": 40
+  },
+  {
+    "label": "FloydWarshall",
+    "detail": "Graph algorithm",
+    "documentation": "All-pairs shortest paths.",
+    "score": 30
+  },
+  {
+    "label": "Kruskal",
+    "detail": "MST algorithm",
+    "documentation": "Kruskal's algorithm using DSU.",
+    "score": 60
+  },
+  {
+    "label": "Prim",
+    "detail": "MST algorithm",
+    "documentation": "Prim's algorithm using priority queue.",
+    "score": 60
+  },
+  {
+    "label": "TopologicalSort",
+    "detail": "Graph algorithm",
+    "documentation": "Linear ordering of vertices in a DAG.",
+    "score": 50
+  },
+  {
+    "label": "SCC",
+    "detail": "Graph concept",
+    "documentation": "Strongly Connected Component.",
+    "score": 40
+  },
+  {
+    "label": "Tarjan",
+    "detail": "Algorithm",
+    "documentation": "Tarjan's SCC algorithm or bridge/articulation point finding.",
+    "score": 40
+  },
+  {
+    "label": "KMP",
+    "detail": "String algorithm",
+    "documentation": "Knuth-Morris-Pratt string matching.",
+    "score": 60
+  },
+  {
+    "label": "Z_algorithm",
+    "detail": "String algorithm",
+    "documentation": "Computes Z-array for pattern matching.",
+    "score": 40
+  },
+  {
+    "label": "std::make_unique",
+    "detail": "Utility",
+    "documentation": "Creates a std::unique_ptr.",
+    "score": 55
+  },
+  {
+    "label": "std::make_shared",
+    "detail": "Utility",
+    "documentation": "Creates a std::shared_ptr.",
+    "score": 55
+  },
+  {
+    "label": "std::forward",
+    "detail": "Utility",
+    "documentation": "Perfect forwarding of arguments.",
+    "score": 70
+  },
+  {
+    "label": "std::move",
+    "detail": "Utility",
+    "documentation": "Casts to an rvalue reference, enabling move semantics.",
+    "score": 80
+  },
+  {
+    "label": "std::exchange",
+    "detail": "Utility",
+    "documentation": "Replaces the value of an object and returns its old value.",
+    "score": 30
+  },
+  {
+    "label": "std::tie",
+    "detail": "Utility",
+    "documentation": "Creates a tuple of lvalue references for unpacking.",
+    "score": 50
+  }
+]
