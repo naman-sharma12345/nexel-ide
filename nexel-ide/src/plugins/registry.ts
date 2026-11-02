@@ -28,6 +28,16 @@ export interface NexelPlugin {
   panels?: Record<string, ComponentType<{ activeFilePath?: string | null }>>;
   /** React hook the shell calls for every registered plugin with its enabled state. */
   useActivation?: (enabled: boolean) => void;
+  /** Offline completion data contributed while the plugin is enabled. */
+  completions?: PluginCompletionContribution;
+}
+
+/** Completion data a plugin contributes when enabled (merged into the offline C++ provider). */
+export interface PluginCompletionContribution {
+  /** Extra dataset categories, e.g. { cp: [...] }. Keys are added to the served categories. */
+  dataset?: Record<string, { label: string; insertText?: string; detail?: string; documentation?: string; score?: number }[]>;
+  /** Snippet map, same shape as core snippets.json. Served only while enableSnippets is on. */
+  snippets?: Record<string, { prefix: string; description?: string; body: string[] | string }>;
 }
 
 const REGISTRY = new Map<string, NexelPlugin>();
@@ -43,4 +53,17 @@ export function getPlugin(id: string): NexelPlugin | undefined { return REGISTRY
 /** Whether a persisted plugins map enables this plugin (absent = default). */
 export function pluginEnabled(p: NexelPlugin, prefs: Record<string, boolean>): boolean {
   return p.id in prefs ? !!prefs[p.id] : p.defaultEnabled;
+}
+
+/** Merged completion contributions from all enabled plugins. Core code asks this, never a plugin id. */
+export function collectPluginCompletions(prefs: Record<string, boolean>): Required<PluginCompletionContribution> & { categories: string[] } {
+  const categories: string[] = [];
+  const dataset: NonNullable<PluginCompletionContribution['dataset']> = {};
+  const snippets: NonNullable<PluginCompletionContribution['snippets']> = {};
+  for (const p of listPlugins()) {
+    if (!pluginEnabled(p, prefs) || !p.completions) continue;
+    for (const [k, v] of Object.entries(p.completions.dataset ?? {})) { dataset[k] = v; categories.push(k); }
+    Object.assign(snippets, p.completions.snippets ?? {});
+  }
+  return { categories, dataset, snippets };
 }
