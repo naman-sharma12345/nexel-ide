@@ -1,460 +1,124 @@
-<div align="center">
+# Nexel IDE 2
 
-<img src="logo.png" alt="Nexel IDE Logo" width="120" />
+A desktop code editor with a quiet glass workspace, a floating file rail, and tools you turn on when you need them.
 
-# NEXEL IDE
+![Nexel IDE 2 editor](4-nexel2-editor.png)
 
-**The competitive programmer's weapon of choice.**
+## See it work
 
-[![Electron 42](https://img.shields.io/badge/Electron-42-47848F?style=for-the-badge&logo=electron&logoColor=white)](#)
-[![React 19](https://img.shields.io/badge/React-19-149eca?style=for-the-badge&logo=react&logoColor=white)](#)
-[![TypeScript 6](https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](#)
-[![Monaco](https://img.shields.io/badge/Monaco-Editor-6f42c1?style=for-the-badge&logo=visualstudiocode&logoColor=white)](#)
-[![Vitest](https://img.shields.io/badge/Tested_with-Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](#)
-[![Playwright](https://img.shields.io/badge/E2E-Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)](#)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](#license)
+![Actual Nexel IDE 2 walkthrough](3-nexel-ide-2-demo.gif)
 
-A frameless, monochrome desktop IDE with the VS Code editor engine, a sandboxed local judge,<br/>
-live Codeforces integration, 100+ CP snippets, and zero telemetry.
+Recorded from the running Electron app on Linux: open a workspace, edit code, enable optional tools, run a Python testcase, and inspect local Git changes. This is the real interface, not a mockup. The recording is a short sequence of screen captures.
 
-[Features](#-features) · [Demo](#-demo) · [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Testing](#-testing) · [License](#license)
+## Branch status
 
-</div>
+This is the `original-glass-integration` development branch. `main` is unchanged.
 
----
+The newest source is preserved in **`1-nexel-ide-2-source-20261105.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
 
-## 🎬 Demo
+## A workspace first
 
-<div align="center">
+- Monaco editing with tabs, split panes, file navigation, find/replace, command palette and keyboard controls.
+- A glass dock and floating file rail that keep the editor at the center.
+- Integrated terminal with native PTY support and a pipe fallback when native bindings are unavailable.
+- File conflict warnings and guarded saves that protect unsaved edits when disk contents change.
+- Local Git status, diff review, staging, commits, branches and history. Fetch, pull and push are explicit actions, not background operations.
 
-![Nexel IDE Demo](recording.gif)
+![Local Git changes](6-nexel2-git.png)
 
-</div>
+## Add only the tools you need
 
----
+Settings contains an Extensions picker. Competitive Programming, Data Tools, Document Navigator, Text Compare, Document Insights, Regex Lab, Time Lab and Color Lab can be enabled individually. Optional tools are off by default; Git is available in the normal workspace.
 
-## ⚡ Features
+Data Tools includes JSON formatting, UTF-8 Base64 and URL conversion, line transformations and text hashes. The document tools work with the current editor context. They are not a marketplace for arbitrary third-party extensions.
 
-### 🧠 Monaco Editor Core
+## Competitive programming, when you want it
 
-> The same engine that powers VS Code — customized to its limit.
+Enable **Competitive Programming** in Settings for Judge, stress testing, Codeforces views and Competitive Companion imports.
 
-- **Custom `nexel-minimal-dark` theme** — hand-tuned syntax token colors against a `#050507` canvas
-- **Multi-tab workflow** with dirty indicators, unsaved-change protection, and keyboard shortcuts (`Ctrl+S`, `Ctrl+W`)
-- **Split-pane editing** — vertical split with draggable divider (20–80% ratio), independent focus tracking per pane
-- **Auto-save** with a 5-second polling loop and toggle LED in the toolbar
-- **C++ intelligent autocomplete** powered by a curated 1,600-entry dataset across 6 categories (keywords, containers, algorithms, math, I/O, CP patterns). Auto-strips the `std::` prefix when `using namespace std;` is detected
-- **100+ competitive programming snippets** — DSU, Fenwick Tree, Segment Tree (+ Lazy), Sparse Table, Trie, Ordered Set (PBDS), BFS, DFS, Dijkstra, Bellman-Ford, Floyd-Warshall, Topological Sort, Kosaraju/Tarjan SCC, LCA, Binary/Ternary Search, Matrix Exponentiation, Sieve, KMP, Z-function, Convex Hull, and more. Searchable via a built-in snippet viewer tab
-- **C++ boilerplate templates** — configure default code that auto-injects into every new `.cpp` file
+![Python testcase in Judge](5-nexel2-judge.png)
 
----
+- C++ compilation and Python execution verified against real local toolchains.
+- Input, Expected, Actual and Diff readers with per-case verdicts.
+- Save-and-run for dirty source, cancellation, bounded output and runtime diagnostics kept separate from stdout.
+- Exact UTF-8 output across streamed chunks, including Hindi and the globe shown in the validation runs.
+- Historical results stay available with their run source named; changing files does not silently claim a new run.
+- Stress testing compares a solution with a brute-force program and can add a failing example to Judge.
+- Companion imports create files without overwriting existing ones and keep their original destination if you switch workspaces.
 
-### 🏆 Local Judge System
+Java remains a supported code path but was not verified successfully in the current Linux environment because `javac` could not run. Do not read that as a tested Java setup.
 
-> Compile, run, and validate — without leaving the IDE.
+## Run the latest snapshot
 
-| Capability | Detail |
-|---|---|
-| **Languages** | C++ (`g++ -std=c++17`), Java (`javac` → `java -cp`), Python (`python` / `python3`) |
-| **Verdicts** | `AC` · `WA` · `TLE` · `MLE` · `RE` — color-coded pills per test case |
-| **Metrics** | Execution time (ms) and peak resident memory (MB) per test |
-| **Diff viewer** | Side-by-side line comparison with match/mismatch highlighting |
-| **Gamified feedback** | 🟢 **AC** → neon green glow wash across editor + tab (1.5s). 🔴 **WA** → horizontal shake on metrics panel |
-| **Batch execution** | All test cases run sequentially with real-time "RUNNING" animation per pill |
+Use a new folder so you do not overwrite an existing checkout or your own edits:
 
----
-
-### 🛡️ Sandboxed Execution Engine
-
-> Every student submission runs in a sandbox. No exceptions.
-
-<details>
-<summary><b>Linux / macOS — Bubblewrap (bwrap)</b></summary>
-
-- `--unshare-all` — isolates IPC, network, PID, UTS, and mount namespaces
-- Read-only bind mounts for `/usr`, `/lib`, `/lib64`, `/bin`, and the source directory
-- Drops privileges to `uid 1000 / gid 1000`
-- Falls back to `ulimit -v -t` constraints if `bwrap` is unavailable (with a prominent security warning)
-
-</details>
-
-<details>
-<summary><b>Windows — Job Objects + Process Tree Killing</b></summary>
-
-- Attempts `win32-job` native Job Objects for memory capping
-- Falls back to `tasklist` / `taskkill` / WMIC / PowerShell recursive child-PID discovery and termination
-
-</details>
-
-<details>
-<summary><b>Cross-platform safety nets</b></summary>
-
-- **Time limit enforcement** — configurable `setTimeout` with `SIGKILL` on the entire process group/tree
-- **Memory limit enforcement** — 300ms polling loop via `ps -o rss=` (Unix) or `tasklist /FI` (Windows)
-- **5 MB output cap** — prevents stdout flooding from crashing the host → immediate `RE` verdict
-- **Signal handling** — `SIGXCPU` → `TLE`, exit code 137 / `SIGKILL` / OOM → `MLE`, non-zero exit → `RE`
-
-</details>
-
----
-
-### 🌐 Codeforces Integration
-
-> Browse contests, scrape problems, import samples — all built in.
-
-- **Live contest browser** — fetches from the Codeforces API. Three sections: Active Now (green pulse), Upcoming (with start time), Recent Past
-- **Problem statement viewer** — full HTML rendering with MathJax LaTeX support, time/memory limit chips, input/output format sections
-- **One-click sample import** — push sample test cases from any problem directly into the Judge
-- **"Open To Folder"** — scaffold a contest directory with `A.cpp`, `B.cpp`, … template files in your workspace
-- **Custom fetch** — type a contest ID (`1981`) or problem (`1981A`) and instantly load it
-- **Robust scraper** — 3-tier Cloudflare bypass: saved cookies → real Chrome profile (Playwright stealth) → HTTP login fallback
-
----
-
-### 📂 Workspace Explorer
-
-- **Recursive file tree** with smart filtering (`node_modules`, `.git`, `.vite` excluded)
-- **Full CRUD** — new file, new folder, rename (inline editing with smart extension selection), delete with confirmation
-- **Context menus** — right-click on files, folders, or empty space for quick actions
-- **Drag & drop** — relocate files and folders within the tree
-- **Pinned files shelf** — bookmark frequently accessed files for instant access
-- **Regex search** — real-time filter with Match Case and Regex toggle buttons
-
----
-
-### ⌨️ Integrated Terminal
-
-- **xterm.js** frontend with `node-pty` native PTY backend (PowerShell on Windows, bash on Linux/macOS)
-- **Fallback mode** — standard `child_process` shell with manual echo if PTY bindings are unavailable
-- **Auto-resize** — `ResizeObserver`-based fit with dimensions forwarded to the PTY process
-- **Theme-matched** — colors aligned with the editor's monochrome palette
-
----
-
-### 🪟 UI & Window Chrome
-
-- **Frameless custom title bar** with File / Edit / Selection / View / Terminal / Options / Help menus
-- **Floating glass NavDock** — vertical activity bar with hover-reveal collapse, neon tube active indicator, animated tooltips
-- **Persistent state** — workspace path, judge test cases, UI preferences, and editor settings survive restarts via `electron-store`
-- **Welcome screen** — logo, branding, and keyboard shortcut guide when no files are open
-
----
-
-## 🧱 Tech Stack
-
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Shell** | Electron 42 | Frameless window, native OS APIs, IPC bridge |
-| **UI** | React 19 + Zustand 5 | Concurrent rendering, persisted state management |
-| **Language** | TypeScript 6 | Strict typing across the Electron boundary |
-| **Editor** | Monaco Editor | VS Code's industrial-grade editing engine |
-| **Terminal** | xterm.js + node-pty | Native PTY shell integration |
-| **Bundler** | Vite 8 | Sub-second HMR, optimized production builds |
-| **Scraper** | Cheerio + Playwright | Codeforces problem extraction with Cloudflare bypass |
-| **Unit Tests** | Vitest + Testing Library | Component, store, service, and security tests |
-| **E2E Tests** | Playwright | Full browser workflow automation |
-| **CI/CD** | GitHub Actions | Lint → Typecheck → Unit (70% coverage) → E2E |
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-| Requirement | Version |
-|---|---|
-| Node.js | ≥ 20 |
-| npm | ≥ 10 |
-| OS | Windows 10/11, Linux, macOS |
-| *(for Judge)* | `g++`, `java`/`javac`, `python` on `PATH` |
-
-### Clone & Install
-
-```bash
-git clone https://github.com/naman/nexel-ide.git
-cd nexel-ide/nexel-ide
+```sh
+git clone --branch original-glass-integration --single-branch https://github.com/naman-sharma12345/nexel-ide.git nexel-ide-2
+cd nexel-ide-2
+mkdir snapshot
+tar -xzf 1-nexel-ide-2-source-20261105.tgz -C snapshot
+cd snapshot/nexel-ide
 npm install
-```
-
-### Launch (Vite + Electron with HMR)
-
-```bash
-# Start the Vite dev server (renderer)
-npm run dev
-
-# In a separate terminal — start Electron (main process)
+npm run typecheck
+npm run build
 npm run electron:dev
 ```
 
-### Available Scripts
+Use Node.js 22 or newer with npm. The app needs a desktop environment. Native terminal bindings may need your OS build tools. To run Judge, install the relevant compiler/runtime on PATH: `g++` for C++, `python3` on Unix or `python` on Windows, and a JDK for Java.
 
-| Script | Description |
-|---|---|
-| `npm run dev` | Start the Vite development server |
-| `npm run build` | TypeScript compile + Vite production build |
-| `npm run electron:dev` | Launch Vite + Electron concurrently with HMR |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run `tsc --noEmit` |
-| `npm run test` | Run all Vitest unit/integration tests |
-| `npm run test:coverage` | Run Vitest with v8 coverage (70% threshold) |
-| `npm run test:e2e` | Run Playwright end-to-end tests |
-| `npm run fetch:clangd` | Download + verify the pinned clangd for this OS into `resources/clangd/` |
-| `npm run fetch:clangd:all` | Same for Windows, macOS and Linux (for release machines) |
-| `npm run test:clangd` | clangd unit tests + the real-binary end-to-end test |
-| `npm run dist` / `dist:win` / `dist:mac` / `dist:linux` | Build, fetch clangd and package with electron-builder |
+For C/C++ language-server features in development:
 
----
-
-## 🧩 C/C++ IntelliSense (clangd)
-
-Nexel ships the official [clangd](https://clangd.llvm.org) language server (pinned **19.1.2**) and wires it straight into Monaco. Without clangd (or if it crashes) the editor quietly falls back to the built-in, zero-install providers, so C++ always has completions.
-
-**What you get in `.cpp` / `.c` / `.h` files**
-
-- Semantic completions (`v.` → `push_back`, `size`, … with signatures, return types and docs), snippets and the Nexel CP aliases merged into one list, no duplicates
-- Hovers with the exact type (`vector<int>`), plus a short Nexel CP note (complexity, pitfalls) for STL names
-- Signature help on `(` and `,`, diagnostics as themed squiggles (errors, warnings, unused code), go to definition / declaration (Ctrl+click, F12, peek into headers), find references, rename (F2), document outline, highlight occurrences, format document / selection (clang-format)
-- A **clangd** chip in the status bar: `ready`, `indexing` (soft pulse), `starting`, `fallback` (not installed), `error` (crashed). Click it to restart clangd, switch to built-in IntelliSense, or open the settings
-- **Settings → IntelliSense**: enable/disable clangd, C++ standard (17 / 20 / 23), extra compiler flags (for example `-DLOCAL -Wshadow`)
-
-**How it works**
-
-```
-Monaco providers ──► ClangdSession (renderer)          src/lib/clangd/session.ts
-                       │  LSP JSON-RPC, debounced incremental didChange, markers, fallback
-                       ▼
-          preload: nexelAPI.lspStart / lspSend / lspRestart / lspStop
-                       ▼  (allowlisted methods only, 4 MB cap, sender check)
-main.cjs ──► LanguageServerManager ──► clangd (stdio, fixed argv, no shell)
-             src/main/services/lsp/    restart with backoff, killed on quit / window close
+```sh
+npm run fetch:clangd
 ```
 
-- **Which clangd runs**: a bundled copy (`<resources>/clangd/<os>-<arch>/bin/clangd`) → the repo copy in dev (`resources/clangd/…`) → `clangd` on your `PATH` → built-in fallback.
-- **Single-file CP folders**: when a workspace has no `compile_commands.json`, `compile_flags.txt` or `.clangd` of its own, Nexel writes a small `.clangd` marked `# nexel:generated` (C++ standard, `-Wall`, your extra flags, C rules for `.c` files). It only ever rewrites files carrying that marker; delete the first line to make it yours.
-- **`#include <bits/stdc++.h>` everywhere**: Linux (libstdc++) and MinGW have it; for macOS (libc++) and MSVC toolchains Nexel adds `-I` to a bundled `nexel-include/bits/stdc++.h` shim.
-- **System headers**: Nexel finds `g++` (then `clang++`) on `PATH` and passes that exact path to clangd's `--query-driver`, so clangd uses the same headers your compiler does (MinGW on Windows, Xcode tools on macOS).
-- **Security**: the renderer can never choose the binary or its arguments. Extra flags go into `.clangd` only after an allowlist check (`-D -U -W -f -O -m -I -isystem`; `-fplugin`, `-Xclang`, `-load`, `@file` and shell characters are dropped), and only `initialize`, `textDocument/*`, `completionItem/resolve`, `$/cancelRequest` and a few `workspace/*` notifications cross the IPC bridge.
+When clangd is unavailable the app uses built-in language helpers. Full semantic tooling depends on a working language server and compiler/header setup.
 
-**Packaged builds bundle clangd on every OS**
+### Useful commands
 
-`scripts/fetch-clangd.mjs` downloads the official release zips from `github.com/clangd/clangd/releases/tag/19.1.2`, checks each SHA256 (pinned in `scripts/clangd-assets.mjs`), caches them (`~/.cache/nexel-clangd`, or `NEXEL_CLANGD_CACHE`) and extracts `bin/` + `lib/clang/19/include` into `resources/clangd/`. electron-builder then copies only the matching folder into each installer through per-target `extraResources`:
+Run these inside the application folder:
 
-| Target | Release asset | Bundled as |
-|---|---|---|
-| Windows x64 (NSIS) | `clangd-windows-19.1.2.zip` | `resources/clangd/win-x64` (also used on Windows on ARM via emulation) |
-| macOS universal (DMG, arm64 + x64) | `clangd-mac-19.1.2.zip` (universal Mach-O) | `resources/clangd/mac-universal` |
-| Linux x64 (AppImage, deb) | `clangd-linux-19.1.2.zip` | `resources/clangd/linux-x64` |
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Vite renderer development server |
+| `npm run electron:dev` | Vite and Electron together |
+| `npm run typecheck` | TypeScript project build check (`tsc -b`) |
+| `npm run build` | Typecheck and production renderer build |
+| `npm test -- --maxWorkers=1 --no-file-parallelism` | Unit and integration tests |
+| `npm run test:e2e` | Playwright workflow tests |
+| `npm run dist:linux` | Build and package for Linux |
+| `npm run dist:win` | Build and package for Windows |
+| `npm run dist:mac` | Build and package for macOS |
 
-The binaries are gitignored and never committed. Linux on ARM has no official build: install `clangd` from your distro and Nexel picks it up from `PATH`.
+Packaging scripts exist; this branch does not claim newly verified installers for every OS.
 
-```bash
-npm run fetch:clangd      # dev: this OS only
-npm run dist:win          # or dist:mac / dist:linux: build + fetch + package
-```
+## Validation and limits
 
-**Verified end to end**: `src/main/services/lsp/__tests__/clangd.e2e.test.ts` spawns the real pinned clangd through `LanguageServerManager`, opens a file with `#include <bits/stdc++.h>` (resolved to the shim) and `vector<int> v; v.`, and checks completion (`push_back`), hover (`vector<int>`), an undeclared-identifier diagnostic, signature help, incremental sync, definition, references, rename, highlights, formatting and symbols, both raw and through the renderer's `ClangdSession` + Monaco providers. It is skipped when no clangd is available.
+Latest local validation on November 5, 2026:
 
-**Troubleshooting**: chip says `fallback` → run `npm run fetch:clangd` (dev) or install clangd. Standard headers not found → install a compiler (`g++`/MinGW on Windows, Xcode command line tools on macOS) and restart clangd from the chip.
+- Canonical typecheck and production build passed.
+- 1,145 unique unit/integration tests passed across 170 files. Four opt-in native tests were skipped in that sweep and passed separately against the real Linux runner.
+- Actual Electron workflows checked editor saves, Git in disposable repositories, plugin lifecycle, Companion imports, UTF-8 output, runtime errors and narrow layouts.
 
----
+These are Linux results, not cross-platform certification. Network Git login/SSH prompts and Windows/macOS behavior need their own testing. Codeforces availability depends on the service. Saved Judge results describe a past run, not current disk contents or an atomic build snapshot. External files can change between checks. Narrow layouts use scrolling where content cannot fit.
 
-## 🏗️ Architecture
+The Judge uses Bubblewrap when available on Linux and resource-limited process execution otherwise. The fallback is not a strong isolation boundary for hostile code. Run only code you trust on your own machine.
 
-```
+## Project layout
+
+```text
 nexel-ide/
-├── .github/workflows/ci.yml          # GitHub Actions: lint, test, e2e
-├── nexel-ide/                         # Main Electron + React application
-│   ├── main.cjs                       # Electron main process (IPC handlers, on-the-fly TS compilation)
-│   ├── preload.cjs                    # contextBridge — 23 safe API methods
-│   ├── src/
-│   │   ├── App.tsx                    # Root layout: TitleBar + NavDock + panels + Editor
-│   │   ├── components/
-│   │   │   ├── TitleBar.tsx           # Frameless window chrome + menu bar
-│   │   │   ├── NavDock.tsx            # Floating glass activity bar with hover-reveal
-│   │   │   ├── Explorer.tsx           # Workspace tree, search, pins, drag-drop, CRUD
-│   │   │   ├── Editor.tsx             # Monaco multi-tab editor + split pane + snippets viewer + CF problem viewer
-│   │   │   ├── Terminal.tsx           # xterm.js + node-pty terminal
-│   │   │   ├── JudgeSystem.tsx        # Test case manager, verdict display, diff viewer
-│   │   │   └── ContestsSystem.tsx     # Codeforces contest browser + problem fetcher
-│   │   ├── stores/
-│   │   │   ├── useEditorStore.ts      # Tabs, split state, settings (Zustand + persist)
-│   │   │   ├── useJudgeStore.ts       # Test cases, verdicts (Zustand + persist)
-│   │   │   ├── useUIStore.ts          # Sidebar, terminal, modal state (Zustand + persist)
-│   │   │   ├── useWorkspaceStore.ts   # File tree, pins, search (Zustand + persist)
-│   │   │   └── electronStorage.ts     # Zustand ↔ electron-store bridge with write-cache
-│   │   ├── judge-backend/
-│   │   │   ├── SandboxExecutor.ts     # ISandboxExecutor interface (swap for Docker/WASM)
-│   │   │   └── LocalSandboxExecutor.ts # Bubblewrap (Linux) + Job Objects (Windows) sandbox
-│   │   ├── main/services/
-│   │   │   ├── JudgeService.ts        # Compilation orchestrator + CF API + scraper spawner
-│   │   │   ├── FileSystemService.ts   # File CRUD with path-traversal protection
-│   │   │   ├── FileTreeWorker.ts      # Off-main-thread directory scanner
-│   │   │   └── StoreService.ts        # electron-store wrapper
-│   │   └── __mocks__/                 # Vitest mocks for nexelAPI + setup
-│   ├── tests/e2e/
-│   │   ├── ide-workflow.spec.ts       # E2E: file → edit → judge → AC celebration
-│   │   └── contests-system.spec.ts    # E2E: browse → open contest → load problem
-│   ├── dataset.json                   # 1,600-entry C++ autocomplete dataset
-│   ├── snippets.json                  # 100+ CP snippet templates
-│   ├── vitest.config.ts               # jsdom, React plugin, 70% coverage thresholds
-│   └── playwright.config.ts           # Chromium, Vite webServer, HTML reporter
-└── nexel-judge/                       # Standalone Codeforces scraper
-    ├── cf_problems.js                 # Problem scraper with 3-tier Cloudflare bypass
-    └── get_contests.js                # Contest list fetcher
+  main.cjs                 Electron entry and IPC handlers
+  preload.cjs              Renderer bridge
+  src/components/          Editor and shared UI
+  src/plugins/             Optional tool panels and Git
+  src/stores/              Workspace and editor state
+  src/lib/                 Editor and workflow helpers
+  src/main/services/       Filesystem, Git, Judge and language services
+  src/judge-backend/        Local execution and resource limits
+  public/fonts/            Offline font assets and licenses
+  scripts/                 Toolchain download helpers
+  tests/e2e/               Playwright workflows
 ```
 
----
-
-## 🧪 Testing
-
-Nexel IDE is protected by a multi-layered testing strategy:
-
-### Unit & Integration Tests (Vitest)
-
-| Suite | What it proves |
-|---|---|
-| `LocalSandboxExecutor.security.test.ts` | 5MB output cap kills the process; hung executions get `SIGKILL` → `TLE` |
-| `LocalSandboxExecutor.test.ts` | Multi-language execution, verdict mapping, memory/time measurement |
-| `JudgeService.compilation.test.ts` | Compiler hangs are aborted via `SIGKILL`; temp workspaces are cleaned up |
-| `JudgeService.contests.test.ts` | Contest API parsing; scraper spawns with correct isolated env vars |
-| `FileTreeWorker.resilience.test.ts` | `EACCES` errors are caught gracefully; 500+ file scans don't block the event loop |
-| `electronStorage.integrity.test.ts` | Write-cache deduplication; invalid JSON fallback handling |
-| `useEditorStore.edge-cases.test.ts` | Rapid tab open/close race conditions; dirty state tracking correctness |
-| `JudgeSystem.test.tsx` | Component rendering, verdict display, run button state management |
-
-### End-to-End Tests (Playwright)
-
-| Suite | Workflow |
-|---|---|
-| `ide-workflow.spec.ts` | Open workspace → create file → edit code → run judge → assert AC verdict + celebration glow |
-| `contests-system.spec.ts` | New user (no credentials) → browse contests → open past contest → load problems → open in editor |
-
-### Coverage
-
-```
-npm run test:coverage
-```
-
-Enforces **70% minimum** on statements, branches, functions, and lines via `@vitest/coverage-v8`.
-
----
-
-## 🔄 CI/CD
-
-GitHub Actions runs **three parallel jobs** on every push/PR to `main`:
-
-```
-┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
-│  lint-and-typecheck  │    │     unit-tests       │    │      e2e-tests      │
-│                     │    │                     │    │                     │
-│  npm run lint       │    │  npm run             │    │  npx playwright     │
-│  npm run typecheck  │    │    test:coverage     │    │    install --with-  │
-│                     │    │                     │    │    deps             │
-│                     │    │  (70% threshold)    │    │  npm run test:e2e  │
-│                     │    │                     │    │                     │
-│                     │    │                     │    │  📦 Upload report   │
-│                     │    │                     │    │     (30-day)        │
-└─────────────────────┘    └─────────────────────┘    └─────────────────────┘
-```
-
----
-
-## 🧭 Roadmap
-
-### ✅ Shipped
-
-- [x] Monaco editor with custom theme, multi-tab, split pane, auto-save
-- [x] C++ autocomplete engine (1,600+ entries) with `std::` auto-stripping
-- [x] 100+ competitive programming snippet library with searchable viewer
-- [x] Local judge system — C++ / Java / Python with AC/WA/TLE/MLE/RE verdicts
-- [x] Sandboxed execution — Bubblewrap (Linux), Job Objects (Windows), output capping
-- [x] Codeforces integration — contest browser, problem viewer, sample import, folder scaffolding
-- [x] Workspace explorer with CRUD, drag-drop, pins, regex search
-- [x] Integrated terminal with native PTY
-- [x] C++ boilerplate template system
-- [x] Persistent state across restarts
-- [x] Gamified AC celebration glow + WA shake animations
-- [x] Custom frameless window with full menu system
-- [x] CI/CD pipeline — lint, typecheck, unit tests (70% coverage), E2E tests
-- [x] Path-traversal protection on file system operations
-- [x] Off-main-thread file tree scanning
-
-### 🚧 Planned
-
-- [ ] Finder overlay (project-wide search & replace)
-- [ ] Git integration sidebar
-- [ ] Themes marketplace (light mode, custom themes)
-- [ ] Atcoder / USACO contest integration
-- [ ] Docker-based sandbox executor
-- [ ] Collaborative editing (WebRTC)
-
----
-
-## 📜 License
-
-Released under the **MIT License**. See [LICENSE](./LICENSE) for the full text.
-
----
-
-<div align="center">
-
-<sub>Built with caffeine and stubbornness by the Nexel Team ☕⚡</sub>
-
-</div>
-
-## What's new on hark/overnight-improvements
-
-- **Paper Light is now a true light theme** (10:50 IST): white-alpha overlays run through a new `--nx-ink` token, near-black surfaces through `--nx-surf`, plus a light Monaco palette (`vs` base). The old invert filter is gone.
-
-- **clangd IntelliSense, finished** (Oct 9): real clangd 19.1.2 in Monaco for C/C++ with completions, hovers, signature help, diagnostics, go to definition, references, rename, outline, highlights and formatting; automatic fallback to the built-in providers; a status-bar chip (ready / indexing / starting / fallback / error) with a restart menu and failure toasts; Settings → IntelliSense (toggle, C++17/20/23, extra flags); auto-generated `.clangd` for CP folders; checksum-verified clangd bundled into Windows, macOS (universal) and Linux builds. See [C/C++ IntelliSense (clangd)](#-cc-intellisense-clangd).
-- **Theme fix**: dark themes now define the `--nx-ink` / `--nx-surf` tokens (hairlines, text tints and glass widgets were falling back to defaults), and Monaco suggest / hover / peek widgets follow the active theme, Paper Light included.
-
-- **Codeforces fix:** built-in problem fetcher (API standings + statement parser, retries, cache, sanitised HTML) replaces the external scraper; upcoming contests now open a countdown view (IST start, Register link) and auto-load problems at start.
-
-- Two new themes: **Obsidian Gold** and **Aurora Teal** (9 themes total).
-- Two new themes: Nord Frost and Deep Forest (7 themes total).
-- Drag-and-drop tab reordering in the editor tab bar.
-
-- Replace in files: replace field + Replace all (Ctrl+Enter) in the Find-in-files panel, with confirm.
-
-- **Zen mode** (Ctrl+Alt+Z or palette): sidebar, dock and status bar fade away; Esc exits.
-- **Breadcrumbs** (design): the editor footer path is now workspace-relative clickable-looking crumbs (`cp-workspace › codeforces › 1950A.cpp`) with chevrons, staggered slide-in on every file switch and an accent-coloured file name.
-- **Living welcome backdrop** (design): dot grid that lights up under the cursor, an accent spotlight that follows the mouse (rAF-throttled CSS vars, no React re-renders) and two slow drifting aurora orbs tinted by the active theme; respects reduced motion.
-- **Session restore** (feature): reopens the tabs you had open in the last workspace (paths only, validated to live inside the workspace root, capped at 24, bounded storage) and focuses the active one.
-- **Judge sandbox hardening** (security / OS): the `ulimit` fallback no longer interpolates file paths into a shell string (positional args, so a hostile file name cannot inject commands), and now also sets `RLIMIT_NPROC` (fork-bomb guard), `RLIMIT_FSIZE` and no core dumps; stdin EPIPE is handled.
-- **Find in files** (feature + design, Ctrl+Shift+F): glass search overlay with case / whole-word / regex toggles, debounced and abortable. The engine (`src/lib/searchInFiles.ts`) is a bounded worker pool: capped files, bytes, matches and concurrency, skips binaries, guards zero-width regexes. Enter jumps to the match and the line flashes in the accent colour.
-- **Theme circular reveal** (design): switching themes now expands the new palette as a circle from where you clicked (View Transitions API), with the colour-glide fallback and reduced-motion respected.
-- **Judge IPC hardening** (security): `judge:run` arguments are validated in the main process (path type/extension, max 200 cases, 2 MB of data, clamped time/memory limits) because the renderer is treated as untrusted.
-- **Stress tester** (feature + design, Judge → ⚡ STRESS): runs your solution against a brute-force file on seeded random inputs until the first mismatch. Animated SVG progress ring (pulses while running, pops ✓ / ! at the end), abortable (STOP), bounded to 2000 tests, shows the counter-example with the first differing line and saves it as a test case in one click.
-- **Hover docs** (feature, zero-install): hover STL calls (`lower_bound`, `priority_queue`, `gcd`…) and Python helpers (`heappush`, `bisect_left`…) for signature, note and complexity. Monaco hover, suggest and find widgets restyled as glass cards with accent-highlighted matches.
-- **Python + Java IntelliSense (tier 1, zero-install)**: snippet/completion providers for fast IO, heaps, DSU, main guards, collections, working on every machine without a language server. Nav dock gets a theme-aware accent sheen (respects reduced motion).
-- **Live contest fetch fix (Oct 24 2026):** problems now load during live Codeforces rounds. The API call drops `from`/`count` (CF rejects them for non-admins while a contest runs), all statements come from one `/contest/X/problems` load, and when Cloudflare blocks plain HTTP (403 or a "Just a moment" page) Nexel loads the page in a hidden Chromium window on a persistent `persist:codeforces` session. If a check needs a human, that window appears once; the clearance is kept. Codeforces-only URLs, sandboxed, no password stored, 2 s between loads. Last resort: named problem cards with an Open on Codeforces hint, and Competitive Companion still works.
-- **Competitive Companion** (feature + security): the IDE listens on `127.0.0.1:27121` (loopback only) for the Competitive Companion browser extension. Sending a problem creates `<Problem>.cpp` (with your C++ template, never overwriting an existing file) and loads the samples into the Judge. Hardened: POST only, 1 MB cap enforced while streaming, strict schema validation, sanitised file names, bounded test count, 5 s request timeout, silent fallback if the port is busy.
-- **Keyboard shortcuts sheet** (design, Ctrl+/): glass cheat-sheet with 3D keycaps that physically press and glow when you hit the matching key. Welcome screen now shows live keycap chips.
-- **Recent workspaces** on the welcome card (MRU, de-duplicated, capped at 5, persisted): one click re-opens a folder.
-- **Theme system** (design): 5 themes (Nexel Emerald, Midnight Indigo, Ember, Sakura Night, Mono Contrast) driven by design tokens (`--nx-bg-*`, `--nx-editor-bg`, `--nx-accent-rgb`). Switching glides colours over ~380ms; Monaco, terminal and chrome change together. All hard-coded accent colours across the CSS migrated to tokens.
-- **Settings panel** (Ctrl+,): theme cards with live mini-previews, font size, tab size, ligatures, word wrap and minimap toggles, persisted and validated (clamped, unknown themes rejected). Also in the command palette (`Theme: …`, `Toggle Minimap`, `Toggle Word Wrap`) and via the status bar theme chip.
-- **Status bar** (design + feature): glass strip with a breathing accent dot, active file with unsaved dot, live `Ln/Col` and selection length, language, judge status (pulsing while judging, `passed/total` after), terminal toggle and shortcut hint. New `--nx-status-h` layout token.
-- **Toast notifications**: spring-in glass toasts with a countdown bar (`Saved main.cpp`), bounded queue (max 4) with de-duplication.
-- Editor canvas now sizes to its container, not 100vh, so the status bar never overlaps.
-- **Quick open (Ctrl+P)**: fuzzy file finder with match highlighting, reusing the command palette.
-- Judge verdict chips: spring pop-in, green/red glow, pulsing RUNNING state.
-
-- **Command palette** (Ctrl/Cmd+Shift+P): fuzzy-searchable, animated, keyboard-driven (navigate sections, toggle sidebar/terminal, edit C++ template).
-
-- **Design:** tabs get a glowing gradient underline that scales in, hover lift, and close buttons that fade in and rotate on hover.
-- **Performance:** Judge and Contests panels are lazy-loaded (React.lazy) with shimmer skeleton fallbacks.
-
-- **Design:** glass dock sheen with accent glow, hover lift on dock items; Monaco accent selection/cursor/indent guides, smooth scrolling, bracket colorization, ligatures.
-- **Security:** CSP meta in index.html; window-open deny and off-origin navigation block in Electron main; Outfit font self-hosted (no Google Fonts request).
-- **Performance:** Monaco bundled locally with slim entry and code-split chunks (earlier run).
-
-- Command palette: matched letters now glow in accent, plus a keyboard-hint footer with result count.
-
-- Stress-test core (`src/lib/stress.ts`): seeded PRNG case generator + first-diff finder, with tests.
-
-- (04:49) Global focus rings, button press feedback, thin themed scrollbars, reduced-motion support; fast-I/O C++ template module (+tests).
-
-- (overnight) Verdict classifier `src/lib/verdict.ts` (AC/WA/TLE/MLE/RE, Codeforces precedence) and animated tab entrance.
-
-- STL signature help (C++): parameter hints while typing calls like `sort(`, `lower_bound(` with complexity notes (src/lib/signatureHelp.ts).
+Nexel IDE 2 keeps the original Nexel identity while making the everyday editor, tools and failure paths easier to use.
