@@ -14,7 +14,7 @@ Recorded from the running Electron app on Linux: open a workspace, edit code, en
 
 This is the `original-glass-integration` development branch. `main` is unchanged.
 
-The newest source is preserved in **`1-nexel-ide-2-source-20261105-1432.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
+The newest source is preserved in **`1-nexel-ide-2-source-20261105-1440.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
 
 ## A workspace first
 
@@ -58,7 +58,7 @@ Use a new folder so you do not overwrite an existing checkout or your own edits:
 git clone --branch original-glass-integration --single-branch https://github.com/naman-sharma12345/nexel-ide.git nexel-ide-2
 cd nexel-ide-2
 mkdir snapshot
-tar -xzf 1-nexel-ide-2-source-20261105-1432.tgz -C snapshot
+tar -xzf 1-nexel-ide-2-source-20261105-1440.tgz -C snapshot
 cd snapshot/nexel-ide
 npm install
 npm run typecheck
@@ -99,7 +99,7 @@ Packaging scripts exist; this branch does not claim newly verified installers fo
 Latest local validation on November 5, 2026:
 
 - Canonical typecheck and production build passed.
-- 1,146 unique unit/integration tests passed across 170 files. Four opt-in native tests were skipped in that sweep and passed separately against the real Linux runner.
+- 1,147 unique unit/integration tests passed across 170 files. Four opt-in native tests were skipped in that sweep and passed separately against the real Linux runner.
 - Actual Electron workflows checked editor saves, Git in disposable repositories, plugin lifecycle, Companion imports, UTF-8 output, runtime errors and narrow layouts.
 
 These are Linux results, not cross-platform certification. Network Git login/SSH prompts and Windows/macOS behavior need their own testing. Codeforces availability depends on the service. Saved Judge results describe a past run, not current disk contents or an atomic build snapshot. External files can change between checks. Narrow layouts use scrolling where content cannot fit.
