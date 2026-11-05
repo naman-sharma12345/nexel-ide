@@ -14,7 +14,7 @@ Recorded from the running Electron app on Linux: open a workspace, edit code, en
 
 This is the `original-glass-integration` development branch. `main` is unchanged.
 
-The newest source is preserved in **`1-nexel-ide-2-source-20261105.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
+The newest source is preserved in **`7-nexel-ide-2-source-complete-20261105.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
 
 ## A workspace first
 
@@ -48,6 +48,8 @@ Enable **Competitive Programming** in Settings for Judge, stress testing, Codefo
 
 Java remains a supported code path but was not verified successfully in the current Linux environment because `javac` could not run. Do not read that as a tested Java setup.
 
+The earlier `1-nexel-ide-2-source-20261105.tgz` is incomplete and superseded. Do not use it. The corrected archive includes language-tooling sources and test setup that the first selection omitted.
+
 ## Run the latest snapshot
 
 Use a new folder so you do not overwrite an existing checkout or your own edits:
@@ -56,7 +58,7 @@ Use a new folder so you do not overwrite an existing checkout or your own edits:
 git clone --branch original-glass-integration --single-branch https://github.com/naman-sharma12345/nexel-ide.git nexel-ide-2
 cd nexel-ide-2
 mkdir snapshot
-tar -xzf 1-nexel-ide-2-source-20261105.tgz -C snapshot
+tar -xzf 7-nexel-ide-2-source-complete-20261105.tgz -C snapshot
 cd snapshot/nexel-ide
 npm install
 npm run typecheck
