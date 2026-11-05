@@ -14,7 +14,7 @@ Recorded from the running Electron app on Linux: open a workspace, edit code, en
 
 This is the `original-glass-integration` development branch. `main` is unchanged.
 
-The newest source is preserved in **`1-nexel-ide-2-source-20261105-1440.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
+The newest source is preserved in **`1-nexel-ide-2-source-20261105-1450.tgz`**. Normal source-tree publication is still in progress. Until that finishes, use the snapshot instructions below rather than assuming the existing `nexel-ide/` folder contains every change shown here.
 
 ## A workspace first
 
@@ -58,7 +58,7 @@ Use a new folder so you do not overwrite an existing checkout or your own edits:
 git clone --branch original-glass-integration --single-branch https://github.com/naman-sharma12345/nexel-ide.git nexel-ide-2
 cd nexel-ide-2
 mkdir snapshot
-tar -xzf 1-nexel-ide-2-source-20261105-1440.tgz -C snapshot
+tar -xzf 1-nexel-ide-2-source-20261105-1450.tgz -C snapshot
 cd snapshot/nexel-ide
 npm install
 npm run typecheck
@@ -92,14 +92,14 @@ Run these inside the application folder:
 | `npm run dist:win` | Build and package for Windows |
 | `npm run dist:mac` | Build and package for macOS |
 
-Packaging scripts exist; this branch does not claim newly verified installers for every OS.
+Package source selection was tested in a staged Electron layout, including real Python Judge execution. This is not an installer test; this branch does not claim newly verified installers for every OS.
 
 ## Validation and limits
 
 Latest local validation on November 5, 2026:
 
 - Canonical typecheck and production build passed.
-- 1,147 unique unit/integration tests passed across 170 files. Four opt-in native tests were skipped in that sweep and passed separately against the real Linux runner.
+- 1,148 unique unit/integration tests passed across 171 files. Four opt-in native tests were skipped in that sweep and passed separately against the real Linux runner.
 - Actual Electron workflows checked editor saves, Git in disposable repositories, plugin lifecycle, Companion imports, UTF-8 output, runtime errors and narrow layouts.
 
 These are Linux results, not cross-platform certification. Network Git login/SSH prompts and Windows/macOS behavior need their own testing. Codeforces availability depends on the service. Saved Judge results describe a past run, not current disk contents or an atomic build snapshot. External files can change between checks. Narrow layouts use scrolling where content cannot fit.
